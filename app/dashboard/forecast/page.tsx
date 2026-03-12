@@ -1,22 +1,38 @@
 'use client'
 
+import { motion } from 'framer-motion'
 import ForecastChart from '@/components/ui/ForecastChart'
 import { mockMonthlyData, mockAccounts } from '@/lib/mockData'
 
-function formatCurrency(n: number) {
+function fmt(n: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
 }
 
+const card = {
+  backgroundColor: '#FFFFFF',
+  border: '1px solid rgba(184,145,58,0.15)',
+  borderRadius: '2px',
+  padding: '28px',
+} as const
+
+const sectionLabel = {
+  fontFamily: 'var(--font-mono)',
+  fontSize: '10px',
+  color: '#A89880',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '0.16em',
+  marginBottom: '22px',
+} as const
+
 export default function ForecastPage() {
-  const avgIncome = mockMonthlyData.reduce((s, m) => s + m.income, 0) / mockMonthlyData.length
+  const avgIncome   = mockMonthlyData.reduce((s, m) => s + m.income,   0) / mockMonthlyData.length
   const avgExpenses = mockMonthlyData.reduce((s, m) => s + m.expenses, 0) / mockMonthlyData.length
-  const avgSavings = avgIncome - avgExpenses
+  const avgSavings  = avgIncome - avgExpenses
 
   const checkingBalance = mockAccounts.find(a => a.accountType === 'checking')?.balance ?? 12450
   const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
   const now = new Date()
 
-  // Last 3 months actuals + 6 months projected
   const historicalMonths = mockMonthlyData.slice(-3).map((m, i) => ({
     month: m.month,
     balance: checkingBalance - (avgSavings * (2 - i)),
@@ -36,62 +52,82 @@ export default function ForecastPage() {
   const forecastData = [...historicalMonths, ...projectedMonths]
   const emergencyFundMonths = checkingBalance / avgExpenses
 
+  const summaryItems = [
+    { label: 'Avg Monthly Income',   value: avgIncome,   color: '#2D6A4F' },
+    { label: 'Avg Monthly Expenses', value: avgExpenses, color: '#8B2635' },
+    { label: 'Avg Monthly Savings',  value: avgSavings,  color: '#B8913A' },
+  ]
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Summary cards */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* Summary */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-        {[
-          { label: 'Avg Monthly Income', value: avgIncome, color: '#8aad78' },
-          { label: 'Avg Monthly Expenses', value: avgExpenses, color: '#c4806a' },
-          { label: 'Avg Monthly Savings', value: avgSavings, color: '#c4a882' },
-        ].map(({ label, value, color }) => (
-          <div key={label} style={{
-            backgroundColor: '#140c02',
-            border: '1px solid rgba(196,168,130,0.12)',
-            borderRadius: '10px',
-            padding: '20px',
-          }}>
-            <p style={{ fontSize: '11px', color: '#7a6040', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>{label}</p>
-            <p style={{ fontSize: '22px', color, fontFamily: 'var(--font-mono)' }}>{formatCurrency(value)}</p>
-          </div>
+        {summaryItems.map(({ label, value, color }, i) => (
+          <motion.div
+            key={label}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: 'easeOut', delay: i * 0.06 }}
+            style={{ backgroundColor: '#FFFFFF', border: '1px solid rgba(184,145,58,0.15)', borderRadius: '2px', padding: '24px' }}
+          >
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#A89880', textTransform: 'uppercase', letterSpacing: '0.16em', marginBottom: '10px' }}>{label}</p>
+            <p style={{ fontFamily: 'var(--font-serif)', fontSize: '28px', fontWeight: 400, color }}>{fmt(value)}</p>
+          </motion.div>
         ))}
       </div>
 
       {/* Forecast chart */}
-      <div style={{
-        backgroundColor: '#140c02',
-        border: '1px solid rgba(196,168,130,0.12)',
-        borderRadius: '12px',
-        padding: '24px',
-      }}>
-        <p style={{ fontSize: '11px', color: '#7a6040', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '20px' }}>
-          Checking Balance — 6-Month Projection
-        </p>
+      <div style={card}>
+        <p style={sectionLabel}>Checking Balance — 6-Month Projection</p>
         <ForecastChart data={forecastData} emergencyFundMonths={emergencyFundMonths} />
       </div>
 
       {/* Projection table */}
-      <div style={{
-        backgroundColor: '#140c02',
-        border: '1px solid rgba(196,168,130,0.12)',
-        borderRadius: '12px',
-        padding: '24px',
-      }}>
-        <p style={{ fontSize: '11px', color: '#7a6040', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '20px' }}>
-          Projected Monthly Balances
-        </p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0' }}>
-          {['Month', 'Projected Balance', 'Type'].map(h => (
-            <div key={h} style={{ padding: '8px 12px', fontSize: '11px', color: '#7a6040', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: '1px solid rgba(196,168,130,0.1)' }}>{h}</div>
-          ))}
-          {projectedMonths.map(({ month, balance }) => (
-            <>
-              <div key={`${month}-m`} style={{ padding: '12px 12px', fontSize: '13px', color: '#c4a882', fontFamily: 'var(--font-mono)', borderBottom: '1px solid rgba(196,168,130,0.06)' }}>{month}</div>
-              <div key={`${month}-b`} style={{ padding: '12px 12px', fontSize: '13px', color: '#8aad78', fontFamily: 'var(--font-mono)', borderBottom: '1px solid rgba(196,168,130,0.06)' }}>{formatCurrency(balance)}</div>
-              <div key={`${month}-t`} style={{ padding: '12px 12px', fontSize: '11px', color: '#7a6040', fontFamily: 'var(--font-mono)', borderBottom: '1px solid rgba(196,168,130,0.06)', letterSpacing: '0.06em' }}>PROJECTED</div>
-            </>
-          ))}
-        </div>
+      <div style={card}>
+        <p style={sectionLabel}>Projected Monthly Balances</p>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              {['Month', 'Projected Balance', 'Type'].map(h => (
+                <th key={h} style={{
+                  padding: '8px 16px 12px',
+                  textAlign: 'left',
+                  fontSize: '10px',
+                  color: '#A89880',
+                  fontFamily: 'var(--font-mono)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.12em',
+                  fontWeight: 400,
+                  borderBottom: '1px solid rgba(184,145,58,0.2)',
+                }}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {projectedMonths.map(({ month, balance }, i) => (
+              <tr key={month} style={{ backgroundColor: i % 2 === 0 ? 'transparent' : 'rgba(184,145,58,0.02)' }}>
+                <td style={{ padding: '13px 16px', fontFamily: 'var(--font-serif)', fontSize: '15px', color: '#1A1714', borderBottom: '1px solid rgba(184,145,58,0.07)' }}>{month}</td>
+                <td style={{ padding: '13px 16px', fontFamily: 'var(--font-serif)', fontSize: '15px', color: '#2D6A4F', borderBottom: '1px solid rgba(184,145,58,0.07)' }}>{fmt(balance)}</td>
+                <td style={{ padding: '13px 16px', borderBottom: '1px solid rgba(184,145,58,0.07)' }}>
+                  <span style={{
+                    fontSize: '9px',
+                    color: '#B8913A',
+                    fontFamily: 'var(--font-mono)',
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    border: '1px solid rgba(184,145,58,0.3)',
+                    padding: '2px 7px',
+                    borderRadius: '2px',
+                  }}>
+                    Projected
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   )

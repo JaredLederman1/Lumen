@@ -1,3 +1,7 @@
+'use client'
+
+import { motion, type Variants } from 'framer-motion'
+
 interface TransactionRowProps {
   merchantName: string | null
   amount: number
@@ -17,64 +21,82 @@ function formatDate(d: Date | string) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-const categoryColors: Record<string, string> = {
-  Income: '#8aad78',
-  Groceries: '#c4a882',
-  Dining: '#d4905a',
-  Entertainment: '#9b8fcc',
-  Transport: '#6aadcc',
-  Utilities: '#a09060',
-  Shopping: '#cc9060',
-  Health: '#8090b0',
-  Travel: '#b08050',
+export const rowVariants: Variants = {
+  hidden: { opacity: 0, y: 5 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.22 } },
 }
 
 export default function TransactionRow({ merchantName, amount, category, date, pending }: TransactionRowProps) {
   const isIncome = amount > 0
-  const color = isIncome ? '#8aad78' : '#c4806a'
-  const catColor = category ? (categoryColors[category] ?? '#7a6040') : '#7a6040'
 
   return (
-    <div
+    <motion.div
+      variants={rowVariants}
+      whileHover={{ backgroundColor: 'rgba(184,145,58,0.03)' }}
       style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '14px 0',
-        borderBottom: '1px solid rgba(196,168,130,0.06)',
+        padding: '13px 10px',
+        borderBottom: '1px solid rgba(184,145,58,0.1)',
+        cursor: 'pointer',
+        borderRadius: '1px',
+        marginLeft: '-10px',
+        marginRight: '-10px',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1 }}>
-        <div
-          style={{
-            width: '8px',
-            height: '8px',
-            borderRadius: '50%',
-            backgroundColor: catColor,
-            flexShrink: 0,
-          }}
-        />
-        <div>
-          <p style={{ fontSize: '13px', color: '#e8d5b0', fontFamily: 'var(--font-mono)', marginBottom: '2px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{
+            fontSize: '13px',
+            color: '#1A1714',
+            fontFamily: 'var(--font-mono)',
+            fontWeight: 500,
+          }}>
             {merchantName ?? 'Unknown Merchant'}
-            {pending && <span style={{ fontSize: '10px', color: '#7a6040', marginLeft: '8px' }}>PENDING</span>}
-          </p>
-          <p style={{ fontSize: '11px', color: '#7a6040', fontFamily: 'var(--font-mono)' }}>
-            {category ?? 'Uncategorized'} · {formatDate(date)}
-          </p>
+          </span>
+          {pending && (
+            <span style={{
+              fontSize: '9px',
+              color: '#B8913A',
+              fontFamily: 'var(--font-mono)',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              border: '1px solid rgba(184,145,58,0.4)',
+              padding: '1px 5px',
+              borderRadius: '2px',
+            }}>
+              Pending
+            </span>
+          )}
+          {category && (
+            <span style={{
+              fontSize: '9px',
+              color: '#A89880',
+              fontFamily: 'var(--font-mono)',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              border: '1px solid rgba(184,145,58,0.15)',
+              padding: '1px 5px',
+              borderRadius: '2px',
+            }}>
+              {category}
+            </span>
+          )}
         </div>
+        <span style={{ fontSize: '11px', color: '#A89880', fontFamily: 'var(--font-mono)' }}>
+          {formatDate(date)}
+        </span>
       </div>
-      <span
-        style={{
-          fontSize: '14px',
-          fontFamily: 'var(--font-mono)',
-          color: color,
-          fontWeight: '500',
-          flexShrink: 0,
-        }}
-      >
+      <span style={{
+        fontFamily: 'var(--font-serif)',
+        fontSize: '17px',
+        fontWeight: 400,
+        color: isIncome ? '#2D6A4F' : '#8B2635',
+        flexShrink: 0,
+      }}>
         {formatCurrency(amount)}
       </span>
-    </div>
+    </motion.div>
   )
 }

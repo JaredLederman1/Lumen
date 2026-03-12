@@ -4,38 +4,55 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const navItems = [
-  { href: '/dashboard', label: 'Overview', icon: '◈' },
-  { href: '/dashboard/accounts', label: 'Accounts', icon: '⬡' },
-  { href: '/dashboard/transactions', label: 'Transactions', icon: '≡' },
-  { href: '/dashboard/cashflow', label: 'Cash Flow', icon: '⟷' },
-  { href: '/dashboard/forecast', label: 'Forecast', icon: '◎' },
+  { href: '/dashboard',              label: 'Overview'     },
+  { href: '/dashboard/accounts',     label: 'Accounts'     },
+  { href: '/dashboard/transactions', label: 'Transactions' },
+  { href: '/dashboard/cashflow',     label: 'Cash Flow'    },
+  { href: '/dashboard/forecast',     label: 'Forecast'     },
 ]
 
 export default function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside
-      style={{
-        width: '220px',
-        minHeight: '100vh',
-        backgroundColor: '#140c02',
-        borderRight: '1px solid rgba(196,168,130,0.12)',
-        display: 'flex',
-        flexDirection: 'column',
-        padding: '0',
-        flexShrink: 0,
-      }}
-    >
+    <aside style={{
+      width: '220px',
+      minHeight: '100vh',
+      backgroundColor: '#FFFFFF',
+      borderRight: '1px solid rgba(184,145,58,0.18)',
+      display: 'flex',
+      flexDirection: 'column',
+      flexShrink: 0,
+    }}>
       {/* Logo */}
-      <div style={{ padding: '32px 24px 28px', borderBottom: '1px solid rgba(196,168,130,0.12)' }}>
-        <span style={{ fontFamily: 'var(--font-heading)', fontSize: '22px', color: '#c4a882', letterSpacing: '0.04em' }}>
-          Sovereign
-        </span>
+      <div style={{
+        padding: '40px 28px 32px',
+        borderBottom: '1px solid rgba(184,145,58,0.12)',
+      }}>
+        <div style={{
+          fontFamily: 'var(--font-serif)',
+          fontSize: '18px',
+          fontWeight: 500,
+          color: '#B8913A',
+          letterSpacing: '0.22em',
+          textTransform: 'uppercase',
+          marginBottom: '5px',
+        }}>
+          Sovreign
+        </div>
+        <div style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: '9px',
+          color: '#A89880',
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+        }}>
+          Wealth Management
+        </div>
       </div>
 
       {/* Nav */}
-      <nav style={{ padding: '16px 12px', flex: 1 }}>
+      <nav style={{ paddingTop: '16px', flex: 1 }}>
         {navItems.map((item) => {
           const isActive = item.href === '/dashboard'
             ? pathname === '/dashboard'
@@ -47,39 +64,62 @@ export default function Sidebar() {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px',
-                padding: '10px 12px',
-                borderRadius: '6px',
-                marginBottom: '4px',
+                padding: '10px 28px',
+                borderLeft: isActive ? '2px solid #B8913A' : '2px solid transparent',
+                marginBottom: '2px',
                 textDecoration: 'none',
-                color: isActive ? '#c4a882' : '#7a6040',
-                backgroundColor: isActive ? 'rgba(196,168,130,0.08)' : 'transparent',
-                fontSize: '13px',
+                color: isActive ? '#B8913A' : '#A89880',
+                backgroundColor: isActive ? 'rgba(184,145,58,0.05)' : 'transparent',
+                fontSize: '12px',
                 fontFamily: 'var(--font-mono)',
-                transition: 'all 0.15s',
+                letterSpacing: '0.06em',
+                transition: 'all 150ms ease',
               }}
             >
-              <span style={{ fontSize: '14px', width: '18px', textAlign: 'center' }}>{item.icon}</span>
               {item.label}
             </Link>
           )
         })}
       </nav>
 
-      {/* Bottom */}
-      <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(196,168,130,0.12)' }}>
-        <Link
-          href="/auth/login"
-          style={{
-            display: 'block',
-            fontSize: '12px',
-            color: '#7a6040',
-            textDecoration: 'none',
+      {/* Footer */}
+      <div style={{
+        padding: '20px 28px',
+        borderTop: '1px solid rgba(184,145,58,0.12)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+      }}>
+        <div style={{
+          width: '32px',
+          height: '32px',
+          borderRadius: '50%',
+          backgroundColor: 'rgba(184,145,58,0.08)',
+          border: '1px solid rgba(184,145,58,0.3)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontFamily: 'var(--font-mono)',
+          fontSize: '10px',
+          color: '#B8913A',
+          letterSpacing: '0.05em',
+          flexShrink: 0,
+        }}>
+          JL
+        </div>
+        <div>
+          <div style={{ fontSize: '11px', color: '#6B5D4A', fontFamily: 'var(--font-mono)', marginBottom: '2px' }}>
+            Jared L.
+          </div>
+          <Link href="/auth/login" style={{
+            fontSize: '10px',
+            color: '#A89880',
             fontFamily: 'var(--font-mono)',
-          }}
-        >
-          Sign out
-        </Link>
+            textDecoration: 'none',
+          }}>
+            Sign out
+          </Link>
+        </div>
       </div>
     </aside>
   )

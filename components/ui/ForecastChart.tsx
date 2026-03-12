@@ -12,7 +12,6 @@ function formatK(value: number) {
 }
 
 export default function ForecastChart({ data, emergencyFundMonths }: ForecastChartProps) {
-  // Split into actual vs projected series for separate styling
   const chartData = data.map(d => ({
     month: d.month,
     actual: d.projected ? null : d.balance,
@@ -23,16 +22,16 @@ export default function ForecastChart({ data, emergencyFundMonths }: ForecastCha
     <div>
       <ResponsiveContainer width="100%" height={220}>
         <LineChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(196,168,130,0.08)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(184,145,58,0.12)" />
           <XAxis
             dataKey="month"
-            tick={{ fill: '#7a6040', fontSize: 11, fontFamily: 'var(--font-mono)' }}
+            tick={{ fill: '#A89880', fontSize: 10, fontFamily: 'var(--font-mono)' }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
             tickFormatter={formatK}
-            tick={{ fill: '#7a6040', fontSize: 11, fontFamily: 'var(--font-mono)' }}
+            tick={{ fill: '#A89880', fontSize: 10, fontFamily: 'var(--font-mono)' }}
             axisLine={false}
             tickLine={false}
             width={40}
@@ -40,18 +39,19 @@ export default function ForecastChart({ data, emergencyFundMonths }: ForecastCha
           <Tooltip
             formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Balance']}
             contentStyle={{
-              backgroundColor: '#140c02',
-              border: '1px solid rgba(196,168,130,0.2)',
-              borderRadius: '6px',
-              color: '#e8d5b0',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid rgba(184,145,58,0.25)',
+              borderRadius: '2px',
+              color: '#1A1714',
               fontFamily: 'var(--font-mono)',
-              fontSize: '12px',
+              fontSize: '11px',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
             }}
           />
           <Line
             type="monotone"
             dataKey="actual"
-            stroke="#c4a882"
+            stroke="#B8913A"
             strokeWidth={2}
             dot={false}
             connectNulls={false}
@@ -59,26 +59,27 @@ export default function ForecastChart({ data, emergencyFundMonths }: ForecastCha
           <Line
             type="monotone"
             dataKey="projected"
-            stroke="#c4a882"
+            stroke="#B8913A"
             strokeWidth={2}
             strokeDasharray="6 4"
+            strokeOpacity={0.5}
             dot={false}
             connectNulls={false}
           />
         </LineChart>
       </ResponsiveContainer>
       <div style={{
-        marginTop: '16px',
-        padding: '12px 16px',
-        backgroundColor: 'rgba(138,173,120,0.08)',
-        border: '1px solid rgba(138,173,120,0.2)',
-        borderRadius: '8px',
+        marginTop: '20px',
+        padding: '14px 18px',
+        backgroundColor: 'rgba(45,106,79,0.06)',
+        border: '1px solid rgba(45,106,79,0.18)',
+        borderRadius: '2px',
         display: 'flex',
         alignItems: 'center',
-        gap: '8px',
+        gap: '10px',
       }}>
-        <span style={{ fontSize: '20px' }}>◎</span>
-        <span style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', color: '#8aad78' }}>
+        <span style={{ fontSize: '16px', color: '#2D6A4F' }}>◎</span>
+        <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: '#2D6A4F', letterSpacing: '0.02em' }}>
           Projected emergency fund coverage: <strong>{emergencyFundMonths.toFixed(1)} months</strong>
         </span>
       </div>

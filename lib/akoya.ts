@@ -2,14 +2,28 @@ const AKOYA_SANDBOX_IDP = 'https://sandbox-idp.ddp.akoya.com'
 const AKOYA_SANDBOX_PRODUCTS = 'https://sandbox-products.ddp.akoya.com'
 
 export function getAkoyaAuthUrl(connectorId: string): string {
+  const clientId = process.env.AKOYA_CLIENT_ID
+  const redirectUri = process.env.AKOYA_REDIRECT_URI
+
+  console.log('[Akoya] Building auth URL:', {
+    connectorId,
+    clientId: clientId ? `${clientId.slice(0, 8)}…` : 'MISSING',
+    redirectUri: redirectUri ?? 'MISSING',
+    clientSecret: process.env.AKOYA_CLIENT_SECRET ? 'set' : 'MISSING',
+  })
+
   const params = new URLSearchParams({
-    client_id: process.env.AKOYA_CLIENT_ID!,
-    redirect_uri: process.env.AKOYA_REDIRECT_URI!,
+    connector: connectorId,
+    client_id: clientId!,
+    redirect_uri: redirectUri!,
     response_type: 'code',
     scope: 'openid profile offline_access accounts transactions balances',
     state: connectorId,
   })
-  return `${AKOYA_SANDBOX_IDP}/auth?${params.toString()}`
+
+  const url = `${AKOYA_SANDBOX_IDP}/auth?${params.toString()}`
+  console.log('[Akoya] Full auth URL:', url)
+  return url
 }
 
 export async function exchangeCodeForToken(

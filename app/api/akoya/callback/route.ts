@@ -3,10 +3,29 @@ import { exchangeCodeForToken, fetchAkoyaAccounts, fetchAkoyaTransactions } from
 import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
-  const code = request.nextUrl.searchParams.get('code')
-  const connectorId = request.nextUrl.searchParams.get('state')
+  const { searchParams } = request.nextUrl
+  const code = searchParams.get('code')
+  const connectorId = searchParams.get('state')
+  const akoyaError = searchParams.get('error')
+  const akoyaErrorDesc = searchParams.get('error_description')
+
+  console.log('[Akoya callback] received params:', {
+    code: code ? `${code.slice(0, 8)}…` : null,
+    connectorId,
+    akoyaError,
+    akoyaErrorDesc,
+    allParams: Object.fromEntries(searchParams.entries()),
+  })
+
+  // Akoya rejected the auth request (e.g. bad client_id, wrong redirect_uri, unknown connector)
+  if (akoyaError) {
+    console.error('[Akoya callback] Akoya returned an error:', akoyaError, akoyaErrorDesc)
+    const msg = encodeURIComponent(akoyaErrorDesc ?? akoyaError)
+    return NextResponse.redirect(new URL(`/dashboard/accounts?error=${encodeURIComponent(akoyaError)}&desc=${msg}`, request.url))
+  }
 
   if (!code || !connectorId) {
+    console.error('[Akoya callback] missing code or state — got:', { code, connectorId })
     return NextResponse.redirect(new URL('/dashboard/accounts?error=missing_params', request.url))
   }
 
@@ -20,12 +39,19 @@ export async function GET(request: NextRequest) {
     // For demo: use a placeholder userId — in production, get from session
     const userId = 'user_demo'
 
+    // Ensure the demo user exists (foreign key requirement)
+    await prisma.user.upsert({
+      where: { id: userId },
+      create: { id: userId, email: 'demo@sovereign.app' },
+      update: {},
+    })
+
     for (const akoyaAccount of akoyaAccounts) {
       const account = await prisma.account.upsert({
         where: { akoyaAccountId: akoyaAccount.accountId ?? akoyaAccount.id },
         create: {
           userId,
-          institutionName: connectorId === 'schwab' ? 'Charles Schwab' : 'Capital One',
+          institutionName: connectorId === 'schwab' ? 'Charles Schwab' : connectorId === 'capital-one' ? 'Capital One' : 'Mikomo Bank',
           accountType: akoyaAccount.accountType ?? 'checking',
           balance: akoyaAccount.currentBalance ?? akoyaAccount.balance ?? 0,
           last4: akoyaAccount.accountNumber?.slice(-4) ?? null,

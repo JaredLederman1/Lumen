@@ -1,17 +1,33 @@
 'use client'
 
+import { motion } from 'framer-motion'
 import NetWorthCard from '@/components/ui/NetWorthCard'
 import DonutChart from '@/components/ui/DonutChart'
 import BarChart from '@/components/ui/BarChart'
 import TransactionRow from '@/components/ui/TransactionRow'
 import { mockNetWorth, mockTransactions, mockSpendingByCategory, mockMonthlyData } from '@/lib/mockData'
 
+const card = {
+  backgroundColor: '#FFFFFF',
+  border: '1px solid rgba(184,145,58,0.15)',
+  borderRadius: '2px',
+  padding: '28px',
+} as const
+
+const label = {
+  fontFamily: 'var(--font-mono)',
+  fontSize: '10px',
+  color: '#A89880',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '0.16em',
+  marginBottom: '22px',
+} as const
+
 export default function DashboardPage() {
   const recentTransactions = mockTransactions.slice(0, 10)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Net Worth Hero */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <NetWorthCard
         current={mockNetWorth.current}
         lastMonth={mockNetWorth.lastMonth}
@@ -19,58 +35,54 @@ export default function DashboardPage() {
         totalLiabilities={mockNetWorth.totalLiabilities}
       />
 
-      {/* Charts row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-        {/* Spending Donut */}
-        <div style={{
-          backgroundColor: '#140c02',
-          border: '1px solid rgba(196,168,130,0.12)',
-          borderRadius: '12px',
-          padding: '24px',
-        }}>
-          <p style={{ fontSize: '11px', color: '#7a6040', fontFamily: 'var(--font-mono)', marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            Spending by Category
-          </p>
+      {/* Thin gold rule */}
+      <div style={{
+        height: '1px',
+        background: 'linear-gradient(90deg, transparent, rgba(184,145,58,0.35) 25%, rgba(184,145,58,0.35) 75%, transparent)',
+      }} />
+
+      {/* Charts */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: 'easeOut', delay: 0.08 }}
+        style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}
+      >
+        <div style={card}>
+          <p style={label}>Spending by Category</p>
           <DonutChart data={mockSpendingByCategory} />
         </div>
-
-        {/* Income vs Expenses Bar */}
-        <div style={{
-          backgroundColor: '#140c02',
-          border: '1px solid rgba(196,168,130,0.12)',
-          borderRadius: '12px',
-          padding: '24px',
-        }}>
-          <p style={{ fontSize: '11px', color: '#7a6040', fontFamily: 'var(--font-mono)', marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            Income vs Expenses — Last 6 Months
-          </p>
+        <div style={card}>
+          <p style={label}>Income vs Expenses — Last 6 Months</p>
           <BarChart data={mockMonthlyData} />
         </div>
-      </div>
+      </motion.div>
 
-      {/* Recent Transactions */}
-      <div style={{
-        backgroundColor: '#140c02',
-        border: '1px solid rgba(196,168,130,0.12)',
-        borderRadius: '12px',
-        padding: '24px',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <p style={{ fontSize: '11px', color: '#7a6040', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            Recent Transactions
-          </p>
-        </div>
-        {recentTransactions.map((tx) => (
-          <TransactionRow
-            key={tx.id}
-            merchantName={tx.merchantName}
-            amount={tx.amount}
-            category={tx.category}
-            date={tx.date}
-            pending={tx.pending}
-          />
-        ))}
-      </div>
+      {/* Transactions */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: 'easeOut', delay: 0.16 }}
+        style={card}
+      >
+        <p style={label}>Recent Transactions</p>
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={{ visible: { transition: { staggerChildren: 0.03 } } }}
+        >
+          {recentTransactions.map((tx) => (
+            <TransactionRow
+              key={tx.id}
+              merchantName={tx.merchantName}
+              amount={tx.amount}
+              category={tx.category}
+              date={tx.date}
+              pending={tx.pending}
+            />
+          ))}
+        </motion.div>
+      </motion.div>
     </div>
   )
 }

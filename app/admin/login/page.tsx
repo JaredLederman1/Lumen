@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import AuthLayout from '@/components/AuthLayout'
 
 const fieldLabel: React.CSSProperties = {
@@ -39,7 +38,9 @@ const primaryBtn = (loading: boolean): React.CSSProperties => ({
   marginTop: '8px',
 })
 
-export default function LoginPage() {
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? ''
+
+export default function AdminLoginPage() {
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [showPwd, setShowPwd]   = useState(false)
@@ -52,12 +53,18 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
     try {
-      const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
+      const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
       if (authError) {
         setError(authError.message)
-      } else {
-        router.push('/dashboard')
+        return
       }
+      // Gate: only allow the designated admin email
+      if (ADMIN_EMAIL && data.user?.email !== ADMIN_EMAIL) {
+        await supabase.auth.signOut()
+        setError('Access denied. This portal is for administrators only.')
+        return
+      }
+      router.push('/admin')
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {
@@ -67,7 +74,6 @@ export default function LoginPage() {
 
   return (
     <AuthLayout>
-      {/* Wordmark */}
       <div style={{ textAlign: 'center', marginBottom: '40px' }}>
         <div style={{
           fontFamily: 'var(--font-serif)',
@@ -78,15 +84,16 @@ export default function LoginPage() {
           textTransform: 'uppercase',
           marginBottom: '10px',
         }}>
-          Sovreign
+          Sovereign
         </div>
         <p style={{
-          fontSize: '16px',
-          color: 'var(--color-text)',
-          fontFamily: 'var(--font-serif)',
-          fontWeight: 300,
+          fontSize: '12px',
+          color: 'var(--color-text-muted)',
+          fontFamily: 'var(--font-mono)',
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
         }}>
-          Sign in to your account
+          Admin portal
         </p>
       </div>
 
@@ -153,19 +160,6 @@ export default function LoginPage() {
           {loading ? 'Signing in…' : 'Sign in'}
         </button>
       </form>
-
-      <p style={{
-        textAlign: 'center',
-        marginTop: '28px',
-        fontSize: '12px',
-        color: 'var(--color-text-muted)',
-        fontFamily: 'var(--font-mono)',
-      }}>
-        No account?{' '}
-        <Link href="/auth/signup" style={{ color: 'var(--color-gold)', textDecoration: 'none' }}>
-          Create one
-        </Link>
-      </p>
     </AuthLayout>
   )
 }

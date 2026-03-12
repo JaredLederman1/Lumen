@@ -10,75 +10,71 @@ function formatCurrency(n: number) {
 }
 
 const accountTypeLabel: Record<string, string> = {
-  checking: 'Checking',
-  savings: 'Savings',
-  credit: 'Credit Card',
-  brokerage: 'Brokerage',
+  checking:   'Checking',
+  savings:    'Savings',
+  credit:     'Credit Card',
+  brokerage:  'Brokerage',
   investment: 'Investment',
-}
-
-const institutionColors: Record<string, string> = {
-  'charles schwab': '#5b9cf6',
-  'capital one': '#cc3333',
 }
 
 export default function AccountCard({ institutionName, accountType, balance, last4 }: AccountCardProps) {
   const isNegative = balance < 0
   const initials = institutionName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
-  const color = institutionColors[institutionName.toLowerCase()] ?? '#c4a882'
 
   return (
-    <div
-      style={{
-        backgroundColor: '#140c02',
-        border: '1px solid rgba(196,168,130,0.12)',
-        borderRadius: '10px',
-        padding: '20px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}
-    >
+    <div style={{
+      backgroundColor: '#FFFFFF',
+      border: '1px solid rgba(184,145,58,0.15)',
+      borderRadius: '2px',
+      padding: '18px 20px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      transition: 'border-color 150ms ease',
+    }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        <div
-          style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '8px',
-            backgroundColor: `${color}20`,
-            border: `1px solid ${color}40`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '13px',
-            fontWeight: '600',
-            color: color,
-            fontFamily: 'var(--font-mono)',
-          }}
-        >
+        <div style={{
+          width: '38px',
+          height: '38px',
+          borderRadius: '50%',
+          backgroundColor: 'rgba(184,145,58,0.08)',
+          border: '1px solid rgba(184,145,58,0.25)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '12px',
+          fontWeight: 500,
+          color: '#B8913A',
+          fontFamily: 'var(--font-mono)',
+          flexShrink: 0,
+        }}>
           {initials}
         </div>
         <div>
-          <p style={{ fontSize: '14px', color: '#e8d5b0', fontFamily: 'var(--font-mono)', marginBottom: '2px' }}>
+          <p style={{
+            fontSize: '14px',
+            color: '#1A1714',
+            fontFamily: 'var(--font-serif)',
+            fontWeight: 400,
+            marginBottom: '2px',
+          }}>
             {institutionName}
           </p>
-          <p style={{ fontSize: '12px', color: '#7a6040', fontFamily: 'var(--font-mono)' }}>
+          <p style={{ fontSize: '11px', color: '#A89880', fontFamily: 'var(--font-mono)', letterSpacing: '0.03em' }}>
             {accountTypeLabel[accountType] ?? accountType}{last4 ? ` ···· ${last4}` : ''}
           </p>
         </div>
       </div>
       <div style={{ textAlign: 'right' }}>
-        <p
-          style={{
-            fontSize: '16px',
-            fontFamily: 'var(--font-mono)',
-            color: isNegative ? '#c4806a' : '#e8d5b0',
-            fontWeight: '500',
-          }}
-        >
+        <p style={{
+          fontFamily: 'var(--font-serif)',
+          fontSize: '18px',
+          fontWeight: 400,
+          color: isNegative ? '#8B2635' : '#1A1714',
+        }}>
           {formatCurrency(balance)}
         </p>
-        <p style={{ fontSize: '11px', color: '#7a6040', fontFamily: 'var(--font-mono)', marginTop: '2px' }}>
+        <p style={{ fontSize: '10px', color: '#A89880', fontFamily: 'var(--font-mono)', marginTop: '2px', letterSpacing: '0.04em' }}>
           Current balance
         </p>
       </div>
