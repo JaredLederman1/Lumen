@@ -4,8 +4,8 @@
   --lm-surface:       #0F1318;
   --lm-surface2:      #151B22;
   --lm-nav-bg:        rgba(8, 11, 15, 0.92);
-  --lm-border:        rgba(255, 255, 255, 0.06);
-  --lm-border-strong: rgba(255, 255, 255, 0.10);
+  --lm-border:        rgba(255, 255, 255, 0.10);
+  --lm-border-strong: rgba(255, 255, 255, 0.18);
   --lm-gold:          #B8913A;
   --lm-gold-dim:      rgba(184, 145, 58, 0.15);
   --lm-gold-line:     rgba(184, 145, 58, 0.25);
@@ -14,11 +14,11 @@
   --lm-gold-a30:      rgba(184, 145, 58, 0.3);
   --lm-gold-a40:      rgba(184, 145, 58, 0.4);
   --lm-gold-a50:      rgba(184, 145, 58, 0.5);
-  --lm-text:          #E8EAF0;
-  --lm-text-mid:      #8A95A3;
-  --lm-text-muted:    #3D4A58;
-  --lm-positive:      #3D7A54;
-  --lm-negative:      #8B2635;
+  --lm-text:          #F0F2F8;
+  --lm-text-mid:      #A8B4C0;
+  --lm-text-muted:    #6B7A8D;
+  --lm-positive:      #4CAF7D;
+  --lm-negative:      #E05C6E;
 
   min-height: 100vh;
   background-color: var(--lm-bg);
@@ -59,7 +59,7 @@
 }
 
 .navLink {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--lm-text-muted);
@@ -75,7 +75,7 @@
 
 .navCta {
   font-family: var(--font-mono), monospace;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--lm-gold);
@@ -130,7 +130,7 @@
 }
 
 .heroEyebrow {
-  font-size: 10px;
+  font-size: 13px;
   letter-spacing: 0.25em;
   text-transform: uppercase;
   color: var(--lm-gold);
@@ -160,7 +160,7 @@
 }
 
 .heroTagline {
-  font-size: 13px;
+  font-size: 16px;
   color: var(--lm-text-mid);
   line-height: 1.8;
   max-width: 420px;
@@ -177,7 +177,7 @@
 /* ── BUTTONS ──────────────────────────────────────────────── */
 .btnPrimary {
   font-family: var(--font-mono), monospace;
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--lm-gold);
@@ -195,7 +195,7 @@
 
 .btnGhost {
   font-family: var(--font-mono), monospace;
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--lm-text-muted);
@@ -233,7 +233,7 @@
 }
 
 .statLabel {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--lm-text-muted);
@@ -252,7 +252,7 @@
 }
 
 .sectionEyebrow {
-  font-size: 10px;
+  font-size: 13px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--lm-gold);
@@ -270,7 +270,7 @@
 }
 
 .sectionSub {
-  font-size: 12px;
+  font-size: 15px;
   color: var(--lm-text-mid);
   line-height: 1.8;
   max-width: 440px;
@@ -294,7 +294,7 @@
 }
 
 .problemCellLabel {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--lm-text-muted);
@@ -335,14 +335,14 @@
 }
 
 .revealDesc {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--lm-text);
   line-height: 1.8;
   margin-bottom: 8px;
 }
 
 .revealNote {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--lm-text-muted);
   letter-spacing: 0.05em;
   line-height: 1.7;
@@ -365,7 +365,7 @@
 .revealCardRow:last-child { border-bottom: none; }
 
 .revealCardLabel {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--lm-text-muted);
   letter-spacing: 0.05em;
 }
@@ -399,7 +399,7 @@
 .featureItem:hover { background: var(--lm-surface); }
 
 .featureNum {
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.1em;
   color: var(--lm-text-muted);
   min-width: 32px;
@@ -418,14 +418,14 @@
 }
 
 .featureDesc {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--lm-text-mid);
   line-height: 1.8;
   max-width: 560px;
 }
 
 .featureTag {
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--lm-gold);
@@ -469,7 +469,7 @@
 }
 
 .ctaSub {
-  font-size: 12px;
+  font-size: 15px;
   color: var(--lm-text-mid);
   margin-bottom: 48px;
   letter-spacing: 0.05em;
@@ -492,7 +492,7 @@
   border-radius: 4px !important;
   color: var(--lm-text) !important;
   font-family: var(--font-mono), monospace !important;
-  font-size: 12px !important;
+  font-size: 14px !important;
   padding: 14px 16px !important;
   outline: none !important;
   transition: border-color 150ms ease !important;
@@ -501,7 +501,7 @@
 .ctaInput:focus { border-color: var(--lm-gold-a40) !important; }
 
 .ctaError {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--lm-negative);
   font-family: var(--font-mono), monospace;
   letter-spacing: 0.04em;
@@ -510,7 +510,7 @@
 }
 
 .ctaSuccess {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--lm-positive);
   font-family: var(--font-mono), monospace;
   letter-spacing: 0.1em;
@@ -537,7 +537,7 @@
 }
 
 .footerNote {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--lm-text-muted);
   letter-spacing: 0.08em;
 }
