@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 export async function GET() {
   try {
     const accounts = await prisma.account.findMany()
-    const totalAssets = accounts.filter(a => a.balance > 0).reduce((s: number, a) => s + a.balance, 0)
+    const totalAssets = accounts.filter((a: { balance: number }) => a.balance > 0).reduce((s: number, a: { balance: number }) => s + a.balance, 0)
     const totalLiabilities = Math.abs(accounts.filter(a => a.balance < 0).reduce((s: number, a) => s + a.balance, 0))
     const netWorth = totalAssets - totalLiabilities
 
