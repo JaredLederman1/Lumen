@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 import styles from './landing.module.css'
 
 const fadeUp = {
@@ -78,6 +79,7 @@ export default function LandingClient() {
           <a href="#" className={styles.navLink}>For advisors</a>
           <a href="#" className={styles.navLink}>Pricing</a>
         </div>
+        <Link href="/admin/login" className={styles.navAdmin}>Admin</Link>
         <button onClick={scrollToCTA} className={styles.navCta}>Get early access</button>
       </nav>
 

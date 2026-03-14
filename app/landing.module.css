@@ -73,6 +73,17 @@
 }
 .navLink:hover { color: var(--lm-text-mid); }
 
+.navAdmin {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--lm-text-muted);
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+.navAdmin:hover { color: var(--lm-text-mid); }
+
 .navCta {
   font-family: var(--font-mono), monospace;
   font-size: 12px;
