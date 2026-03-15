@@ -159,7 +159,7 @@ export default function OppCostCalculator() {
 
         {/* ── Header — always visible ───────────────────────────── */}
         <div className={styles.calcHeader}>
-          <h2 className={styles.calcHeaderHeadline}>See how much Lumen will save you.</h2>
+          <h2 className={styles.calcHeaderHeadline}>How Much Will Lumen Save You?</h2>
         </div>
 
         <AnimatePresence mode="wait">

@@ -562,7 +562,7 @@
   font-family: var(--font-serif), Georgia, serif;
   font-size: clamp(28px, 3vw, 44px);
   font-weight: 300;
-  color: var(--lm-text);
+  color: var(--lm-gold);
   margin: 0;
 }
 
