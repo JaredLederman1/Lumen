@@ -7,24 +7,26 @@ datasource db {
 }
 
 model User {
-  id         String   @id @default(cuid())
-  email      String   @unique
-  createdAt  DateTime @default(now()) @map("created_at")
-  accounts   Account[]
-  snapshots  NetWorthSnapshot[]
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  createdAt          DateTime            @default(now()) @map("created_at")
+  accounts           Account[]
+  snapshots          NetWorthSnapshot[]
+  onboardingProfile  OnboardingProfile?
+  employmentBenefits EmploymentBenefits?
 }
 
 model Account {
-  id              String   @id @default(cuid())
-  userId          String   @map("user_id")
-  institutionName String   @map("institution_name")
-  accountType     String   @map("account_type")
-  balance         Float    @default(0)
+  id              String        @id @default(cuid())
+  userId          String        @map("user_id")
+  institutionName String        @map("institution_name")
+  accountType     String        @map("account_type")
+  balance         Float         @default(0)
   last4           String?
-  akoyaAccountId  String?  @unique @map("akoya_account_id")
-  akoyaToken      String?  @map("akoya_token")
-  createdAt       DateTime @default(now()) @map("created_at")
-  user            User     @relation(fields: [userId], references: [id])
+  akoyaAccountId  String?       @unique @map("akoya_account_id")
+  akoyaToken      String?       @map("akoya_token")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  user            User          @relation(fields: [userId], references: [id])
   transactions    Transaction[]
 
   @@map("accounts")
@@ -44,12 +46,53 @@ model Transaction {
 }
 
 model NetWorthSnapshot {
-  id              String   @id @default(cuid())
-  userId          String   @map("user_id")
-  totalAssets     Float    @map("total_assets")
-  totalLiabilities Float   @map("total_liabilities")
-  recordedAt      DateTime @default(now()) @map("recorded_at")
-  user            User     @relation(fields: [userId], references: [id])
+  id               String   @id @default(cuid())
+  userId           String   @map("user_id")
+  totalAssets      Float    @map("total_assets")
+  totalLiabilities Float    @map("total_liabilities")
+  recordedAt       DateTime @default(now()) @map("recorded_at")
+  user             User     @relation(fields: [userId], references: [id])
 
   @@map("net_worth_snapshots")
+}
+
+model OnboardingProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique @map("user_id")
+  age           Int
+  annualIncome  Float    @map("annual_income")
+  savingsRate   Float    @map("savings_rate")
+  retirementAge Int      @map("retirement_age")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@map("onboarding_profiles")
+}
+
+model EmploymentBenefits {
+  id                   String   @id @default(cuid())
+  userId               String   @unique @map("user_id")
+  extractedAt          DateTime @default(now()) @map("extracted_at")
+  rawExtraction        Json     @map("raw_extraction")
+  has401k              Boolean  @default(false) @map("has_401k")
+  matchRate            Float?   @map("match_rate")
+  matchCap             Float?   @map("match_cap")
+  vestingYears         Int?     @map("vesting_years")
+  hasHSA               Boolean  @default(false) @map("has_hsa")
+  hsaEmployerContrib   Float?   @map("hsa_employer_contrib")
+  hasFSA               Boolean  @default(false) @map("has_fsa")
+  fsaLimit             Float?   @map("fsa_limit")
+  hasRSUs              Boolean  @default(false) @map("has_rsus")
+  hasESPP              Boolean  @default(false) @map("has_espp")
+  esppDiscount         Float?   @map("espp_discount")
+  hasCommuterBenefits  Boolean  @default(false) @map("has_commuter_benefits")
+  commuterMonthlyLimit Float?   @map("commuter_monthly_limit")
+  tuitionReimbursement Float?   @map("tuition_reimbursement")
+  wellnessStipend      Float?   @map("wellness_stipend")
+  totalAnnualValue     Float?   @map("total_annual_value")
+  capturedAnnualValue  Float?   @map("captured_annual_value")
+  user                 User     @relation(fields: [userId], references: [id])
+
+  @@map("employment_benefits")
 }
