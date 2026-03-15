@@ -252,8 +252,8 @@ export default function LandingClient() {
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
       >
-        <h2 className={styles.ctaHeadline}>See your number.</h2>
-        <p className={styles.ctaSub}>It takes two minutes. No account required to start.</p>
+        <h2 className={styles.ctaHeadline}>Stay in the loop.</h2>
+        <p className={styles.ctaSub}>Sign up to be first to know when Lumen launches.</p>
         <form className={styles.ctaForm} onSubmit={handleSubmit} noValidate>
           <input
             ref={emailRef}

@@ -157,11 +157,6 @@ export default function OppCostCalculator() {
     <section className={styles.calcSection}>
       <div className={styles.calcInner}>
 
-        {/* ── Header — always visible ───────────────────────────── */}
-        <div className={styles.calcHeader}>
-          <h2 className={styles.calcHeaderHeadline}>How Much Will Lumen Save You?</h2>
-        </div>
-
         <AnimatePresence mode="wait">
 
           {/* ── Steps 0–2: inputs ─────────────────────────────────── */}
