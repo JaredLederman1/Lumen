@@ -78,7 +78,7 @@ export default function LoginPage() {
           textTransform: 'uppercase',
           marginBottom: '10px',
         }}>
-          Sovreign
+          Lumen
         </div>
         <p style={{
           fontSize: '16px',
