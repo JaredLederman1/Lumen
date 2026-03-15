@@ -104,7 +104,9 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
+  text-align: center;
   padding: 120px 48px 80px;
   position: relative;
   overflow: hidden;
@@ -112,9 +114,8 @@
 
 .heroGrid {
   position: absolute;
-  top: 0; right: 0; bottom: 0;
-  width: 50%;
-  opacity: 0.03;
+  inset: 0;
+  opacity: 0.025;
   background-image:
     linear-gradient(var(--lm-gold-solid) 1px, transparent 1px),
     linear-gradient(90deg, var(--lm-gold-solid) 1px, transparent 1px);
@@ -124,20 +125,21 @@
 
 .heroOrb {
   position: absolute;
-  top: 20%;
-  right: 15%;
-  width: 400px;
-  height: 400px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 700px;
+  height: 700px;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--lm-gold-orb) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(184,145,58,0.06) 0%, transparent 65%);
   pointer-events: none;
 }
 
 .heroRule {
   width: 1px;
-  height: 80px;
+  height: 72px;
   background: linear-gradient(to bottom, transparent, var(--lm-gold-line));
-  margin-bottom: 40px;
+  margin: 0 auto 40px;
 }
 
 .heroEyebrow {
@@ -154,7 +156,7 @@
   font-weight: 300;
   line-height: 1.05;
   color: var(--lm-text);
-  max-width: 720px;
+  max-width: 760px;
   margin-bottom: 0;
 }
 
@@ -167,21 +169,22 @@
   width: 48px;
   height: 1px;
   background: var(--lm-gold-line);
-  margin: 36px 0;
+  margin: 36px auto;
 }
 
 .heroTagline {
-  font-size: 16px;
+  font-size: 17px;
   color: var(--lm-text-mid);
   line-height: 1.8;
-  max-width: 420px;
-  margin-bottom: 48px;
+  max-width: 460px;
+  margin: 0 auto 52px;
   letter-spacing: 0.02em;
 }
 
 .heroActions {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 24px;
 }
 
@@ -191,18 +194,26 @@
   font-size: 13px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: var(--lm-gold);
-  border: 1px solid var(--lm-gold-a50);
+  color: #0D1018;
+  background: var(--lm-gold);
+  border: 1px solid var(--lm-gold);
   padding: 14px 32px;
   border-radius: 4px;
-  background: transparent;
   cursor: pointer;
   text-decoration: none;
-  transition: background 150ms ease, border-color 150ms ease;
+  transition: background 150ms ease, border-color 150ms ease, opacity 150ms ease;
   display: inline-block;
   white-space: nowrap;
 }
-.btnPrimary:hover { background: var(--lm-gold-dim); border-color: var(--lm-gold); }
+.btnPrimary:hover { background: #d4a846; border-color: #d4a846; }
+
+/* Hero-sized CTA — apply alongside btnPrimary */
+.btnHero {
+  font-size: 14px;
+  padding: 18px 48px;
+  letter-spacing: 0.18em;
+  border-radius: 4px;
+}
 
 .btnGhost {
   font-family: var(--font-mono), monospace;
@@ -532,9 +543,7 @@
 
 /* ── CALCULATOR SECTION ───────────────────────────────────── */
 .calcSection {
-  background: var(--lm-surface);
-  border-top: 1px solid var(--lm-border);
-  border-bottom: 1px solid var(--lm-border);
+  background: transparent;
   padding: 96px 48px;
 }
 
