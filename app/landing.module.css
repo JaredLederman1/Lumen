@@ -52,10 +52,10 @@
   text-transform: uppercase;
 }
 
-.navLinks {
+.navRight {
   display: flex;
-  gap: 36px;
   align-items: center;
+  gap: 24px;
 }
 
 .navLink {

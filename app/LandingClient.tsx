@@ -80,13 +80,10 @@ export default function LandingClient() {
       {/* ── NAV ─────────────────────────────────────────────── */}
       <nav className={styles.nav}>
         <div className={styles.navLogo}>Lumen</div>
-        <div className={styles.navLinks}>
-          <a href="#" className={styles.navLink}>How it works</a>
-          <a href="#" className={styles.navLink}>For advisors</a>
-          <a href="#" className={styles.navLink}>Pricing</a>
+        <div className={styles.navRight}>
+          <Link href="/admin/login" className={styles.navAdmin}>Admin</Link>
+          <button onClick={scrollToEmail} className={styles.navCta}>Get early access</button>
         </div>
-        <Link href="/admin/login" className={styles.navAdmin}>Admin</Link>
-        <button onClick={scrollToEmail} className={styles.navCta}>Get early access</button>
       </nav>
 
       {/* ── HERO ────────────────────────────────────────────── */}
@@ -138,7 +135,6 @@ export default function LandingClient() {
           transition={{ duration: 0.8, ease: 'easeOut', delay: 0.75 }}
         >
           <button onClick={scrollToCTA} className={`${styles.btnPrimary} ${styles.btnHero}`}>See your number</button>
-          <a href="#" className={styles.btnGhost}>How it works →</a>
         </motion.div>
       </section>
 
@@ -210,9 +206,15 @@ export default function LandingClient() {
       <div className={styles.goldRule} />
 
       {/* ── CALCULATOR ──────────────────────────────────────── */}
-      <div ref={calcRef}>
+      <motion.div
+        ref={calcRef}
+        variants={inView}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.1 }}
+      >
         <OppCostCalculator />
-      </div>
+      </motion.div>
 
       <div className={styles.goldRule} />
 
