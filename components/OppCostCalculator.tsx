@@ -91,7 +91,7 @@ export default function OppCostCalculator() {
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    const t = setTimeout(() => inputRef.current?.focus(), 400)
+    const t = setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 400)
     return () => clearTimeout(t)
   }, [step])
 
