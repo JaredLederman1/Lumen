@@ -554,24 +554,16 @@
 
 /* Header */
 .calcHeader {
+  text-align: center;
   margin-bottom: 64px;
 }
 
 .calcHeaderHeadline {
   font-family: var(--font-serif), Georgia, serif;
-  font-size: clamp(32px, 4vw, 52px);
+  font-size: clamp(28px, 3vw, 44px);
   font-weight: 300;
-  line-height: 1.15;
   color: var(--lm-text);
-  margin: 16px 0 20px;
-}
-
-.calcHeaderSub {
-  font-size: 15px;
-  color: var(--lm-text-mid);
-  line-height: 1.8;
-  max-width: 480px;
-  letter-spacing: 0.02em;
+  margin: 0;
 }
 
 /* Step UI */
