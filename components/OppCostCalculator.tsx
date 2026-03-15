@@ -157,6 +157,14 @@ export default function OppCostCalculator() {
     <section className={styles.calcSection}>
       <div className={styles.calcInner}>
 
+        <div className={styles.calcSectionHeader}>
+          <p className={styles.sectionEyebrow}>The calculation</p>
+          <h2 className={styles.sectionHeadline}>See your number.</h2>
+          <p className={styles.sectionSub}>
+            Four inputs. The exact dollar cost of your current trajectory — and what closing the gap looks like.
+          </p>
+        </div>
+
         <AnimatePresence mode="wait">
 
           {/* ── Steps 0–2: inputs ─────────────────────────────────── */}
