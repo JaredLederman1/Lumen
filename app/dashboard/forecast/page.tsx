@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import ForecastChart from '@/components/ui/ForecastChart'
-import { mockMonthlyData, mockAccounts } from '@/lib/mockData'
+import { mockMonthlyData, mockAccounts } from '@/lib/data'
 
 function fmt(n: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)

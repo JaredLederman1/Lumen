@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import AccountCard from '@/components/ui/AccountCard'
-import { mockAccounts } from '@/lib/mockData'
+import { mockAccounts, fetchAccounts } from '@/lib/data'
 
 interface Account {
   id: string
@@ -36,9 +36,8 @@ function AccountsContent() {
   const errorDesc = searchParams.get('desc')
 
   useEffect(() => {
-    fetch('/api/accounts')
-      .then(r => r.json())
-      .then(data => setAccounts(data.accounts?.length > 0 ? data.accounts : mockAccounts))
+    fetchAccounts()
+      .then(accounts => setAccounts(accounts.length > 0 ? accounts : mockAccounts))
       .catch(() => setAccounts(mockAccounts))
       .finally(() => setLoading(false))
   }, [])

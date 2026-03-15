@@ -5,7 +5,7 @@ import NetWorthCard from '@/components/ui/NetWorthCard'
 import DonutChart from '@/components/ui/DonutChart'
 import BarChart from '@/components/ui/BarChart'
 import TransactionRow from '@/components/ui/TransactionRow'
-import { mockNetWorth, mockTransactions, mockSpendingByCategory, mockMonthlyData } from '@/lib/mockData'
+import { mockNetWorth, mockTransactions, mockSpendingByCategory, mockMonthlyData } from '@/lib/data'
 
 const card = {
   backgroundColor: '#FFFFFF',

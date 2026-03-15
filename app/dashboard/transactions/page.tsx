@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import TransactionRow from '@/components/ui/TransactionRow'
-import { mockTransactions, mockAccounts } from '@/lib/mockData'
+import { mockTransactions, mockAccounts } from '@/lib/data'
 
 const CATEGORIES = ['All', 'Income', 'Groceries', 'Dining', 'Entertainment', 'Transport', 'Utilities', 'Shopping', 'Health', 'Travel']
 const PAGE_SIZE = 10

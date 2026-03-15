@@ -1,6 +1,8 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
 
 const pageTitles: Record<string, string> = {
   '/dashboard':              'Overview',
@@ -12,7 +14,22 @@ const pageTitles: Record<string, string> = {
 
 export default function Header() {
   const pathname = usePathname()
+  const router = useRouter()
   const title = pageTitles[pathname] ?? 'Sovreign'
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      const email = data.session?.user?.email
+      const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL
+      setIsAdmin(!!email && !!adminEmail && email === adminEmail)
+    })
+  }, [])
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    router.push('/admin/login')
+  }
 
   return (
     <header style={{
@@ -35,7 +52,7 @@ export default function Header() {
       }}>
         {title}
       </h1>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <span style={{
           fontSize: '11px',
           color: '#A89880',
@@ -44,6 +61,38 @@ export default function Header() {
         }}>
           {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' })}
         </span>
+        {isAdmin && (
+          <>
+            <span style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '9px',
+              color: '#B8913A',
+              border: '1px solid rgba(184,145,58,0.4)',
+              borderRadius: '2px',
+              padding: '3px 8px',
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+            }}>
+              Admin
+            </span>
+            <button
+              onClick={handleSignOut}
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '9px',
+                color: '#A89880',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                padding: '3px 0',
+              }}
+            >
+              Sign out
+            </button>
+          </>
+        )}
         <div style={{
           width: '30px',
           height: '30px',

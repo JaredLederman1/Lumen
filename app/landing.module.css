@@ -530,6 +530,208 @@
   position: relative;
 }
 
+/* ── CALCULATOR SECTION ───────────────────────────────────── */
+.calcSection {
+  background: var(--lm-surface);
+  border-top: 1px solid var(--lm-border);
+  border-bottom: 1px solid var(--lm-border);
+  padding: 96px 48px;
+}
+
+.calcInner {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+/* Step UI */
+.calcStepWrap {
+  max-width: 560px;
+}
+
+.calcProgress {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.calcProgressItem {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--lm-gold);
+  border: 1px solid var(--lm-gold-a30);
+  padding: 4px 12px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.calcEyebrow {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--lm-text-muted);
+  margin-bottom: 20px;
+  font-family: var(--font-mono), monospace;
+}
+
+.calcQuestion {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(30px, 4vw, 48px);
+  font-weight: 300;
+  color: var(--lm-text);
+  line-height: 1.15;
+  margin-bottom: 32px;
+}
+
+.calcInputWrap {
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid var(--lm-border-strong);
+  margin-bottom: 16px;
+  transition: border-color 150ms ease;
+}
+.calcInputWrap:focus-within {
+  border-color: var(--lm-gold-a50);
+}
+
+.calcInputPrefix {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 300;
+  color: var(--lm-text-muted);
+  line-height: 1;
+  padding-right: 4px;
+  user-select: none;
+}
+
+.calcInput {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 300;
+  color: var(--lm-text);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--lm-border-strong);
+  outline: none;
+  padding: 0 0 8px;
+  width: 100%;
+  letter-spacing: -0.01em;
+  transition: border-color 150ms ease;
+  /* hide number input spinners */
+  -moz-appearance: textfield;
+}
+.calcInput::-webkit-inner-spin-button,
+.calcInput::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.calcInput:focus { border-color: var(--lm-gold-a50); }
+.calcInput::placeholder { color: var(--lm-text-muted); }
+
+.calcInputPrefixed {
+  border-bottom: none;
+}
+
+.calcHint {
+  font-size: 13px;
+  color: var(--lm-text-muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 40px;
+  line-height: 1.6;
+}
+
+.calcErr {
+  font-size: 13px;
+  color: var(--lm-negative);
+  font-family: var(--font-mono), monospace;
+  letter-spacing: 0.04em;
+  margin-bottom: 12px;
+}
+
+.calcActions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Result enhancements */
+.calcDelayCallout {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border: 1px solid var(--lm-gold-a30);
+  border-radius: 4px;
+  padding: 14px 20px;
+  margin: 24px 0;
+  background: rgba(184, 145, 58, 0.04);
+}
+
+.calcDelayLabel {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--lm-text-muted);
+}
+
+.calcDelayVal {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--lm-negative);
+}
+
+.calcRecalc {
+  background: none;
+  border: none;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--lm-text-muted);
+  cursor: pointer;
+  padding: 0;
+  transition: color 150ms ease;
+  margin-top: 8px;
+}
+.calcRecalc:hover { color: var(--lm-text-mid); }
+
+/* Email capture */
+.calcEmailWrap {
+  margin-top: 28px;
+  padding-top: 28px;
+  border-top: 1px solid var(--lm-border);
+}
+
+.calcEmailHeadline {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--lm-text);
+  margin-bottom: 8px;
+}
+
+.calcEmailSub {
+  font-size: 13px;
+  color: var(--lm-text-muted);
+  letter-spacing: 0.05em;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.calcEmailForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.calcEmailConfirm {
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lm-positive);
+  padding: 16px 0;
+}
+
 /* ── FOOTER ───────────────────────────────────────────────── */
 .footer {
   border-top: 1px solid var(--lm-border);

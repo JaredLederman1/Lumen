@@ -64,7 +64,7 @@ export default function AdminLoginPage() {
         setError('Access denied. This portal is for administrators only.')
         return
       }
-      router.push('/admin')
+      router.push('/dashboard')
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {

@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import styles from './landing.module.css'
+import OppCostCalculator from '@/components/OppCostCalculator'
 
 const fadeUp = {
   hidden:  { opacity: 0, y: 16 },
@@ -43,6 +44,7 @@ const FEATURES = [
 ]
 
 export default function LandingClient() {
+  const calcRef  = useRef<HTMLDivElement>(null)
   const ctaRef   = useRef<HTMLElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
   const [email, setEmail]           = useState('')
@@ -50,6 +52,10 @@ export default function LandingClient() {
   const [submitted, setSubmitted]   = useState(false)
 
   const scrollToCTA = () => {
+    calcRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const scrollToEmail = () => {
     ctaRef.current?.scrollIntoView({ behavior: 'smooth' })
     setTimeout(() => emailRef.current?.focus(), 650)
   }
@@ -80,7 +86,7 @@ export default function LandingClient() {
           <a href="#" className={styles.navLink}>Pricing</a>
         </div>
         <Link href="/admin/login" className={styles.navAdmin}>Admin</Link>
-        <button onClick={scrollToCTA} className={styles.navCta}>Get early access</button>
+        <button onClick={scrollToEmail} className={styles.navCta}>Get early access</button>
       </nav>
 
       {/* ── HERO ────────────────────────────────────────────── */}
@@ -203,48 +209,10 @@ export default function LandingClient() {
 
       <div className={styles.goldRule} />
 
-      {/* ── REVEAL ──────────────────────────────────────────── */}
-      <motion.section
-        className={styles.revealSection}
-        variants={inView}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.1 }}
-      >
-        <div className={styles.revealInner}>
-          <div>
-            <p className={styles.sectionEyebrow}>Your opportunity cost</p>
-            <div className={styles.revealNumber}>$84,200</div>
-            <p className={styles.revealDesc}>
-              The retirement wealth forfeited by waiting one additional year to invest — at a $120K income and 5% savings rate, age 28.
-            </p>
-            <p className={styles.revealNote}>
-              Based on 7% annualized real return.<br />
-              S&amp;P 500 historical average. Calculated in today&apos;s dollars.
-            </p>
-          </div>
-          <div>
-            <div className={styles.revealCard}>
-              <div className={styles.revealCardRow}>
-                <span className={styles.revealCardLabel}>Years to retirement</span>
-                <span className={styles.revealCardVal}>37</span>
-              </div>
-              <div className={styles.revealCardRow}>
-                <span className={styles.revealCardLabel}>Current monthly investment</span>
-                <span className={styles.revealCardVal}>$500</span>
-              </div>
-              <div className={styles.revealCardRow}>
-                <span className={styles.revealCardLabel}>Projected wealth at current rate</span>
-                <span className={styles.revealCardVal}>$1.1M</span>
-              </div>
-              <div className={styles.revealCardRow}>
-                <span className={styles.revealCardLabel}>Projected wealth at 20% rate</span>
-                <span className={`${styles.revealCardVal} ${styles.positive}`}>$4.4M</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </motion.section>
+      {/* ── CALCULATOR ──────────────────────────────────────── */}
+      <div ref={calcRef}>
+        <OppCostCalculator />
+      </div>
 
       <div className={styles.goldRule} />
 

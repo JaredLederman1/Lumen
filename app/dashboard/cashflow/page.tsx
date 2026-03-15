@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { mockMonthlyData } from '@/lib/mockData'
+import { mockMonthlyData } from '@/lib/data'
 import BarChart from '@/components/ui/BarChart'
 
 function fmt(n: number) {
