@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import styles from './landing.module.css'
@@ -44,13 +44,6 @@ const FEATURES = [
 ]
 
 export default function LandingClient() {
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      history.scrollRestoration = 'manual'
-      window.scrollTo(0, 0)
-    }
-  }, [])
-
   const calcRef  = useRef<HTMLDivElement>(null)
   const ctaRef   = useRef<HTMLElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)

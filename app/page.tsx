@@ -7,5 +7,11 @@ export const metadata: Metadata = {
 }
 
 export default function Page() {
-  return <LandingClient />
+  return (
+    <>
+      {/* Runs synchronously before React hydrates — ensures page always starts at top */}
+      <script dangerouslySetInnerHTML={{ __html: 'history.scrollRestoration="manual";window.scrollTo(0,0);' }} />
+      <LandingClient />
+    </>
+  )
 }
