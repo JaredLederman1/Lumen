@@ -89,6 +89,30 @@ export default function OppCostCalculator() {
   const [emailErr,       setEmailErr]       = useState('')
   const [emailSubmitted, setEmailSubmitted] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const stepRef  = useRef(step)
+  useEffect(() => { stepRef.current = step }, [step])
+
+  // Push a history entry when result is shown so the browser back button works
+  useEffect(() => {
+    if (step === 3) {
+      window.history.pushState({ lumenCalcResult: true }, '')
+    }
+  }, [step])
+
+  // On popstate (back button), reset the calculator and scroll to top
+  useEffect(() => {
+    const handlePop = () => {
+      if (stepRef.current === 3) {
+        setStep(0)
+        setAge('')
+        setIncome('')
+        setMonthly('')
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+    }
+    window.addEventListener('popstate', handlePop)
+    return () => window.removeEventListener('popstate', handlePop)
+  }, [])
 
   useEffect(() => {
     const t = setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 400)
