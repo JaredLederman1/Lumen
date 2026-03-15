@@ -92,7 +92,7 @@ export default function AdminPage() {
             textTransform: 'uppercase',
             marginBottom: '6px',
           }}>
-            Lumen
+            Illumin
           </div>
           <p style={{
             fontFamily: 'var(--font-mono)',

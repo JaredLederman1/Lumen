@@ -594,7 +594,7 @@ export default function OnboardingPage() {
           letterSpacing: '0.22em',
           textTransform: 'uppercase',
         }}>
-          Lumen
+          Illumin
         </div>
         {stepNum !== null && (
           <span style={{

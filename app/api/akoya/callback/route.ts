@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     // Ensure the demo user exists (foreign key requirement)
     await prisma.user.upsert({
       where: { id: userId },
-      create: { id: userId, email: 'demo@lumen.app' },
+      create: { id: userId, email: 'demo@illumin.app' },
       update: {},
     })
 

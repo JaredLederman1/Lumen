@@ -95,7 +95,7 @@ export default function OppCostCalculator() {
   // Push a history entry when result is shown so the browser back button works
   useEffect(() => {
     if (step === 3) {
-      window.history.pushState({ lumenCalcResult: true }, '')
+      window.history.pushState({ illuminCalcResult: true }, '')
     }
   }, [step])
 
@@ -374,7 +374,7 @@ export default function OppCostCalculator() {
                           Don&apos;t let this be just a number.
                         </p>
                         <p className={styles.calcEmailSub}>
-                          Get early access to Lumen and a full action plan at launch.
+                          Get early access to Illumin and a full action plan at launch.
                         </p>
                         <form onSubmit={handleEmailSubmit} className={styles.calcEmailForm} noValidate>
                           <input

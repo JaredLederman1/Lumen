@@ -15,7 +15,7 @@ const pageTitles: Record<string, string> = {
 export default function Header() {
   const pathname = usePathname()
   const router = useRouter()
-  const title = pageTitles[pathname] ?? 'Lumen'
+  const title = pageTitles[pathname] ?? 'Illumin'
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {

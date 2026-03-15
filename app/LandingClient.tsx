@@ -79,7 +79,7 @@ export default function LandingClient() {
 
       {/* ── NAV ─────────────────────────────────────────────── */}
       <nav className={styles.nav}>
-        <div className={styles.navLogo}>Lumen</div>
+        <div className={styles.navLogo}>Illumin</div>
         <div className={styles.navRight}>
           <Link href="/admin/login" className={styles.navAdmin}>Admin</Link>
           <button onClick={scrollToEmail} className={styles.navCta}>Get early access</button>
@@ -124,7 +124,7 @@ export default function LandingClient() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: 'easeOut', delay: 0.6 }}
         >
-          Lumen shows you the full financial picture — what you have, what you&apos;re missing,
+          Illumin shows you the full financial picture — what you have, what you&apos;re missing,
           and exactly what inaction is costing you.
         </motion.p>
 
@@ -195,7 +195,7 @@ export default function LandingClient() {
             </p>
           </div>
           <div className={styles.problemCell}>
-            <p className={styles.problemCellLabel}>What Lumen gives you</p>
+            <p className={styles.problemCellLabel}>What Illumin gives you</p>
             <p className={styles.problemCellText}>
               A single number. The real cost of your current trajectory — <strong>and what changes it.</strong>
             </p>
@@ -226,7 +226,7 @@ export default function LandingClient() {
         whileInView="visible"
         viewport={{ once: true, amount: 0.1 }}
       >
-        <p className={styles.sectionEyebrow}>What Lumen does</p>
+        <p className={styles.sectionEyebrow}>What Illumin does</p>
         <h2 className={styles.sectionHeadline}>Visibility that changes behavior.</h2>
         <p className={styles.sectionSub}>
           Every feature is designed around one question: what do you need to see to make better decisions?
@@ -255,7 +255,7 @@ export default function LandingClient() {
         viewport={{ once: true, amount: 0.2 }}
       >
         <h2 className={styles.ctaHeadline}>Stay in the loop.</h2>
-        <p className={styles.ctaSub}>Sign up to be first to know when Lumen launches.</p>
+        <p className={styles.ctaSub}>Sign up to be first to know when Illumin launches.</p>
         <form className={styles.ctaForm} onSubmit={handleSubmit} noValidate>
           <input
             ref={emailRef}
@@ -282,8 +282,8 @@ export default function LandingClient() {
 
       {/* ── FOOTER ──────────────────────────────────────────── */}
       <footer className={styles.footer}>
-        <div className={styles.footerLogo}>Lumen</div>
-        <div className={styles.footerNote}>© 2026 Lumen. Financial clarity for what&apos;s ahead.</div>
+        <div className={styles.footerLogo}>Illumin</div>
+        <div className={styles.footerNote}>© 2026 Illumin. Financial clarity for what&apos;s ahead.</div>
       </footer>
 
     </div>

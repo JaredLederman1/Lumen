@@ -111,7 +111,7 @@ export default function SignupPage() {
           textTransform: 'uppercase',
           marginBottom: '10px',
         }}>
-          Lumen
+          Illumin
         </div>
         <p style={{
           fontSize: '16px',

@@ -21,7 +21,7 @@ const dmMono = DM_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Lumen — Wealth Management",
+  title: "Illumin — Wealth Management",
   description: "Institutional personal finance",
 }
 

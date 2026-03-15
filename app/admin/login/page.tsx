@@ -84,7 +84,7 @@ export default function AdminLoginPage() {
           textTransform: 'uppercase',
           marginBottom: '10px',
         }}>
-          Lumen
+          Illumin
         </div>
         <p style={{
           fontSize: '12px',

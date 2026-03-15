@@ -40,7 +40,7 @@ export default function Sidebar() {
           textTransform: 'uppercase',
           marginBottom: '5px',
         }}>
-          Lumen
+          Illumin
         </div>
         <div style={{
           fontFamily: 'var(--font-mono)',

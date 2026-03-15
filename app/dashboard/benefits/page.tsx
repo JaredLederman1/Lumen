@@ -147,7 +147,7 @@ export default function BenefitsPage() {
           Employment Contract Analyzer
         </h1>
         <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#8A95A3', lineHeight: 1.6 }}>
-          Upload your offer letter or benefits summary. Lumen extracts every benefit, quantifies its dollar value, and surfaces what you&apos;re likely leaving on the table.
+          Upload your offer letter or benefits summary. Illumin extracts every benefit, quantifies its dollar value, and surfaces what you&apos;re likely leaving on the table.
         </p>
       </div>
 
