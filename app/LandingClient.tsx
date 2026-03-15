@@ -52,7 +52,7 @@ export default function LandingClient() {
   const [submitted, setSubmitted]   = useState(false)
 
   const scrollToCTA = () => {
-    calcRef.current?.scrollIntoView({ behavior: 'smooth' })
+    calcRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
 
   const scrollToEmail = () => {

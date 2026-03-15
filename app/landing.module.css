@@ -107,7 +107,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 120px 48px 80px;
+  padding: 60px 48px;
   position: relative;
   overflow: hidden;
 }
@@ -769,7 +769,7 @@
   .nav { padding: 0 24px; }
   .navLinks { display: none; }
 
-  .hero { padding: 100px 24px 60px; }
+  .hero { padding: 60px 24px; }
 
   .statRow { margin: 0 24px; }
 
