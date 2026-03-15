@@ -552,6 +552,28 @@
   margin: 0 auto;
 }
 
+/* Header */
+.calcHeader {
+  margin-bottom: 64px;
+}
+
+.calcHeaderHeadline {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 300;
+  line-height: 1.15;
+  color: var(--lm-text);
+  margin: 16px 0 20px;
+}
+
+.calcHeaderSub {
+  font-size: 15px;
+  color: var(--lm-text-mid);
+  line-height: 1.8;
+  max-width: 480px;
+  letter-spacing: 0.02em;
+}
+
 /* Step UI */
 .calcStepWrap {
   max-width: 560px;

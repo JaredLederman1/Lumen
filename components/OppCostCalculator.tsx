@@ -157,6 +157,17 @@ export default function OppCostCalculator() {
     <section className={styles.calcSection}>
       <div className={styles.calcInner}>
 
+        {/* ── Header — always visible ───────────────────────────── */}
+        <div className={styles.calcHeader}>
+          <p className={styles.sectionEyebrow}>The opportunity cost calculator</p>
+          <h2 className={styles.calcHeaderHeadline}>
+            Three numbers.<br />One wake-up call.
+          </h2>
+          <p className={styles.calcHeaderSub}>
+            Enter your age, income, and current monthly investment. We&apos;ll show you exactly what your current trajectory is costing you at retirement.
+          </p>
+        </div>
+
         <AnimatePresence mode="wait">
 
           {/* ── Steps 0–2: inputs ─────────────────────────────────── */}
