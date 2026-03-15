@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (!code || !connectorId) {
-    console.error('[Akoya callback] missing code or state — got:', { code, connectorId })
+    console.error('[Akoya callback] missing code or state, got:', { code, connectorId })
     return NextResponse.redirect(new URL('/dashboard/accounts?error=missing_params', request.url))
   }
 
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     const accountsResponse = await fetchAkoyaAccounts(connectorId, access_token)
     const akoyaAccounts = accountsResponse.accounts ?? []
 
-    // For demo: use a placeholder userId — in production, get from session
+    // For demo: use a placeholder userId; in production, get from session
     const userId = 'user_demo'
 
     // Ensure the demo user exists (foreign key requirement)

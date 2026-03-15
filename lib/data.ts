@@ -1,5 +1,5 @@
 /**
- * lib/data.ts — Single source of truth for mock vs. real data.
+ * lib/data.ts: Single source of truth for mock vs. real data.
  *
  * Flip USE_MOCK_DATA to false to route all fetches through the real API routes.
  * No other file in the codebase should import directly from lib/mockData or
@@ -18,7 +18,7 @@ import {
 
 export const USE_MOCK_DATA = true
 
-// ─── Re-exports (synchronous — used by client components directly) ────────────
+// ─── Re-exports (synchronous; used by client components directly) ────────────
 
 export {
   mockAccounts,

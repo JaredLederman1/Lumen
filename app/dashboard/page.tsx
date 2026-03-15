@@ -53,7 +53,7 @@ export default function DashboardPage() {
           <DonutChart data={mockSpendingByCategory} />
         </div>
         <div style={card}>
-          <p style={label}>Income vs Expenses — Last 6 Months</p>
+          <p style={label}>Income vs Expenses, Last 6 Months</p>
           <BarChart data={mockMonthlyData} />
         </div>
       </motion.div>

@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing or invalid fields' }, { status: 400 })
     }
 
-    // Best-effort log — DB save can be added once OnboardingProfile model is migrated
+    // Best-effort log; DB save can be added once OnboardingProfile model is migrated
     console.log('[Onboarding] Profile received:', { age, annualIncome, savingsRate, retirementAge })
 
     return NextResponse.json({ success: true })

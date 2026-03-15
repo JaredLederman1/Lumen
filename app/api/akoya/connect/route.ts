@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   })
 
   if (!process.env.AKOYA_CLIENT_ID || !process.env.AKOYA_CLIENT_SECRET || !process.env.AKOYA_REDIRECT_URI) {
-    console.error('[Akoya connect] Missing required env vars — check .env.local and restart the dev server')
+    console.error('[Akoya connect] Missing required env vars; check .env.local and restart the dev server')
     return NextResponse.redirect(new URL('/dashboard/accounts?error=not_configured', request.url))
   }
 

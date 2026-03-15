@@ -185,7 +185,7 @@ export default function OppCostCalculator() {
           <p className={styles.sectionEyebrow}>The calculation</p>
           <h2 className={styles.sectionHeadline}>See your number.</h2>
           <p className={styles.sectionSub}>
-            Four inputs. The exact dollar cost of your current trajectory — and what closing the gap looks like.
+            Three inputs. The exact dollar cost of your current trajectory, and what closing the gap looks like.
           </p>
         </div>
 
@@ -312,7 +312,7 @@ export default function OppCostCalculator() {
                   <p className={styles.revealDesc}>
                     {result.gap > 0
                       ? `Retirement wealth forfeited by investing at your current rate (${result.savingsRatePct.toFixed(1)}%) instead of the recommended 20%.`
-                      : `Projected retirement wealth at your current savings rate. You're ahead of most — here's what each year of compounding adds.`
+                      : `Projected retirement wealth at your current savings rate. You're ahead of most; here's what each year of compounding adds.`
                     }
                   </p>
 

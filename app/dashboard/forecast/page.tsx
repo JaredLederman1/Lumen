@@ -78,7 +78,7 @@ export default function ForecastPage() {
 
       {/* Forecast chart */}
       <div style={card}>
-        <p style={sectionLabel}>Checking Balance — 6-Month Projection</p>
+        <p style={sectionLabel}>Checking Balance: 6-Month Projection</p>
         <ForecastChart data={forecastData} emergencyFundMonths={emergencyFundMonths} />
       </div>
 

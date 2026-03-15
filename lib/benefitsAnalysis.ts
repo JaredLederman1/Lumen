@@ -77,7 +77,7 @@ export function analyzeBenefitsGaps(
       annualDollarValue: Math.round(annual),
       lifetimeDollarValue: Math.round(lifetime),
       urgency: 'high',
-      action: `Enroll in your HSA to receive the ${fmt(annual)} annual employer contribution — this is free money added directly to your account`,
+      action: `Enroll in your HSA to receive the ${fmt(annual)} annual employer contribution; this is free money added directly to your account`,
     })
   }
 
@@ -93,7 +93,7 @@ export function analyzeBenefitsGaps(
       annualDollarValue: Math.round(annual),
       lifetimeDollarValue: Math.round(lifetime),
       urgency: 'high',
-      action: `Enroll in ESPP — the ${discountPct}% discount represents an immediate guaranteed return on every dollar contributed`,
+      action: `Enroll in ESPP; the ${discountPct}% discount represents an immediate guaranteed return on every dollar contributed`,
     })
   }
 
@@ -123,7 +123,7 @@ export function analyzeBenefitsGaps(
       annualDollarValue: Math.round(annual),
       lifetimeDollarValue: Math.round(lifetime),
       urgency: 'medium',
-      action: `You have ${fmt(annual)} per year in tuition reimbursement — apply this toward courses, certifications, or a graduate degree`,
+      action: `You have ${fmt(annual)} per year in tuition reimbursement; apply this toward courses, certifications, or a graduate degree`,
     })
   }
 
@@ -138,7 +138,7 @@ export function analyzeBenefitsGaps(
       annualDollarValue: Math.round(annual),
       lifetimeDollarValue: Math.round(lifetime),
       urgency: 'medium',
-      action: `Claim your ${fmt(annual)} wellness stipend — check HR documentation for eligible expenses`,
+      action: `Claim your ${fmt(annual)} wellness stipend; check HR documentation for eligible expenses`,
     })
   }
 

@@ -20,7 +20,7 @@ const FEATURES = [
   {
     num: '01',
     title: 'The opportunity cost reveal',
-    desc: 'Enter four numbers. See exactly what your current trajectory is costing you in retirement wealth — and what closing the gap looks like.',
+    desc: 'Enter three numbers. See exactly what your current trajectory is costing you in retirement wealth, and what closing the gap looks like.',
     tag: 'Core',
   },
   {
@@ -32,7 +32,7 @@ const FEATURES = [
   {
     num: '03',
     title: 'Monthly cost-of-waiting notification',
-    desc: "One number, once a month. What this month's delay cost you. Not to create anxiety — to make the decision concrete.",
+    desc: "One number, once a month. What this month's delay cost you. Not to create anxiety, but to make the decision concrete.",
     tag: 'Retention',
   },
   {
@@ -124,7 +124,7 @@ export default function LandingClient() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: 'easeOut', delay: 0.6 }}
         >
-          Illumin shows you the full financial picture — what you have, what you&apos;re missing,
+          Illumin shows you the full financial picture: what you have, what you&apos;re missing,
           and exactly what inaction is costing you.
         </motion.p>
 
@@ -197,7 +197,7 @@ export default function LandingClient() {
           <div className={styles.problemCell}>
             <p className={styles.problemCellLabel}>What Illumin gives you</p>
             <p className={styles.problemCellText}>
-              A single number. The real cost of your current trajectory — <strong>and what changes it.</strong>
+              A single number. The real cost of your current trajectory, and what changes it.
             </p>
           </div>
         </div>

@@ -257,7 +257,7 @@ export default function BenefitsPage() {
                   Total annual benefit value
                 </p>
                 <p style={{ fontFamily: 'var(--font-serif)', fontSize: '36px', fontWeight: 300, color: '#1A1A1A' }}>
-                  {result.totalAnnualValue ? fmt(result.totalAnnualValue) : '—'}
+                  {result.totalAnnualValue ? fmt(result.totalAnnualValue) : 'N/A'}
                 </p>
                 <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#8A95A3', marginTop: '4px' }}>
                   {offeredCount} benefits offered · {notOfferedCount} not available

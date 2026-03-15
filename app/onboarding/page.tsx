@@ -151,7 +151,7 @@ export default function OnboardingPage() {
         body: JSON.stringify({ age: ageNum, annualIncome: income, savingsRate, retirementAge }),
       })
     } catch {
-      // Non-fatal — reveal regardless
+      // Non-fatal; reveal regardless
     }
     setStep('reveal')
     setPosting(false)
@@ -179,7 +179,7 @@ export default function OnboardingPage() {
           exit="exit"
           transition={transition}
         >
-          {/* Step 0 — Age */}
+          {/* Step 0: Age */}
           {step === 0 && (
             <div>
               <h1 style={heading}>How old are you?</h1>
@@ -219,7 +219,7 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Step 1 — Income */}
+          {/* Step 1: Income */}
           {step === 1 && (
             <div>
               <h1 style={heading}>What is your annual income?</h1>
@@ -261,7 +261,7 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Step 2 — Savings rate */}
+          {/* Step 2: Savings rate */}
           {step === 2 && (
             <div>
               <h1 style={heading}>What share of your income are you currently investing?</h1>
@@ -324,7 +324,7 @@ export default function OnboardingPage() {
                   letterSpacing: '0.02em',
                   margin: 0,
                 }}>
-                  This is what flows into your savings and investment accounts after every expense — rent, food, utilities, everything — is already paid.
+                  This is what flows into your savings and investment accounts after every expense (rent, food, utilities, everything) is already paid.
                 </p>
               </div>
 
@@ -335,7 +335,7 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Step 3 — Retirement age */}
+          {/* Step 3: Retirement age */}
           {step === 3 && (
             <div>
               <h1 style={heading}>At what age do you plan to retire?</h1>
@@ -446,7 +446,7 @@ export default function OnboardingPage() {
             lineHeight: 1.45,
             marginBottom: '16px',
           }}>
-            This is not a one-time loss. Every year you delay, you forfeit this amount in retirement wealth — permanently.
+            This is not a one-time loss. Every year you delay, you forfeit this amount in retirement wealth, permanently.
           </p>
           <p style={{
             fontFamily: 'var(--font-serif)',
@@ -469,7 +469,7 @@ export default function OnboardingPage() {
           </p>
         </div>
 
-        {/* Right — breakdown card */}
+        {/* Right: breakdown card */}
         <div style={{
           backgroundColor: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
@@ -564,7 +564,7 @@ export default function OnboardingPage() {
       display: 'flex',
       flexDirection: 'column',
     }}>
-      {/* Progress bar — 4 segments */}
+      {/* Progress bar: 4 segments */}
       <div style={{ height: '2px', display: 'flex', gap: '2px', flexShrink: 0 }}>
         {[0, 1, 2, 3].map(i => (
           <div
