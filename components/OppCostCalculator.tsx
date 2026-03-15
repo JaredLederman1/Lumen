@@ -163,14 +163,22 @@ export default function OppCostCalculator() {
     setMonthlyErr('')
   }
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setEmailErr('Please enter a valid email address.')
       return
     }
     setEmailErr('')
-    setEmailSubmitted(true)
+    try {
+      await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+    } finally {
+      setEmailSubmitted(true)
+    }
   }
 
   const primaryHeadlineNum = result
