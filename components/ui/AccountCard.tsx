@@ -1,10 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 interface AccountCardProps {
   id?: string
-  institutionName: string
   accountType: string
   balance: number
   last4?: string | null
@@ -23,108 +22,120 @@ const accountTypeLabel: Record<string, string> = {
   investment: 'Investment',
 }
 
-export default function AccountCard({ id, institutionName, accountType, balance, last4, onRemove }: AccountCardProps) {
+export default function AccountCard({ id, accountType, balance, last4, onRemove }: AccountCardProps) {
   const isNegative = balance < 0
-  const initials = institutionName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+  const [menuOpen, setMenuOpen] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [removing, setRemoving] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+        setConfirming(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   const handleRemove = async () => {
     if (!id) return
     setRemoving(true)
+    setMenuOpen(false)
     await fetch(`/api/accounts/${id}`, { method: 'DELETE' })
     onRemove?.(id)
   }
 
   return (
     <div style={{
-      backgroundColor: '#FFFFFF',
-      border: '1px solid rgba(184,145,58,0.15)',
-      borderRadius: '2px',
-      padding: '18px 20px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      transition: 'border-color 150ms ease',
-      opacity: removing ? 0.5 : 1,
+      padding: '12px 20px 12px 52px',
+      borderTop: '1px solid rgba(184,145,58,0.08)',
+      opacity: removing ? 0.4 : 1,
+      transition: 'opacity 200ms ease',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        <div style={{
-          width: '38px',
-          height: '38px',
-          borderRadius: '50%',
-          backgroundColor: 'rgba(184,145,58,0.08)',
-          border: '1px solid rgba(184,145,58,0.25)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '12px',
-          fontWeight: 500,
-          color: '#B8913A',
-          fontFamily: 'var(--font-mono)',
-          flexShrink: 0,
-        }}>
-          {initials}
-        </div>
-        <div>
-          <p style={{
-            fontSize: '14px',
-            color: '#1A1714',
-            fontFamily: 'var(--font-serif)',
-            fontWeight: 400,
-            marginBottom: '2px',
-          }}>
-            {institutionName}
-          </p>
-          <p style={{ fontSize: '11px', color: '#A89880', fontFamily: 'var(--font-mono)', letterSpacing: '0.03em' }}>
-            {accountTypeLabel[accountType] ?? accountType}{last4 ? ` ···· ${last4}` : ''}
-          </p>
-        </div>
+      <div>
+        <p style={{ fontSize: '13px', color: '#1A1714', fontFamily: 'var(--font-serif)', fontWeight: 400, marginBottom: '2px' }}>
+          {accountTypeLabel[accountType] ?? accountType}
+        </p>
+        <p style={{ fontSize: '11px', color: '#A89880', fontFamily: 'var(--font-mono)', letterSpacing: '0.03em' }}>
+          {last4 ? `···· ${last4}` : 'No account number'}
+        </p>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-        {id && !removing && (
-          confirming ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '11px', color: '#8B2635', fontFamily: 'var(--font-mono)' }}>Remove?</span>
-              <button
-                onClick={handleRemove}
-                style={{ fontSize: '11px', color: '#8B2635', fontFamily: 'var(--font-mono)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px', textDecoration: 'underline' }}
-              >
-                Yes
-              </button>
-              <button
-                onClick={() => setConfirming(false)}
-                style={{ fontSize: '11px', color: '#A89880', fontFamily: 'var(--font-mono)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px' }}
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setConfirming(true)}
-              style={{ fontSize: '10px', color: '#A89880', fontFamily: 'var(--font-mono)', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '0.06em', textTransform: 'uppercase', padding: '4px' }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#8B2635')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#A89880')}
-            >
-              Remove
-            </button>
-          )
-        )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <p style={{ fontFamily: 'var(--font-serif)', fontSize: '16px', fontWeight: 400, color: isNegative ? '#8B2635' : '#1A1714' }}>
+          {formatCurrency(balance)}
+        </p>
 
-        <div style={{ textAlign: 'right' }}>
-          <p style={{
-            fontFamily: 'var(--font-serif)',
-            fontSize: '18px',
-            fontWeight: 400,
-            color: isNegative ? '#8B2635' : '#1A1714',
-          }}>
-            {formatCurrency(balance)}
-          </p>
-          <p style={{ fontSize: '10px', color: '#A89880', fontFamily: 'var(--font-mono)', marginTop: '2px', letterSpacing: '0.04em' }}>
-            Current balance
-          </p>
-        </div>
+        {id && (
+          <div ref={menuRef} style={{ position: 'relative' }}>
+            <button
+              onClick={() => { setMenuOpen(o => !o); setConfirming(false) }}
+              style={{
+                width: '26px', height: '26px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'none', border: '1px solid transparent', borderRadius: '2px',
+                color: '#A89880', fontSize: '14px', cursor: 'pointer', lineHeight: 1,
+                transition: 'border-color 120ms ease, color 120ms ease',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(184,145,58,0.25)'; e.currentTarget.style.color = '#B8913A' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.color = '#A89880' }}
+              title="Account settings"
+            >
+              ···
+            </button>
+
+            {menuOpen && (
+              <div style={{
+                position: 'absolute', top: 'calc(100% + 4px)', right: 0,
+                backgroundColor: '#FFFFFF', border: '1px solid rgba(184,145,58,0.2)',
+                borderRadius: '2px', boxShadow: '0 6px 20px rgba(26,23,20,0.10)',
+                zIndex: 50, minWidth: '150px', overflow: 'hidden',
+              }}>
+                {confirming ? (
+                  <div style={{ padding: '12px 14px' }}>
+                    <p style={{ fontSize: '11px', color: '#8B2635', fontFamily: 'var(--font-mono)', marginBottom: '10px' }}>
+                      Remove this account?
+                    </p>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={handleRemove}
+                        style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: '#FFFFFF', background: '#8B2635', border: 'none', borderRadius: '2px', padding: '5px 10px', cursor: 'pointer' }}
+                      >
+                        Remove
+                      </button>
+                      <button
+                        onClick={() => setConfirming(false)}
+                        style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: '#A89880', background: 'none', border: '1px solid rgba(184,145,58,0.2)', borderRadius: '2px', padding: '5px 10px', cursor: 'pointer' }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirming(true)}
+                    style={{
+                      display: 'block', width: '100%', textAlign: 'left',
+                      padding: '10px 14px', background: 'none', border: 'none',
+                      fontSize: '12px', fontFamily: 'var(--font-mono)', color: '#8B2635',
+                      cursor: 'pointer', transition: 'background-color 100ms ease',
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(139,38,53,0.05)')}
+                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  >
+                    Remove account
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
