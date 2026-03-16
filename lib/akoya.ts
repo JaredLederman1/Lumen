@@ -114,14 +114,23 @@ export async function fetchAkoyaTransactions(
   accountId: string,
   accessToken: string
 ) {
-  // No date filter: sandbox data is from 2019-2020, a 6-month window from today returns nothing
-  const res = await fetch(
-    `${AKOYA_SANDBOX_PRODUCTS}/transactions/v2/${connectorId}/${accountId}`,
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }
-  )
-  if (!res.ok) throw new Error(`Failed to fetch transactions: ${res.statusText}`)
+  // Use a wide date range: sandbox data is from 2019-2020 so we go back 10 years
+  const startDate = new Date()
+  startDate.setFullYear(startDate.getFullYear() - 10)
+  const params = new URLSearchParams({
+    startDate: startDate.toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0],
+  })
+
+  const url = `${AKOYA_SANDBOX_PRODUCTS}/transactions/v2/${connectorId}/${accountId}?${params}`
+  console.log('[Akoya] fetchAkoyaTransactions:', url.replace(accountId, accountId.slice(0, 12) + '…'))
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!res.ok) {
+    const body = await res.text()
+    throw new Error(`Failed to fetch transactions: ${res.status} ${res.statusText} — ${body}`)
+  }
   return res.json()
 }
 
