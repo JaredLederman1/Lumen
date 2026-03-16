@@ -4,10 +4,6 @@ import { fetchAkoyaTransactions, normalizeAkoyaAccounts, fetchAkoyaAccounts } fr
 
 // Dev-only diagnostic: shows DB state and live-tests the transaction fetch
 export async function GET() {
-  if (process.env.NODE_ENV === 'production' && process.env.DIAG_ENABLED !== 'true') {
-    return NextResponse.json({ error: 'Set DIAG_ENABLED=true in env to use this on production' }, { status: 403 })
-  }
-
   try {
     const accounts = await prisma.account.findMany()
     const txCount = await prisma.transaction.count()
