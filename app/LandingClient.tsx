@@ -125,7 +125,7 @@ export default function LandingClient() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: 'easeOut', delay: 0.35 }}
         >
-          Wealth management.<br /><em>Without the wealth manager.</em>
+          The 1%&apos;s Playbook,<br /><em>Now for Everyone.</em>
         </motion.h1>
 
         <motion.div
