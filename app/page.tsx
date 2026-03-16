@@ -3,7 +3,7 @@ import LandingClient from './LandingClient'
 
 export const metadata: Metadata = {
   title: "Illumin: You can't fix what you can't see",
-  description: 'Financial clarity for high earners.',
+  description: 'Institutional-grade wealth management for everyone.',
 }
 
 export default function Page() {

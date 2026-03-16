@@ -19,27 +19,33 @@ const inView = {
 const FEATURES = [
   {
     num: '01',
-    title: 'The opportunity cost reveal',
-    desc: 'Enter three numbers. See exactly what your current trajectory is costing you in retirement wealth, and what closing the gap looks like.',
-    tag: 'Core',
+    title: 'Net Worth & Account Aggregation',
+    desc: 'Every place. Checking, savings, investments, 401(k), brokerage. A complete balance sheet, updated automatically.',
+    tag: 'Foundation',
   },
   {
     num: '02',
-    title: 'Complete account aggregation',
-    desc: 'Every account in one place. Checking, savings, investments, 401(k), brokerage. Your actual net worth, not an estimate.',
-    tag: 'Core',
+    title: 'Financial Health Score',
+    desc: 'A single number, 0 to 100, that scores your savings rate, debt health, investment behavior, and spending efficiency. With specific findings and next steps, not generic advice.',
+    tag: 'Intelligence',
   },
   {
     num: '03',
-    title: 'Monthly cost-of-waiting notification',
-    desc: "One number, once a month. What this month's delay cost you. Not to create anxiety, but to make the decision concrete.",
-    tag: 'Retention',
+    title: 'Opportunity Cost Visibility',
+    desc: 'What is inaction costing you, in dollars, per year? Illumin calculates your personal number and surfaces it monthly: the mechanic that changes behavior.',
+    tag: 'Clarity',
   },
   {
     num: '04',
-    title: 'Portfolio construction for high earners',
-    desc: 'Advanced risk assessment and allocation tools for users with significant investable assets. Coming soon.',
-    tag: 'HNWI',
+    title: 'Investment & Portfolio Tools',
+    desc: "Track holdings, allocation, and performance. Benchmark against the S&P 500. See where you're exposed and where you're leaving returns on the table.",
+    tag: 'Portfolio',
+  },
+  {
+    num: '05',
+    title: 'Wealth Trajectory Projection',
+    desc: 'Where are you headed at your current rate? Where could you be? The gap between those two lines is the product.',
+    tag: 'Planning',
   },
 ]
 
@@ -119,7 +125,7 @@ export default function LandingClient() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: 'easeOut', delay: 0.35 }}
         >
-          You can&apos;t fix<br /><em>what you can&apos;t see.</em>
+          Wealth management.<br /><em>Without the wealth manager.</em>
         </motion.h1>
 
         <motion.div
@@ -135,8 +141,10 @@ export default function LandingClient() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: 'easeOut', delay: 0.6 }}
         >
-          Illumin shows you the full financial picture: what you have, what you&apos;re missing,
-          and exactly what inaction is costing you.
+          <em>You can&apos;t fix what you can&apos;t see.</em>
+          <br /><br />
+          Illumin gives you the complete picture: net worth, investments, cash flow, opportunity cost,
+          and a financial health score. The tools that used to require a $500/hr advisor or a 1% AUM fee.
         </motion.p>
 
         <motion.div
@@ -159,15 +167,15 @@ export default function LandingClient() {
       >
         <div className={styles.stat}>
           <div className={styles.statNumber}>$127K</div>
-          <div className={styles.statLabel}>Average opportunity cost per year of delay</div>
+          <div className={styles.statLabel}>Avg. annual cost of not optimizing</div>
         </div>
         <div className={styles.stat}>
-          <div className={styles.statNumber}>73%</div>
-          <div className={styles.statLabel}>Of high earners invest below the recommended rate</div>
+          <div className={styles.statNumber}>6 tools</div>
+          <div className={styles.statLabel}>Wealth management modules, one platform</div>
         </div>
         <div className={styles.stat}>
-          <div className={styles.statNumber}>2 min</div>
-          <div className={styles.statLabel}>To see your complete financial picture</div>
+          <div className={styles.statNumber}>0%</div>
+          <div className={styles.statLabel}>Management fee</div>
         </div>
       </motion.div>
 
@@ -182,33 +190,34 @@ export default function LandingClient() {
         viewport={{ once: true, amount: 0.1 }}
       >
         <p className={styles.sectionEyebrow}>The problem</p>
-        <h2 className={styles.sectionHeadline}>Most high earners are financially blind.</h2>
+        <h2 className={styles.sectionHeadline}>Wealth management, gated. Just not for you.</h2>
         <p className={styles.sectionSub}>
-          Not because they lack the information. Because no single tool has ever shown it to them clearly.
+          Private banks and RIAs offer sophisticated financial planning: portfolio construction, tax optimization,
+          wealth projections, to clients with $1M+ in assets. Everyone else gets a budgeting app. Illumin closes that gap.
         </p>
         <div className={styles.problemGrid}>
           <div className={styles.problemCell}>
-            <p className={styles.problemCellLabel}>What you know</p>
+            <p className={styles.problemCellLabel}>What private wealth management offers</p>
             <p className={styles.problemCellText}>
-              Your salary is good. <strong>You&apos;re doing fine.</strong> There&apos;s money in your account at the end of the month.
+              Portfolio construction, tax planning, wealth projections. <strong>Financial infrastructure that actually moves the needle.</strong>
             </p>
           </div>
           <div className={styles.problemCell}>
-            <p className={styles.problemCellLabel}>What you don&apos;t see</p>
+            <p className={styles.problemCellLabel}>Who gets access</p>
             <p className={styles.problemCellText}>
-              Every month you wait costs you <strong>compounding wealth</strong> you will never recover. The gap is already larger than you think.
+              Clients with <strong>$1M+ in investable assets.</strong> A dedicated advisor. A 1&ndash;2% AUM fee, annually.
             </p>
           </div>
           <div className={styles.problemCell}>
-            <p className={styles.problemCellLabel}>What most apps give you</p>
+            <p className={styles.problemCellLabel}>What everyone else gets</p>
             <p className={styles.problemCellText}>
-              Budgeting tools. Spending categories. <strong>Transaction lists.</strong> None of it tells you what you&apos;re actually losing.
+              Budgeting apps. Spending categories. <strong>Transaction lists.</strong> Tools designed for awareness, not optimization.
             </p>
           </div>
           <div className={styles.problemCell}>
             <p className={styles.problemCellLabel}>What Illumin gives you</p>
             <p className={styles.problemCellText}>
-              A single number. The real cost of your current trajectory, and what changes it.
+              The full platform. Net worth, investments, cash flow, opportunity cost, and a health score. <strong>No advisor required. No minimum.</strong>
             </p>
           </div>
         </div>
@@ -238,9 +247,9 @@ export default function LandingClient() {
         viewport={{ once: true, amount: 0.1 }}
       >
         <p className={styles.sectionEyebrow}>What Illumin does</p>
-        <h2 className={styles.sectionHeadline}>Visibility that changes behavior.</h2>
+        <h2 className={styles.sectionHeadline}>Five pillars. One platform.</h2>
         <p className={styles.sectionSub}>
-          Every feature is designed around one question: what do you need to see to make better decisions?
+          The complete wealth management infrastructure, designed for people who have never had access to it.
         </p>
         <div className={styles.featureList}>
           {FEATURES.map(f => (
@@ -265,8 +274,8 @@ export default function LandingClient() {
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
       >
-        <h2 className={styles.ctaHeadline}>Stay in the loop.</h2>
-        <p className={styles.ctaSub}>Sign up to be first to know when Illumin launches.</p>
+        <h2 className={styles.ctaHeadline}>See your complete financial picture.</h2>
+        <p className={styles.ctaSub}>It takes two minutes. No advisor required.</p>
         <form className={styles.ctaForm} onSubmit={handleSubmit} noValidate>
           <input
             ref={emailRef}
@@ -294,7 +303,7 @@ export default function LandingClient() {
       {/* ── FOOTER ──────────────────────────────────────────── */}
       <footer className={styles.footer}>
         <div className={styles.footerLogo}>Illumin</div>
-        <div className={styles.footerNote}>© 2026 Illumin. Financial clarity for what&apos;s ahead.</div>
+        <div className={styles.footerNote}>© 2026 Illumin. Institutional-grade wealth management for everyone.</div>
       </footer>
 
     </div>
