@@ -193,7 +193,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ benefits, extracted, crossCheck, totalContractValue, totalBenefitsValue, capturedAnnualValue })
   } catch (e) {
-    console.error('[benefits/extract] DB error:', e)
-    return err('Failed to save results to database. Your analysis completed successfully but could not be stored.', 'DB_ERROR', 500)
+    const dbMsg = e instanceof Error ? e.message : String(e)
+    console.error('[benefits/extract] DB error:', dbMsg)
+    return err(`DB error: ${dbMsg}`, 'DB_ERROR', 500)
   }
 }
