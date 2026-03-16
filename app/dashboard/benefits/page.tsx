@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
@@ -14,6 +14,14 @@ interface AnalysisResult {
   totalBenefitsValue: number
   capturedAnnualValue: number
 }
+
+const LOADING_PHASES = [
+  'Reading document structure...',
+  'Extracting compensation terms...',
+  'Identifying benefits and perks...',
+  'Cross-checking your transaction history...',
+  'Calculating opportunity cost...',
+]
 
 const card: React.CSSProperties = {
   backgroundColor: '#FFFFFF',
@@ -49,12 +57,36 @@ const urgencyDot: Record<BenefitStatus['urgency'], string> = {
 }
 
 export default function BenefitsPage() {
-  const [dragging, setDragging]   = useState(false)
-  const [file, setFile]           = useState<File | null>(null)
-  const [uploading, setUploading] = useState(false)
-  const [error, setError]         = useState<string | null>(null)
-  const [result, setResult]       = useState<AnalysisResult | null>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [dragging, setDragging]       = useState(false)
+  const [file, setFile]               = useState<File | null>(null)
+  const [uploading, setUploading]     = useState(false)
+  const [error, setError]             = useState<string | null>(null)
+  const [result, setResult]           = useState<AnalysisResult | null>(null)
+  const [progress, setProgress]       = useState(0)
+  const [loadingPhase, setLoadingPhase] = useState(0)
+  const inputRef          = useRef<HTMLInputElement>(null)
+  const progressRef       = useRef<ReturnType<typeof setInterval> | null>(null)
+  const phaseRef          = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    if (!uploading) return
+    setProgress(0)
+    setLoadingPhase(0)
+    let current = 0
+    progressRef.current = setInterval(() => {
+      const increment = (88 - current) * 0.07 + Math.random() * 1.5
+      current = Math.min(current + increment, 88)
+      setProgress(current)
+      if (current >= 88) clearInterval(progressRef.current!)
+    }, 380)
+    phaseRef.current = setInterval(() => {
+      setLoadingPhase(p => Math.min(p + 1, LOADING_PHASES.length - 1))
+    }, 2600)
+    return () => {
+      clearInterval(progressRef.current!)
+      clearInterval(phaseRef.current!)
+    }
+  }, [uploading])
 
   const handleFile = (f: File) => {
     if (f.type !== 'application/pdf') { setError('Please upload a PDF file.'); return }
@@ -85,6 +117,10 @@ export default function BenefitsPage() {
         setError((data.error ?? 'Analysis failed.') + code)
         return
       }
+      clearInterval(progressRef.current!)
+      clearInterval(phaseRef.current!)
+      setProgress(100)
+      await new Promise(r => setTimeout(r, 480))
       setResult({
         extracted:           data.extracted,
         crossCheck:          data.crossCheck,
@@ -121,8 +157,26 @@ export default function BenefitsPage() {
 
       <AnimatePresence mode="wait">
 
+        {/* ── Loading state ────────────────────────────────────────────────── */}
+        {uploading && (
+          <motion.div key="loading" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.3 }}>
+            <div style={card}>
+              <p style={sectionLabel}>Analyzing contract</p>
+              <p style={{ fontFamily: 'var(--font-serif)', fontSize: '22px', fontWeight: 300, color: '#1A1A1A', marginBottom: '28px' }}>
+                {LOADING_PHASES[loadingPhase]}
+              </p>
+              <div style={{ height: '2px', backgroundColor: 'rgba(184,145,58,0.12)', borderRadius: '1px', marginBottom: '10px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${progress}%`, backgroundColor: '#B8913A', transition: 'width 360ms ease', borderRadius: '1px' }} />
+              </div>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#8A95A3', letterSpacing: '0.08em' }}>
+                {Math.round(progress)}%
+              </p>
+            </div>
+          </motion.div>
+        )}
+
         {/* ── Upload state ─────────────────────────────────────────────────── */}
-        {!result && (
+        {!result && !uploading && (
           <motion.div key="upload" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.3 }}>
             <div style={card}>
               <p style={sectionLabel}>Upload document</p>
@@ -163,12 +217,11 @@ export default function BenefitsPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <button
                   onClick={analyze}
-                  disabled={!file || uploading}
-                  style={{ padding: '11px 26px', backgroundColor: file && !uploading ? '#B8913A' : 'rgba(184,145,58,0.15)', color: file && !uploading ? '#FFFFFF' : '#A89880', border: 'none', borderRadius: '2px', fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.06em', cursor: file && !uploading ? 'pointer' : 'not-allowed', transition: 'all 150ms ease' }}
+                  disabled={!file}
+                  style={{ padding: '11px 26px', backgroundColor: file ? '#B8913A' : 'rgba(184,145,58,0.15)', color: file ? '#FFFFFF' : '#A89880', border: 'none', borderRadius: '2px', fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.06em', cursor: file ? 'pointer' : 'not-allowed', transition: 'all 150ms ease' }}
                 >
-                  {uploading ? 'Analyzing...' : 'Analyze contract'}
+                  Analyze contract
                 </button>
-                {uploading && <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#8A95A3' }}>Reading with Claude AI...</p>}
               </div>
 
               <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#C4B8A8', marginTop: '16px' }}>
