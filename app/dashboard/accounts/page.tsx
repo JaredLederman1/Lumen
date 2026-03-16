@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import AccountCard from '@/components/ui/AccountCard'
-import { mockAccounts, fetchAccounts } from '@/lib/data'
+import { fetchAccounts } from '@/lib/data'
 
 interface Account {
   id: string
@@ -127,8 +127,8 @@ function AccountsContent() {
 
   useEffect(() => {
     fetchAccounts()
-      .then(a => setAccounts(a.length > 0 ? a : mockAccounts))
-      .catch(() => setAccounts(mockAccounts))
+      .then(a => setAccounts(a))
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 
