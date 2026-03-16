@@ -197,7 +197,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ benefits, extracted, crossCheck, totalContractValue, totalBenefitsValue, capturedAnnualValue })
   } catch (e) {
     const dbMsg = e instanceof Error ? e.message : String(e)
-    console.error('[benefits/extract] DB error:', dbMsg)
-    return err(`DB error: ${dbMsg}`, 'DB_ERROR', 500)
+    const urlStatus = process.env.DATABASE_URL ? `SET(${process.env.DATABASE_URL.slice(0, 12)}...)` : 'UNSET'
+    console.error('[benefits/extract] DB error:', dbMsg, 'DATABASE_URL:', urlStatus)
+    return err(`DB error [URL=${urlStatus}]: ${dbMsg}`, 'DB_ERROR', 500)
   }
 }
