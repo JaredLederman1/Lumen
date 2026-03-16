@@ -92,6 +92,7 @@ model EmploymentBenefits {
   wellnessStipend      Float?   @map("wellness_stipend")
   totalAnnualValue     Float?   @map("total_annual_value")
   capturedAnnualValue  Float?   @map("captured_annual_value")
+  actionItemsDone      Json     @default("[]") @map("action_items_done")
   user                 User     @relation(fields: [userId], references: [id])
 
   @@map("employment_benefits")

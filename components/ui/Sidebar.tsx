@@ -11,6 +11,7 @@ const navItems = [
   { href: '/dashboard/forecast',     label: 'Forecast'     },
   { href: '/dashboard/benefits',     label: 'Benefits'     },
   { href: '/dashboard/score',        label: 'Score'        },
+  { href: '/dashboard/profile',      label: 'Profile'      },
 ]
 
 export default function Sidebar() {
