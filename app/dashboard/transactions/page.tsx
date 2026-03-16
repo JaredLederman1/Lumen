@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import TransactionRow from '@/components/ui/TransactionRow'
 import { mockTransactions, mockAccounts } from '@/lib/data'
@@ -19,23 +19,54 @@ const controlStyle = {
   outline: 'none',
 } as const
 
+interface Account {
+  id: string
+  institutionName: string
+  last4: string | null
+}
+
+interface Transaction {
+  id: string
+  accountId: string
+  merchantName: string | null
+  amount: number
+  category: string | null
+  date: string | Date
+  pending: boolean
+}
+
 export default function TransactionsPage() {
-  const [search, setSearch] = useState('')
-  const [category, setCategory] = useState('All')
+  const [search,        setSearch]        = useState('')
+  const [category,      setCategory]      = useState('All')
   const [accountFilter, setAccountFilter] = useState('All')
-  const [page, setPage] = useState(1)
+  const [page,          setPage]          = useState(1)
+  const [accounts,      setAccounts]      = useState<Account[]>(mockAccounts)
+  const [transactions,  setTransactions]  = useState<Transaction[]>(mockTransactions as Transaction[])
+
+  useEffect(() => {
+    fetch('/api/accounts')
+      .then(r => r.json())
+      .then(d => { if (d.accounts?.length) setAccounts(d.accounts) })
+      .catch(() => {})
+
+    // Fetch a generous batch; client-side filtering handles search, category, and account
+    fetch('/api/transactions?limit=500')
+      .then(r => r.json())
+      .then(d => { if (d.transactions?.length) setTransactions(d.transactions) })
+      .catch(() => {})
+  }, [])
 
   const filtered = useMemo(() => {
-    return mockTransactions.filter(tx => {
-      const matchSearch = !search || (tx.merchantName ?? '').toLowerCase().includes(search.toLowerCase())
+    return transactions.filter(tx => {
+      const matchSearch   = !search || (tx.merchantName ?? '').toLowerCase().includes(search.toLowerCase())
       const matchCategory = category === 'All' || tx.category === category
-      const matchAccount = accountFilter === 'All' || tx.accountId === accountFilter
+      const matchAccount  = accountFilter === 'All' || tx.accountId === accountFilter
       return matchSearch && matchCategory && matchAccount
     })
-  }, [search, category, accountFilter])
+  }, [transactions, search, category, accountFilter])
 
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paginated   = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const totalPages  = Math.ceil(filtered.length / PAGE_SIZE)
 
   const pageBtn = (active: boolean) => ({
     padding: '6px 14px',
@@ -64,7 +95,7 @@ export default function TransactionsPage() {
       }}>
         <input
           type="text"
-          placeholder="Search merchant…"
+          placeholder="Search merchant..."
           value={search}
           onChange={e => { setSearch(e.target.value); setPage(1) }}
           style={{ ...controlStyle, minWidth: '200px' }}
@@ -74,8 +105,8 @@ export default function TransactionsPage() {
         </select>
         <select value={accountFilter} onChange={e => { setAccountFilter(e.target.value); setPage(1) }} style={controlStyle}>
           <option value="All">All Accounts</option>
-          {mockAccounts.map(a => (
-            <option key={a.id} value={a.id}>{a.institutionName} ···· {a.last4}</option>
+          {accounts.map(a => (
+            <option key={a.id} value={a.id}>{a.institutionName}{a.last4 ? ` .... ${a.last4}` : ''}</option>
           ))}
         </select>
         <span style={{ fontSize: '11px', color: '#A89880', fontFamily: 'var(--font-mono)', marginLeft: 'auto', letterSpacing: '0.04em' }}>
@@ -116,13 +147,13 @@ export default function TransactionsPage() {
         {totalPages > 1 && (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(184,145,58,0.1)' }}>
             <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={pageBtn(page === 1)}>
-              ← Prev
+              Prev
             </button>
             <span style={{ fontSize: '11px', color: '#A89880', fontFamily: 'var(--font-mono)', padding: '0 8px' }}>
               {page} / {totalPages}
             </span>
             <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={pageBtn(page === totalPages)}>
-              Next →
+              Next
             </button>
           </div>
         )}

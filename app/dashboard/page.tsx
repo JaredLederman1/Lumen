@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import NetWorthCard from '@/components/ui/NetWorthCard'
 import DonutChart from '@/components/ui/DonutChart'
@@ -23,16 +24,82 @@ const label = {
   marginBottom: '22px',
 } as const
 
+interface NetWorthState {
+  current: number
+  lastMonth: number
+  totalAssets: number
+  totalLiabilities: number
+}
+
+interface Transaction {
+  id: string
+  merchantName: string | null
+  amount: number
+  category: string | null
+  date: string | Date
+  pending: boolean
+}
+
+interface SpendingCategory {
+  category: string
+  amount: number
+  color: string
+}
+
+interface MonthlyData {
+  month: string
+  income: number
+  expenses: number
+  savings: number
+}
+
 export default function DashboardPage() {
-  const recentTransactions = mockTransactions.slice(0, 10)
+  const [netWorth, setNetWorth] = useState<NetWorthState>({
+    current: mockNetWorth.current,
+    lastMonth: mockNetWorth.lastMonth,
+    totalAssets: mockNetWorth.totalAssets,
+    totalLiabilities: mockNetWorth.totalLiabilities,
+  })
+  const [transactions, setTransactions]       = useState<Transaction[]>(mockTransactions.slice(0, 10) as Transaction[])
+  const [monthlyData, setMonthlyData]         = useState<MonthlyData[]>(mockMonthlyData)
+  const [spendingByCategory, setSpending]     = useState<SpendingCategory[]>(mockSpendingByCategory)
+
+  useEffect(() => {
+    fetch('/api/networth')
+      .then(r => r.json())
+      .then(d => {
+        if (d.netWorth !== undefined) {
+          setNetWorth({
+            current: d.netWorth,
+            lastMonth: d.previousNetWorth ?? d.netWorth,
+            totalAssets: d.totalAssets,
+            totalLiabilities: d.totalLiabilities,
+          })
+        }
+      })
+      .catch(() => {})
+
+    fetch('/api/transactions?limit=10')
+      .then(r => r.json())
+      .then(d => { if (d.transactions?.length) setTransactions(d.transactions) })
+      .catch(() => {})
+
+    fetch('/api/cashflow')
+      .then(r => r.json())
+      .then(d => {
+        if (d.months?.length)           setMonthlyData(d.months)
+        if (d.spendingByCategory?.length) setSpending(d.spendingByCategory)
+      })
+      .catch(() => {})
+  }, [])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <NetWorthCard
-        current={mockNetWorth.current}
-        lastMonth={mockNetWorth.lastMonth}
-        totalAssets={mockNetWorth.totalAssets}
-        totalLiabilities={mockNetWorth.totalLiabilities}
+        current={netWorth.current}
+        lastMonth={netWorth.lastMonth}
+        totalAssets={netWorth.totalAssets}
+        totalLiabilities={netWorth.totalLiabilities}
       />
 
       {/* Thin gold rule */}
@@ -50,15 +117,15 @@ export default function DashboardPage() {
       >
         <div style={card}>
           <p style={label}>Spending by Category</p>
-          <DonutChart data={mockSpendingByCategory} />
+          <DonutChart data={spendingByCategory} />
         </div>
         <div style={card}>
           <p style={label}>Income vs Expenses, Last 6 Months</p>
-          <BarChart data={mockMonthlyData} />
+          <BarChart data={monthlyData} />
         </div>
       </motion.div>
 
-      {/* Transactions */}
+      {/* Recent transactions */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -71,7 +138,7 @@ export default function DashboardPage() {
           animate="visible"
           variants={{ visible: { transition: { staggerChildren: 0.03 } } }}
         >
-          {recentTransactions.map((tx) => (
+          {transactions.map((tx) => (
             <TransactionRow
               key={tx.id}
               merchantName={tx.merchantName}

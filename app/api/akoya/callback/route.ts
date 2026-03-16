@@ -51,13 +51,16 @@ export async function GET(request: NextRequest) {
 
     // Fetch accounts from Akoya
     const accountsResponse = await fetchAkoyaAccounts(connectorId, access_token, id_token)
+    console.log('[Akoya callback] raw accountsResponse:', JSON.stringify(accountsResponse, null, 2))
 
     // FDX wraps each account in a typed key e.g. { depositAccount: {...} } or { investmentAccount: {...} }
     // Unwrap to get the raw account object
     const FDX_ACCOUNT_KEYS = ['depositAccount', 'investmentAccount', 'loanAccount', 'lineOfCredit', 'insuranceAccount', 'annuityAccount']
     const akoyaAccounts = (accountsResponse.accounts ?? []).map((entry: Record<string, unknown>) => {
       const key = FDX_ACCOUNT_KEYS.find(k => entry[k])
-      return key ? (entry[key] as Record<string, unknown>) : entry
+      const unwrapped = key ? (entry[key] as Record<string, unknown>) : entry
+      console.log('[Akoya callback] entry keys:', Object.keys(entry), '| unwrap key:', key ?? 'none', '| unwrapped keys:', Object.keys(unwrapped))
+      return unwrapped
     })
 
     // Ensure user record exists and resolve internal userId
@@ -69,6 +72,15 @@ export async function GET(request: NextRequest) {
     const userId = dbUser.id
 
     for (const akoyaAccount of akoyaAccounts) {
+      console.log('[Akoya callback] saving account:', {
+        accountId: akoyaAccount.accountId ?? akoyaAccount.id,
+        accountType: akoyaAccount.accountType,
+        currentBalance: akoyaAccount.currentBalance,
+        currentValue: akoyaAccount.currentValue,
+        principalBalance: akoyaAccount.principalBalance,
+        balance: akoyaAccount.balance,
+        allKeys: Object.keys(akoyaAccount),
+      })
       const account = await prisma.account.upsert({
         where: { akoyaAccountId: akoyaAccount.accountId ?? akoyaAccount.id },
         create: {

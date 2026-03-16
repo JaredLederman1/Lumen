@@ -1,8 +1,9 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { mockMonthlyData } from '@/lib/data'
 import BarChart from '@/components/ui/BarChart'
+import { mockMonthlyData } from '@/lib/data'
 
 function fmt(n: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
@@ -24,30 +25,47 @@ const sectionLabel = {
   marginBottom: '22px',
 } as const
 
+interface MonthlyData {
+  month: string
+  year?: number
+  income: number
+  expenses: number
+  savings: number
+}
+
 export default function CashFlowPage() {
-  const recent = mockMonthlyData.slice(-3)
+  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>(mockMonthlyData)
+
+  useEffect(() => {
+    fetch('/api/cashflow')
+      .then(r => r.json())
+      .then(d => { if (d.months?.length) setMonthlyData(d.months) })
+      .catch(() => {})
+  }, [])
+
+  const recent = monthlyData.slice(-3)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Monthly spotlight cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-        {recent.map(({ month, income, expenses, savings }) => {
-          const savingsRate = ((savings / income) * 100).toFixed(0)
+        {recent.map(({ month, year, income, expenses, savings }) => {
+          const savingsRate = income > 0 ? ((savings / income) * 100).toFixed(0) : '0'
           return (
             <motion.div
-              key={month}
+              key={`${month}-${year}`}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, ease: 'easeOut' }}
               style={{ backgroundColor: '#FFFFFF', border: '1px solid rgba(184,145,58,0.15)', borderRadius: '2px', padding: '24px' }}
             >
               <p style={{ fontFamily: 'var(--font-serif)', fontSize: '18px', fontWeight: 400, color: '#B8913A', marginBottom: '20px', letterSpacing: '0.02em' }}>
-                {month} 2026
+                {month}{year ? ` ${year}` : ''}
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '11px' }}>
                 {[
-                  { label: 'Income',       value: fmt(income),   color: '#2D6A4F' },
-                  { label: 'Expenses',     value: fmt(expenses), color: '#8B2635' },
+                  { label: 'Income',   value: fmt(income),   color: '#2D6A4F' },
+                  { label: 'Expenses', value: fmt(expenses), color: '#8B2635' },
                 ].map(r => (
                   <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                     <span style={{ fontSize: '11px', color: '#A89880', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>{r.label}</span>
@@ -73,7 +91,7 @@ export default function CashFlowPage() {
       {/* Chart */}
       <div style={card}>
         <p style={sectionLabel}>6-Month Overview</p>
-        <BarChart data={mockMonthlyData} />
+        <BarChart data={monthlyData} />
       </div>
 
       {/* Table */}
@@ -101,12 +119,13 @@ export default function CashFlowPage() {
               </tr>
             </thead>
             <tbody>
-              {mockMonthlyData.map(({ month, income, expenses, savings }, i) => {
-                const rate = ((savings / income) * 100).toFixed(0)
-                const isEven = i % 2 === 0
+              {monthlyData.map(({ month, year, income, expenses, savings }, i) => {
+                const rate = income > 0 ? ((savings / income) * 100).toFixed(0) : '0'
                 return (
-                  <tr key={month} style={{ backgroundColor: isEven ? 'transparent' : 'rgba(184,145,58,0.02)' }}>
-                    <td style={{ padding: '13px 16px', fontFamily: 'var(--font-serif)', fontSize: '15px', color: '#1A1714', borderBottom: '1px solid rgba(184,145,58,0.07)' }}>{month}</td>
+                  <tr key={`${month}-${year}-${i}`} style={{ backgroundColor: i % 2 === 0 ? 'transparent' : 'rgba(184,145,58,0.02)' }}>
+                    <td style={{ padding: '13px 16px', fontFamily: 'var(--font-serif)', fontSize: '15px', color: '#1A1714', borderBottom: '1px solid rgba(184,145,58,0.07)' }}>
+                      {month}{year ? ` ${year}` : ''}
+                    </td>
                     <td style={{ padding: '13px 16px', fontFamily: 'var(--font-serif)', fontSize: '15px', color: '#2D6A4F', borderBottom: '1px solid rgba(184,145,58,0.07)' }}>{fmt(income)}</td>
                     <td style={{ padding: '13px 16px', fontFamily: 'var(--font-serif)', fontSize: '15px', color: '#8B2635', borderBottom: '1px solid rgba(184,145,58,0.07)' }}>{fmt(expenses)}</td>
                     <td style={{ padding: '13px 16px', fontFamily: 'var(--font-serif)', fontSize: '15px', color: '#1A1714', borderBottom: '1px solid rgba(184,145,58,0.07)' }}>{fmt(savings)}</td>

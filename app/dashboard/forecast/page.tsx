@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import ForecastChart from '@/components/ui/ForecastChart'
 import { mockMonthlyData, mockAccounts } from '@/lib/data'
@@ -24,14 +25,23 @@ const sectionLabel = {
   marginBottom: '22px',
 } as const
 
-export default function ForecastPage() {
+interface ForecastData {
+  avgIncome: number
+  avgExpenses: number
+  avgSavings: number
+  checkingBalance: number
+  emergencyFundMonths: number
+  historicalMonths: { month: string; balance: number; projected: boolean }[]
+  projectedMonths: { month: string; balance: number; projected: boolean }[]
+}
+
+function mockForecast(): ForecastData {
   const avgIncome   = mockMonthlyData.reduce((s, m) => s + m.income,   0) / mockMonthlyData.length
   const avgExpenses = mockMonthlyData.reduce((s, m) => s + m.expenses, 0) / mockMonthlyData.length
   const avgSavings  = avgIncome - avgExpenses
-
   const checkingBalance = mockAccounts.find(a => a.accountType === 'checking')?.balance ?? 12450
-  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
   const now = new Date()
+  const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
   const historicalMonths = mockMonthlyData.slice(-3).map((m, i) => ({
     month: m.month,
@@ -41,16 +51,27 @@ export default function ForecastPage() {
   historicalMonths[historicalMonths.length - 1].balance = checkingBalance
 
   const projectedMonths = Array.from({ length: 6 }, (_, i) => {
-    const futureDate = new Date(now.getFullYear(), now.getMonth() + i + 1, 1)
-    return {
-      month: monthNames[futureDate.getMonth()],
-      balance: Math.round(checkingBalance + avgSavings * (i + 1)),
-      projected: true,
-    }
+    const d = new Date(now.getFullYear(), now.getMonth() + i + 1, 1)
+    return { month: MONTH_NAMES[d.getMonth()], balance: Math.round(checkingBalance + avgSavings * (i + 1)), projected: true }
   })
 
+  return { avgIncome, avgExpenses, avgSavings, checkingBalance, emergencyFundMonths: checkingBalance / (avgExpenses || 1), historicalMonths, projectedMonths }
+}
+
+export default function ForecastPage() {
+  const [data, setData] = useState<ForecastData>(mockForecast)
+
+  useEffect(() => {
+    fetch('/api/forecast')
+      .then(r => r.json())
+      .then(d => {
+        if (d.avgIncome !== undefined) setData(d)
+      })
+      .catch(() => {})
+  }, [])
+
+  const { avgIncome, avgExpenses, avgSavings, emergencyFundMonths, historicalMonths, projectedMonths } = data
   const forecastData = [...historicalMonths, ...projectedMonths]
-  const emergencyFundMonths = checkingBalance / avgExpenses
 
   const summaryItems = [
     { label: 'Avg Monthly Income',   value: avgIncome,   color: '#2D6A4F' },
@@ -107,7 +128,7 @@ export default function ForecastPage() {
           </thead>
           <tbody>
             {projectedMonths.map(({ month, balance }, i) => (
-              <tr key={month} style={{ backgroundColor: i % 2 === 0 ? 'transparent' : 'rgba(184,145,58,0.02)' }}>
+              <tr key={`${month}-${i}`} style={{ backgroundColor: i % 2 === 0 ? 'transparent' : 'rgba(184,145,58,0.02)' }}>
                 <td style={{ padding: '13px 16px', fontFamily: 'var(--font-serif)', fontSize: '15px', color: '#1A1714', borderBottom: '1px solid rgba(184,145,58,0.07)' }}>{month}</td>
                 <td style={{ padding: '13px 16px', fontFamily: 'var(--font-serif)', fontSize: '15px', color: '#2D6A4F', borderBottom: '1px solid rgba(184,145,58,0.07)' }}>{fmt(balance)}</td>
                 <td style={{ padding: '13px 16px', borderBottom: '1px solid rgba(184,145,58,0.07)' }}>
