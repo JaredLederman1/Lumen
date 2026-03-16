@@ -16,7 +16,7 @@ import {
   mockPortfolio,
 } from '@/lib/mockData'
 
-export const USE_MOCK_DATA = true
+export const USE_MOCK_DATA = false
 
 // ─── Re-exports (synchronous; used by client components directly) ────────────
 
