@@ -86,7 +86,9 @@ export default function OppCostCalculator() {
   const [email,          setEmail]          = useState('')
   const [emailErr,       setEmailErr]       = useState('')
   const [emailSubmitted, setEmailSubmitted] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef    = useRef<HTMLInputElement>(null)
+  const mirrorRef   = useRef<HTMLSpanElement>(null)
+  const [ageMirrorW, setAgeMirrorW] = useState(0)
   const stepRef  = useRef(step)
   useEffect(() => { stepRef.current = step }, [step])
 
@@ -216,6 +218,14 @@ export default function OppCostCalculator() {
                 <>
                   <h3 className={styles.calcQuestion}>How old are you?</h3>
                   <div className={styles.calcInputWrap}>
+                    {/* Hidden mirror to measure typed text width */}
+                    <span
+                      ref={mirrorRef}
+                      aria-hidden
+                      className={styles.calcInputMirror}
+                    >
+                      {age}
+                    </span>
                     <input
                       ref={inputRef}
                       type="text"
@@ -226,11 +236,21 @@ export default function OppCostCalculator() {
                         const v = e.target.value.replace(/[^0-9]/g, '')
                         setAge(v)
                         setAgeErr('')
+                        requestAnimationFrame(() => {
+                          setAgeMirrorW(mirrorRef.current?.offsetWidth ?? 0)
+                        })
                       }}
                       onKeyDown={handleKey}
-                      placeholder=""
+                      placeholder="enter your age"
                     />
-                    <span className={styles.calcInputSuffix}>years old</span>
+                    {age && (
+                      <span
+                        className={styles.calcInputSuffix}
+                        style={{ left: `calc(50% + ${ageMirrorW / 2}px - 2px)`, right: 'auto' }}
+                      >
+                        years old
+                      </span>
+                    )}
                   </div>
                   {ageErr && <p className={styles.calcErr}>{ageErr}</p>}
                   <p className={styles.calcHint}>We&apos;ll assume retirement at 65.</p>
@@ -251,7 +271,7 @@ export default function OppCostCalculator() {
                       value={income}
                       onChange={e => handleIncomeChange(e.target.value)}
                       onKeyDown={handleKey}
-                      placeholder=""
+                      placeholder="enter your income"
                     />
                   </div>
                   {incomeErr && <p className={styles.calcErr}>{incomeErr}</p>}
@@ -276,13 +296,15 @@ export default function OppCostCalculator() {
                         background: `linear-gradient(to right, white ${savingsPct}%, rgba(255,255,255,0.12) ${savingsPct}%)`,
                       }}
                     />
-                    <span className={styles.calcSliderReadout}>{savingsRate}%</span>
+                    <div className={styles.calcSliderReadoutWrap}>
+                      <span className={styles.calcSliderReadoutLabel}>That&apos;s</span>
+                      <span className={styles.calcSliderReadout}>{savingsRate}%</span>
+                    </div>
                   </div>
 
                   {/* Live dollar readout */}
                   <div className={styles.calcSliderBox}>
                     <div className={styles.calcSliderBoxInner}>
-                      <span className={styles.calcSliderBoxLabel}>That&apos;s</span>
                       <span className={styles.calcSliderBoxValue}>
                         {fmtFull(monthlyLive)}
                         <span className={styles.calcSliderBoxUnit}> / month</span>

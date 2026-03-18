@@ -33,7 +33,7 @@ export default function Page() {
           <p className={styles.eyebrow}>Personal Finance</p>
 
           <h1 className={styles.headline}>
-            You can&apos;t fix<br />what you can&apos;t see.
+            The 1%&apos;s Playbook,<br />Now for Everyone.
           </h1>
 
           <p className={styles.subhead}>
