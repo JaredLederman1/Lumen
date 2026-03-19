@@ -183,6 +183,26 @@ export default function TransactionsPage() {
             <option key={a.id} value={a.id}>{a.institutionName}{a.last4 ? ` .... ${a.last4}` : ''}</option>
           ))}
         </select>
+        {(search || category !== 'All' || accountFilter !== 'All') && (
+          <button
+            onClick={() => { setSearch(''); setCategory('All'); setAccountFilter('All'); setPage(1) }}
+            style={{
+              padding: '8px 12px',
+              backgroundColor: 'transparent',
+              border: '1px solid rgba(184,145,58,0.25)',
+              borderRadius: '2px',
+              color: '#A89880',
+              fontSize: '11px',
+              fontFamily: 'var(--font-mono)',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Reset Filters
+          </button>
+        )}
         <span style={{ fontSize: '11px', color: '#A89880', fontFamily: 'var(--font-mono)', marginLeft: 'auto', letterSpacing: '0.04em' }}>
           {filtered.length} transactions
         </span>
