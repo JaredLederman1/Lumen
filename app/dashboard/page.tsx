@@ -144,6 +144,7 @@ export default function DashboardPage() {
               return (
                 <TransactionRow
                   key={tx.id}
+                  id={tx.id}
                   merchantName={tx.merchantName}
                   amount={tx.amount}
                   category={tx.category}

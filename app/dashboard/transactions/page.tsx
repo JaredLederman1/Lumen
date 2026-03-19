@@ -77,6 +77,13 @@ export default function TransactionsPage() {
     accountId:    'cash',
   })
 
+  // Optimistic category overrides: txId -> category string
+  const [categoryOverrides, setCategoryOverrides] = useState<Record<string, string>>({})
+
+  const handleCategoryChange = (txId: string, cat: string) => {
+    setCategoryOverrides(prev => ({ ...prev, [txId]: cat }))
+  }
+
   const accountMap = useMemo(() =>
     Object.fromEntries(accounts.map(a => [a.id, a])),
   [accounts])
@@ -231,14 +238,16 @@ export default function TransactionsPage() {
                 return (
                   <TransactionRow
                     key={tx.id}
+                    id={tx.id}
                     merchantName={tx.merchantName}
                     amount={tx.amount}
-                    category={tx.category}
+                    category={categoryOverrides[tx.id] ?? tx.category}
                     date={tx.date}
                     pending={tx.pending}
                     accountName={acct?.institutionName ?? null}
                     last4={acct?.last4 ?? null}
                     recurring={tx.merchantName ? recurringMerchants.has(tx.merchantName) : false}
+                    onCategoryChange={handleCategoryChange}
                   />
                 )
               })}
@@ -261,8 +270,6 @@ export default function TransactionsPage() {
     {/* ── Add Transaction Modal ─────────────────────────────── */}
     <AnimatePresence>
       {modalOpen && (
-        <>
-          {/* Backdrop */}
           <motion.div
             key="backdrop"
             initial={{ opacity: 0 }}
@@ -273,28 +280,27 @@ export default function TransactionsPage() {
             style={{
               position: 'fixed', inset: 0, backgroundColor: 'rgba(26,23,20,0.5)',
               backdropFilter: 'blur(4px)', zIndex: 50,
-            }}
-          />
-
-          {/* Panel */}
-          <motion.div
-            key="modal"
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 16 }}
-            transition={{ duration: 0.28, ease: 'easeOut' }}
-            style={{
-              position: 'fixed', top: '50%', left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '100%', maxWidth: '480px',
-              backgroundColor: '#FFFFFF',
-              border: '1px solid rgba(184,145,58,0.25)',
-              borderRadius: '4px',
-              padding: '32px',
-              zIndex: 51,
-              display: 'flex', flexDirection: 'column', gap: '20px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
+            {/* Panel — stopPropagation prevents backdrop click from closing when clicking inside */}
+            <motion.div
+              key="modal"
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 16 }}
+              transition={{ duration: 0.28, ease: 'easeOut' }}
+              onClick={e => e.stopPropagation()}
+              style={{
+                width: '100%', maxWidth: '480px',
+                backgroundColor: '#FFFFFF',
+                border: '1px solid rgba(184,145,58,0.25)',
+                borderRadius: '4px',
+                padding: '32px',
+                zIndex: 51,
+                display: 'flex', flexDirection: 'column', gap: '20px',
+              }}
+            >
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <p style={{ fontFamily: 'var(--font-serif)', fontSize: '20px', fontWeight: 400, color: '#1A1714', margin: 0 }}>
@@ -434,10 +440,11 @@ export default function TransactionsPage() {
                 {submitting ? 'Saving…' : 'Save Transaction'}
               </button>
             </div>
+            </motion.div>
           </motion.div>
-        </>
       )}
     </AnimatePresence>
     </>
   )
 }
+
