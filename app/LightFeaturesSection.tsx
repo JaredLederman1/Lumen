@@ -90,6 +90,7 @@ export default function LightFeaturesSection() {
                 viewBox="0 0 280 80"
                 width="100%"
                 height="80"
+                preserveAspectRatio="none"
                 aria-hidden="true"
                 className={styles.sparkline}
               >
