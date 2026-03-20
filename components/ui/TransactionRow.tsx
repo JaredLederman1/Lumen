@@ -27,6 +27,10 @@ function formatCurrency(n: number) {
   return n < 0 ? `-${formatted}` : `+${formatted}`
 }
 
+function formatCategory(cat: string) {
+  return cat.replace(/\s*—\s*/g, ' ').replace(/_/g, ' ')
+}
+
 function formatDate(d: Date | string) {
   const date = typeof d === 'string' ? new Date(d) : d
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -93,12 +97,12 @@ export default function TransactionRow({
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '13px', color: '#1A1714', fontFamily: 'var(--font-mono)', fontWeight: 500 }}>
+          <span style={{ fontSize: '16px', color: 'var(--color-text)', fontFamily: 'var(--font-mono)', fontWeight: 500 }}>
             {merchantName ?? 'Unknown Merchant'}
           </span>
           {pending && (
             <span style={{
-              fontSize: '9px', color: '#B8913A', fontFamily: 'var(--font-mono)',
+              fontSize: '11px', color: '#B8913A', fontFamily: 'var(--font-mono)',
               letterSpacing: '0.1em', textTransform: 'uppercase',
               border: '1px solid rgba(184,145,58,0.4)', padding: '1px 5px', borderRadius: '2px',
             }}>
@@ -107,7 +111,7 @@ export default function TransactionRow({
           )}
           {recurring && (
             <span style={{
-              fontSize: '9px', color: '#4A6785', fontFamily: 'var(--font-mono)',
+              fontSize: '11px', color: '#4A6785', fontFamily: 'var(--font-mono)',
               letterSpacing: '0.1em', textTransform: 'uppercase',
               border: '1px solid rgba(74,103,133,0.35)', padding: '1px 5px', borderRadius: '2px',
             }}>
@@ -124,7 +128,7 @@ export default function TransactionRow({
               onChange={e => handleCategoryChange(e.target.value)}
               onClick={e => e.stopPropagation()}
               style={{
-                fontSize: '9px', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em',
+                fontSize: '11px', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em',
                 textTransform: 'uppercase', color: '#1A1714',
                 border: '1px solid rgba(184,145,58,0.5)', borderRadius: '2px',
                 padding: '1px 4px', backgroundColor: '#FFFFFF', cursor: 'pointer',
@@ -138,7 +142,7 @@ export default function TransactionRow({
               onClick={e => { e.stopPropagation(); setEditing(true) }}
               title="Click to edit category"
               style={{
-                fontSize: '9px', color: saving ? '#B8913A' : '#A89880', fontFamily: 'var(--font-mono)',
+                fontSize: '11px', color: saving ? '#B8913A' : '#A89880', fontFamily: 'var(--font-mono)',
                 letterSpacing: '0.1em', textTransform: 'uppercase',
                 border: `1px solid ${saving ? 'rgba(184,145,58,0.4)' : 'rgba(184,145,58,0.15)'}`,
                 padding: '1px 5px', borderRadius: '2px',
@@ -146,24 +150,24 @@ export default function TransactionRow({
                 userSelect: 'none',
               }}
             >
-              {saving ? 'saving...' : (category ?? 'uncategorized')}
+              {saving ? 'saving...' : (category ? formatCategory(category) : 'uncategorized')}
             </span>
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '11px', color: '#A89880', fontFamily: 'var(--font-mono)' }}>
+          <span style={{ fontSize: '13px', color: '#A89880', fontFamily: 'var(--font-mono)' }}>
             {formatDate(date)}
           </span>
           {accountLabel && (
-            <span style={{ fontSize: '11px', color: '#B8913A', fontFamily: 'var(--font-mono)', opacity: 0.7 }}>
+            <span style={{ fontSize: '13px', color: '#B8913A', fontFamily: 'var(--font-mono)', opacity: 0.7 }}>
               {accountLabel}
             </span>
           )}
         </div>
       </div>
       <span style={{
-        fontFamily: 'var(--font-serif)',
-        fontSize: '17px',
+        fontFamily: 'var(--font-sans)',
+        fontSize: '20px',
         fontWeight: 400,
         color: isIncome ? '#2D6A4F' : '#8B2635',
         flexShrink: 0,

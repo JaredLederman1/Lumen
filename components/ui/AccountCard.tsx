@@ -61,12 +61,12 @@ export default function AccountCard({ id, accountType, classification, balance, 
     }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-          <p style={{ fontSize: '13px', color: '#F0F2F8', fontFamily: 'var(--font-serif)', fontWeight: 400 }}>
+          <p style={{ fontSize: '16px', color: '#F0F2F8', fontFamily: 'var(--font-serif)', fontWeight: 400 }}>
             {accountTypeLabel[accountType] ?? accountType}
           </p>
           {classification && (
             <span style={{
-              fontSize: '9px', fontFamily: 'var(--font-mono)', letterSpacing: '0.10em',
+              fontSize: '11px', fontFamily: 'var(--font-mono)', letterSpacing: '0.10em',
               textTransform: 'uppercase', padding: '2px 6px', borderRadius: '2px',
               backgroundColor: classification === 'liability' ? 'rgba(224,92,110,0.10)' : 'rgba(76,175,125,0.10)',
               color: classification === 'liability' ? '#E05C6E' : '#4CAF7D',
@@ -76,13 +76,13 @@ export default function AccountCard({ id, accountType, classification, balance, 
             </span>
           )}
         </div>
-        <p style={{ fontSize: '11px', color: '#6B7A8D', fontFamily: 'var(--font-mono)', letterSpacing: '0.03em' }}>
+        <p style={{ fontSize: '13px', color: '#6B7A8D', fontFamily: 'var(--font-mono)', letterSpacing: '0.03em' }}>
           {last4 ? `···· ${last4}` : 'No account number'}
         </p>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        <p style={{ fontFamily: 'var(--font-serif)', fontSize: '16px', fontWeight: 400, color: isNegative ? '#E05C6E' : '#F0F2F8' }}>
+        <p style={{ fontFamily: 'var(--font-sans)', fontSize: '19px', fontWeight: 400, color: isNegative ? '#E05C6E' : '#F0F2F8' }}>
           {formatCurrency(balance)}
         </p>
 
@@ -94,7 +94,7 @@ export default function AccountCard({ id, accountType, classification, balance, 
                 width: '26px', height: '26px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: 'none', border: '1px solid transparent', borderRadius: '2px',
-                color: '#6B7A8D', fontSize: '14px', cursor: 'pointer', lineHeight: 1,
+                color: '#6B7A8D', fontSize: '17px', cursor: 'pointer', lineHeight: 1,
                 transition: 'border-color 120ms ease, color 120ms ease',
               }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(184,145,58,0.25)'; e.currentTarget.style.color = '#B8913A' }}
@@ -113,19 +113,19 @@ export default function AccountCard({ id, accountType, classification, balance, 
               }}>
                 {confirming ? (
                   <div style={{ padding: '12px 14px' }}>
-                    <p style={{ fontSize: '11px', color: '#E05C6E', fontFamily: 'var(--font-mono)', marginBottom: '10px' }}>
+                    <p style={{ fontSize: '13px', color: '#E05C6E', fontFamily: 'var(--font-mono)', marginBottom: '10px' }}>
                       Remove this account?
                     </p>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button
                         onClick={handleRemove}
-                        style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: '#F0F2F8', background: '#E05C6E', border: 'none', borderRadius: '2px', padding: '5px 10px', cursor: 'pointer' }}
+                        style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', color: '#F0F2F8', background: '#E05C6E', border: 'none', borderRadius: '2px', padding: '5px 10px', cursor: 'pointer' }}
                       >
                         Remove
                       </button>
                       <button
                         onClick={() => setConfirming(false)}
-                        style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: '#6B7A8D', background: 'none', border: '1px solid rgba(184,145,58,0.2)', borderRadius: '2px', padding: '5px 10px', cursor: 'pointer' }}
+                        style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', color: '#6B7A8D', background: 'none', border: '1px solid rgba(184,145,58,0.2)', borderRadius: '2px', padding: '5px 10px', cursor: 'pointer' }}
                       >
                         Cancel
                       </button>
@@ -137,7 +137,7 @@ export default function AccountCard({ id, accountType, classification, balance, 
                     style={{
                       display: 'block', width: '100%', textAlign: 'left',
                       padding: '10px 14px', background: 'none', border: 'none',
-                      fontSize: '12px', fontFamily: 'var(--font-mono)', color: '#E05C6E',
+                      fontSize: '14px', fontFamily: 'var(--font-mono)', color: '#E05C6E',
                       cursor: 'pointer', transition: 'background-color 100ms ease',
                     }}
                     onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(224,92,110,0.08)')}

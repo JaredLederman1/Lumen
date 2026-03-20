@@ -80,7 +80,7 @@ export default function StockChartBg() {
           ref={lineRef}
           d={lineD}
           fill="none"
-          stroke="white"
+          stroke="#A8B4C0"
           strokeWidth={2.5}
           opacity={0.7}
           strokeLinejoin="miter"

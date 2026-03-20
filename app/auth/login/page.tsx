@@ -56,7 +56,12 @@ export default function LoginPage() {
       if (authError) {
         setError(authError.message)
       } else {
-        router.push('/dashboard')
+        const { data: levelData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+        if (levelData?.nextLevel === 'aal2' && levelData.currentLevel !== 'aal2') {
+          router.push('/auth/mfa/verify')
+        } else {
+          router.push('/dashboard')
+        }
       }
     } catch {
       setError('Something went wrong. Please try again.')

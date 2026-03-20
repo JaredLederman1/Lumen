@@ -42,24 +42,24 @@ export default function ScorePage() {
   return (
     <div style={{ padding: '40px 48px', maxWidth: '900px' }}>
       <div style={{ marginBottom: '36px' }}>
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#B8913A', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: '10px' }}>
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#B8913A', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: '10px' }}>
           Financial Score
         </p>
-        <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '28px', fontWeight: 400, color: '#F0F2F8', marginBottom: '8px' }}>
+        <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '38px', fontWeight: 400, color: '#F0F2F8', marginBottom: '8px' }}>
           Your Score Report
         </h1>
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#6B7A8D', lineHeight: 1.6 }}>
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', color: '#6B7A8D', lineHeight: 1.6 }}>
           A composite view of your financial health across benefits utilization, savings behavior, and retirement planning.
         </p>
       </div>
 
       {loading && (
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#6B7A8D' }}>Loading…</p>
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: '#6B7A8D' }}>Loading…</p>
       )}
 
       {!loading && !authToken && (
         <div style={{ backgroundColor: 'rgba(224,92,110,0.08)', border: '1px solid rgba(224,92,110,0.20)', borderRadius: '6px', padding: '16px 20px' }}>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#E05C6E' }}>Sign in to view your score.</p>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: '#E05C6E' }}>Sign in to view your score.</p>
         </div>
       )}
 
@@ -74,8 +74,8 @@ export default function ScorePage() {
             <div style={{ position: 'relative', flexShrink: 0 }}>
               <ScoreRing score={report.overallScore} />
               <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontFamily: 'var(--font-serif)', fontSize: '28px', fontWeight: 300, color: '#F0F2F8' }}>{report.overallScore}</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: '#B8913A', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{scoreLabel}</span>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '43px', fontWeight: 300, color: '#F0F2F8' }}>{report.overallScore}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#B8913A', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{scoreLabel}</span>
               </div>
             </div>
             <div style={{ flex: 1 }}>
@@ -83,8 +83,8 @@ export default function ScorePage() {
                 {report.dimensions.map(d => (
                   <div key={d.name}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#6B7A8D' }}>{d.name}</span>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#F0F2F8' }}>{d.score}</span>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', color: '#6B7A8D' }}>{d.name}</span>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', color: '#F0F2F8' }}>{d.score}</span>
                     </div>
                     <div style={{ height: '4px', backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: '2px', overflow: 'hidden' }}>
                       <motion.div
@@ -102,7 +102,7 @@ export default function ScorePage() {
 
           {report.findings.length > 0 ? (
             <>
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#6B7A8D', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '16px' }}>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#6B7A8D', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '16px' }}>
                 Action items ({report.findings.length})
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '32px' }}>
@@ -120,15 +120,15 @@ export default function ScorePage() {
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                             <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: c.dot, flexShrink: 0 }} />
-                            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#F0F2F8', fontWeight: 500 }}>{f.title}</span>
-                            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: c.label, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{f.type}</span>
+                            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '17px', color: '#F0F2F8', fontWeight: 500 }}>{f.title}</span>
+                            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: c.label, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{f.type}</span>
                           </div>
-                          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#6B7A8D', lineHeight: 1.6, paddingLeft: '14px' }}>{f.description}</p>
+                          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', color: '#6B7A8D', lineHeight: 1.6, paddingLeft: '14px' }}>{f.description}</p>
                         </div>
                         {f.dollarImpact > 0 && (
                           <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                            <p style={{ fontFamily: 'var(--font-serif)', fontSize: '18px', fontWeight: 300, color: '#F0F2F8' }}>{fmt(f.dollarImpact)}</p>
-                            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: '#6B7A8D' }}>per year</p>
+                            <p style={{ fontFamily: 'var(--font-sans)', fontSize: '26px', fontWeight: 300, color: '#F0F2F8' }}>{fmt(f.dollarImpact)}</p>
+                            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#6B7A8D' }}>per year</p>
                           </div>
                         )}
                       </div>
@@ -139,7 +139,7 @@ export default function ScorePage() {
             </>
           ) : (
             <div style={{ backgroundColor: 'rgba(76,175,125,0.10)', border: '1px solid rgba(76,175,125,0.20)', borderRadius: '6px', padding: '20px 24px', marginBottom: '32px' }}>
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#4CAF7D' }}>No critical findings. Upload your employment contract to unlock a full benefits analysis.</p>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: '#4CAF7D' }}>No critical findings. Upload your employment contract to unlock a full benefits analysis.</p>
             </div>
           )}
 
@@ -148,13 +148,13 @@ export default function ScorePage() {
               display: 'inline-block', padding: '12px 24px',
               backgroundColor: '#B8913A', color: '#0D1018',
               borderRadius: '4px', fontFamily: 'var(--font-mono)',
-              fontSize: '12px', textDecoration: 'none', letterSpacing: '0.06em',
+              fontSize: '14px', textDecoration: 'none', letterSpacing: '0.06em',
             }}>
               Upload contract to complete analysis →
             </Link>
           )}
 
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#6B7A8D', marginTop: '28px' }}>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#6B7A8D', marginTop: '28px' }}>
             Generated {new Date(report.generatedAt).toLocaleString()}
           </p>
         </motion.div>

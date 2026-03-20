@@ -1,21 +1,49 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 import { USE_MOCK_DATA, mockMonthlyData, mockSpendingByCategory } from '@/lib/data'
 import { prisma } from '@/lib/prisma'
 
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const PALETTE = ['#B8913A','#2D6A4F','#8B4513','#4A6785','#9B7B4A','#7A6A5A']
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   if (USE_MOCK_DATA) {
     return NextResponse.json({ months: mockMonthlyData, spendingByCategory: mockSpendingByCategory })
   }
 
   try {
+    const authHeader = request.headers.get('authorization')
+    const token = authHeader?.replace('Bearer ', '')
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return request.cookies.getAll() },
+          setAll() {},
+        },
+      }
+    )
+
+    const { data: { user: authUser } } = token
+      ? await supabase.auth.getUser(token)
+      : await supabase.auth.getUser()
+
+    if (!authUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const dbUser = await prisma.user.findUnique({ where: { email: authUser.email! } })
+    if (!dbUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
     const since = new Date()
     since.setMonth(since.getMonth() - 6)
 
     const transactions = await prisma.transaction.findMany({
-      where: { date: { gte: since } },
+      where: { account: { userId: dbUser.id }, date: { gte: since } },
       orderBy: { date: 'asc' },
     })
 

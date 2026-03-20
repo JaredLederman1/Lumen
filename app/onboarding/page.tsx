@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -110,6 +110,18 @@ export default function OnboardingPage() {
   const [retirementAge, setRetirementAge] = useState(65)
   const [posting, setPosting]         = useState(false)
   const [postError, setPostError]     = useState<string | null>(null)
+  const [animPhase, setAnimPhase] = useState(0)
+
+  const stepRef = useRef<HTMLDivElement>(null)
+
+  // Time-based welcome animation over 5 seconds
+  useEffect(() => {
+    const t1 = setTimeout(() => setAnimPhase(1), 300)   // "Welcome to Illumin" fades in
+    const t2 = setTimeout(() => setAnimPhase(2), 2000)  // gold divider expands
+    const t3 = setTimeout(() => setAnimPhase(3), 3400)  // body line fades in
+    const t4 = setTimeout(() => setAnimPhase(4), 5000)  // scroll prompt appears
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4) }
+  }, [])
 
   const stepNum      = typeof step === 'number' ? step : null
   const filledSegs   = step === 'reveal' ? 4 : (step as number) + 1
@@ -557,13 +569,132 @@ export default function OnboardingPage() {
   )
 
   // ── Shell ─────────────────────────────────────────────────────────────────
+  const showWelcome  = animPhase >= 1
+  const showDivider  = animPhase >= 2
+  const showLine3    = animPhase >= 3
+  const showScroll   = animPhase >= 4
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: 'var(--color-bg)',
-      display: 'flex',
-      flexDirection: 'column',
-    }}>
+    <div>
+
+      {/* Welcome section: tall zone so user must scroll to reach calculator */}
+      <div style={{ height: '400vh', position: 'relative' }}>
+        <div style={{
+          position: 'sticky',
+          top: 0,
+          height: '100vh',
+          backgroundColor: 'var(--color-bg)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '40px',
+          overflow: 'hidden',
+        }}>
+          {/* Wordmark */}
+          <div style={{
+            position: 'absolute',
+            top: '40px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            fontFamily: 'var(--font-serif)',
+            fontSize: '13px',
+            fontWeight: 400,
+            color: 'var(--color-gold)',
+            letterSpacing: '0.32em',
+            textTransform: 'uppercase',
+            whiteSpace: 'nowrap',
+          }}>
+            Illumin
+          </div>
+
+          <div style={{ width: '100%', maxWidth: '560px', textAlign: 'center' }}>
+            {/* Line 1: fades in at 300ms */}
+            <h1 style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: '52px',
+              fontWeight: 300,
+              color: 'var(--color-text)',
+              lineHeight: 1.15,
+              letterSpacing: '-0.01em',
+              margin: 0,
+              opacity: showWelcome ? 1 : 0,
+              transform: showWelcome ? 'translateY(0)' : 'translateY(16px)',
+              transition: 'opacity 0.8s ease, transform 0.8s ease',
+            }}>
+              Welcome to <span style={{ color: 'var(--color-gold)' }}>Illumin</span>
+            </h1>
+
+            {/* Gold divider: expands from center at 2s */}
+            <div style={{
+              height: '1px',
+              backgroundColor: 'var(--color-gold)',
+              marginTop: '32px',
+              transformOrigin: 'center',
+              transform: showDivider ? 'scaleX(1)' : 'scaleX(0)',
+              transition: 'transform 0.7s ease',
+            }} />
+
+            {/* Body line: fades in at 3.4s */}
+            <p style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '13px',
+              color: 'var(--color-text-muted)',
+              lineHeight: 1.75,
+              letterSpacing: '0.02em',
+              marginTop: '28px',
+              marginBottom: 0,
+              opacity: showLine3 ? 1 : 0,
+              transform: showLine3 ? 'translateY(0)' : 'translateY(20px)',
+              transition: 'opacity 0.65s ease, transform 0.65s ease',
+            }}>
+              Enter a few details below and Illumin&apos;s financial engine will begin calibrating your experience.
+            </p>
+          </div>
+
+          {/* Scroll affordance: fades out once user has scrolled past line 3 */}
+          <div style={{
+            position: 'absolute',
+            bottom: '40px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '6px',
+            opacity: showScroll ? 1 : 0,
+            transition: 'opacity 0.4s ease',
+            pointerEvents: 'none',
+          }}>
+            <span style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '9px',
+              letterSpacing: '0.16em',
+              textTransform: 'uppercase',
+              color: 'var(--color-text-muted)',
+            }}>
+              Scroll
+            </span>
+            <motion.div
+              animate={{ y: [0, 4, 0] }}
+              transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+              style={{ color: 'var(--color-text-muted)' }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      {/* Step shell */}
+      <div ref={stepRef} style={{
+        minHeight: '100vh',
+        backgroundColor: 'var(--color-bg)',
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
       {/* Progress bar: 4 segments */}
       <div style={{ height: '2px', display: 'flex', gap: '2px', flexShrink: 0 }}>
         {[0, 1, 2, 3].map(i => (
@@ -623,6 +754,7 @@ export default function OnboardingPage() {
             {renderStep()}
           </div>
         )}
+      </div>
       </div>
     </div>
   )

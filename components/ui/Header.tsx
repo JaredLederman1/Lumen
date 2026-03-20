@@ -44,7 +44,7 @@ export default function Header() {
     }}>
       <h1 style={{
         fontFamily: 'var(--font-serif)',
-        fontSize: '20px',
+        fontSize: '24px',
         fontWeight: 400,
         color: '#F0F2F8',
         margin: 0,
@@ -54,7 +54,7 @@ export default function Header() {
       </h1>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <span style={{
-          fontSize: '11px',
+          fontSize: '13px',
           color: '#6B7A8D',
           fontFamily: 'var(--font-mono)',
           letterSpacing: '0.04em',
@@ -65,7 +65,7 @@ export default function Header() {
           <>
             <span style={{
               fontFamily: 'var(--font-mono)',
-              fontSize: '9px',
+              fontSize: '11px',
               color: '#B8913A',
               border: '1px solid rgba(184,145,58,0.4)',
               borderRadius: '2px',
@@ -79,7 +79,7 @@ export default function Header() {
               onClick={handleSignOut}
               style={{
                 fontFamily: 'var(--font-mono)',
-                fontSize: '9px',
+                fontSize: '11px',
                 color: '#6B7A8D',
                 background: 'none',
                 border: 'none',
@@ -103,7 +103,7 @@ export default function Header() {
           alignItems: 'center',
           justifyContent: 'center',
           fontFamily: 'var(--font-mono)',
-          fontSize: '10px',
+          fontSize: '12px',
           color: '#B8913A',
         }}>
           JL

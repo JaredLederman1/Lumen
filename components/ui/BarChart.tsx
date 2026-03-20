@@ -42,12 +42,12 @@ export default function BarChart({ data }: BarChartProps) {
               borderRadius: '2px',
               color: '#F0F2F8',
               fontFamily: 'var(--font-mono)',
-              fontSize: '11px',
+              fontSize: '13px',
               boxShadow: '0 4px 16px rgba(0,0,0,0.40)',
             }}
             cursor={{ fill: 'rgba(184,145,58,0.06)' }}
           />
-          <Legend wrapperStyle={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: '#6B7A8D' }} />
+          <Legend wrapperStyle={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: '#6B7A8D' }} />
           <Bar dataKey="income"   fill="#4CAF7D" radius={[2, 2, 0, 0]} />
           <Bar dataKey="expenses" fill="#8B4513" radius={[2, 2, 0, 0]} />
         </RechartsBarChart>

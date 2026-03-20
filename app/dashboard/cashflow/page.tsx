@@ -1,8 +1,11 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
+import type { Variants } from 'framer-motion'
 import Link from 'next/link'
 import BarChart from '@/components/ui/BarChart'
+import MerchantBar from '@/components/ui/MerchantBar'
 import { useDashboard } from '@/lib/dashboardData'
 
 function fmt(n: number) {
@@ -10,28 +13,57 @@ function fmt(n: number) {
 }
 
 const card = {
-  backgroundColor: '#0F1318',
-  border: '1px solid rgba(184,145,58,0.15)',
+  backgroundColor: 'var(--color-surface)',
+  border: '1px solid var(--color-gold-border)',
   borderRadius: '2px',
   padding: '28px',
 } as const
 
 const sectionLabel = {
   fontFamily: 'var(--font-mono)',
-  fontSize: '10px',
-  color: '#6B7A8D',
+  fontSize: '12px',
+  color: 'var(--color-text-muted)',
   textTransform: 'uppercase' as const,
   letterSpacing: '0.16em',
   marginBottom: '22px',
 } as const
 
+interface MerchantSummary {
+  name: string
+  totalSpent: number
+  transactionCount: number
+  lastDate: string
+  category: string | null
+  accountIds: string[]
+  percentOfTotal: number
+}
+
+interface MerchantData {
+  merchants: MerchantSummary[]
+  totalSpend: number
+  periodLabel: string
+}
+
+const merchantItemVariants: Variants = {
+  hidden: { opacity: 0, y: 6 },
+  visible: { opacity: 1, y: 0 },
+}
+
 export default function CashFlowPage() {
   const { loading, monthlyData } = useDashboard()
+  const [merchantData, setMerchantData] = useState<MerchantData | null>(null)
+
+  useEffect(() => {
+    fetch('/api/merchants')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.merchants) setMerchantData(d) })
+      .catch(() => {})
+  }, [])
 
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '320px' }}>
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#6B7A8D', letterSpacing: '0.06em' }}>Loading…</p>
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}>Loading…</p>
       </div>
     )
   }
@@ -44,14 +76,14 @@ export default function CashFlowPage() {
         transition={{ duration: 0.35, ease: 'easeOut' }}
         style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: '20px', textAlign: 'center' }}
       >
-        <div style={{ width: '48px', height: '48px', borderRadius: '50%', border: '1px solid rgba(184,145,58,0.25)', backgroundColor: 'rgba(184,145,58,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
+        <div style={{ width: '48px', height: '48px', borderRadius: '50%', border: '1px solid var(--color-gold-border)', backgroundColor: 'var(--color-gold-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
           ◈
         </div>
         <div>
-          <p style={{ fontFamily: 'var(--font-serif)', fontSize: '22px', fontWeight: 400, color: '#F0F2F8', marginBottom: '8px' }}>No cash flow data</p>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#6B7A8D', lineHeight: 1.7 }}>Connect a bank account to see your income, expenses, and savings trends.</p>
+          <p style={{ fontFamily: 'var(--font-serif)', fontSize: '26px', fontWeight: 400, color: 'var(--color-text)', marginBottom: '8px' }}>No cash flow data</p>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.7 }}>Connect a bank account to see your income, expenses, and savings trends.</p>
         </div>
-        <Link href="/dashboard/accounts" style={{ padding: '10px 24px', backgroundColor: '#B8913A', border: 'none', borderRadius: '2px', color: '#F0F2F8', fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.08em', textDecoration: 'none', display: 'inline-block' }}>
+        <Link href="/dashboard/accounts" style={{ padding: '10px 24px', backgroundColor: 'var(--color-gold)', border: 'none', borderRadius: '2px', color: 'var(--color-text)', fontFamily: 'var(--font-mono)', fontSize: '13px', letterSpacing: '0.08em', textDecoration: 'none', display: 'inline-block' }}>
           Connect an Account
         </Link>
       </motion.div>
@@ -72,29 +104,29 @@ export default function CashFlowPage() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, ease: 'easeOut' }}
-              style={{ backgroundColor: '#0F1318', border: '1px solid rgba(184,145,58,0.15)', borderRadius: '2px', padding: '24px' }}
+              style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-gold-border)', borderRadius: '2px', padding: '24px' }}
             >
-              <p style={{ fontFamily: 'var(--font-serif)', fontSize: '18px', fontWeight: 400, color: '#B8913A', marginBottom: '20px', letterSpacing: '0.02em' }}>
+              <p style={{ fontFamily: 'var(--font-serif)', fontSize: '24px', fontWeight: 400, color: 'var(--color-gold)', marginBottom: '20px', letterSpacing: '0.02em' }}>
                 {month}{year ? ` ${year}` : ''}
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '11px' }}>
                 {[
-                  { label: 'Income',   value: fmt(income),   color: '#4CAF7D' },
-                  { label: 'Expenses', value: fmt(expenses), color: '#E05C6E' },
+                  { label: 'Income',   value: fmt(income),   color: 'var(--color-positive)' },
+                  { label: 'Expenses', value: fmt(expenses), color: 'var(--color-negative)' },
                 ].map(r => (
                   <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                    <span style={{ fontSize: '11px', color: '#6B7A8D', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>{r.label}</span>
-                    <span style={{ fontFamily: 'var(--font-serif)', fontSize: '16px', color: r.color }}>{r.value}</span>
+                    <span style={{ fontSize: '13px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>{r.label}</span>
+                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: '24px', color: r.color }}>{r.value}</span>
                   </div>
                 ))}
-                <div style={{ borderTop: '1px solid rgba(184,145,58,0.12)', paddingTop: '11px', display: 'flex', flexDirection: 'column', gap: '11px' }}>
+                <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '11px', display: 'flex', flexDirection: 'column', gap: '11px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                    <span style={{ fontSize: '11px', color: '#6B7A8D', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>Net Savings</span>
-                    <span style={{ fontFamily: 'var(--font-serif)', fontSize: '16px', color: '#F0F2F8' }}>{fmt(savings)}</span>
+                    <span style={{ fontSize: '13px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>Net Savings</span>
+                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: '24px', color: 'var(--color-text)' }}>{fmt(savings)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                    <span style={{ fontSize: '11px', color: '#6B7A8D', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>Savings Rate</span>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: '#B8913A', fontWeight: 500 }}>{savingsRate}%</span>
+                    <span style={{ fontSize: '13px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>Savings Rate</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '18px', color: 'var(--color-gold)', fontWeight: 500 }}>{savingsRate}%</span>
                   </div>
                 </div>
               </div>
@@ -117,7 +149,7 @@ export default function CashFlowPage() {
             <thead>
               <tr>
                 {['Month', 'Income', 'Expenses', 'Net Savings', 'Rate'].map(h => (
-                  <th key={h} style={{ padding: '8px 16px 12px', textAlign: 'left', fontSize: '10px', color: '#6B7A8D', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 400, borderBottom: '1px solid rgba(184,145,58,0.2)' }}>
+                  <th key={h} style={{ padding: '8px 16px 12px', textAlign: 'left', fontSize: '12px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 400, borderBottom: '1px solid var(--color-border-strong)' }}>
                     {h}
                   </th>
                 ))}
@@ -127,14 +159,14 @@ export default function CashFlowPage() {
               {[...monthlyData].reverse().map(({ month, year, income, expenses, savings }, i) => {
                 const rate = income > 0 ? ((savings / income) * 100).toFixed(0) : '0'
                 return (
-                  <tr key={`${month}-${year}-${i}`} style={{ backgroundColor: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>
-                    <td style={{ padding: '13px 16px', fontFamily: 'var(--font-serif)', fontSize: '15px', color: '#F0F2F8', borderBottom: '1px solid rgba(184,145,58,0.07)' }}>
+                  <tr key={`${month}-${year}-${i}`} style={{ backgroundColor: i % 2 === 0 ? 'transparent' : 'var(--color-surface-texture)' }}>
+                    <td style={{ padding: '13px 16px', fontFamily: 'var(--font-serif)', fontSize: '20px', color: 'var(--color-text)', borderBottom: '1px solid var(--color-border)' }}>
                       {month}{year ? ` ${year}` : ''}
                     </td>
-                    <td style={{ padding: '13px 16px', fontFamily: 'var(--font-serif)', fontSize: '15px', color: '#4CAF7D', borderBottom: '1px solid rgba(184,145,58,0.07)' }}>{fmt(income)}</td>
-                    <td style={{ padding: '13px 16px', fontFamily: 'var(--font-serif)', fontSize: '15px', color: '#E05C6E', borderBottom: '1px solid rgba(184,145,58,0.07)' }}>{fmt(expenses)}</td>
-                    <td style={{ padding: '13px 16px', fontFamily: 'var(--font-serif)', fontSize: '15px', color: '#F0F2F8', borderBottom: '1px solid rgba(184,145,58,0.07)' }}>{fmt(savings)}</td>
-                    <td style={{ padding: '13px 16px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#B8913A', borderBottom: '1px solid rgba(184,145,58,0.07)', fontWeight: 500 }}>{rate}%</td>
+                    <td style={{ padding: '13px 16px', fontFamily: 'var(--font-sans)', fontSize: '20px', color: 'var(--color-positive)', borderBottom: '1px solid var(--color-border)' }}>{fmt(income)}</td>
+                    <td style={{ padding: '13px 16px', fontFamily: 'var(--font-sans)', fontSize: '20px', color: 'var(--color-negative)', borderBottom: '1px solid var(--color-border)' }}>{fmt(expenses)}</td>
+                    <td style={{ padding: '13px 16px', fontFamily: 'var(--font-sans)', fontSize: '20px', color: 'var(--color-text)', borderBottom: '1px solid var(--color-border)' }}>{fmt(savings)}</td>
+                    <td style={{ padding: '13px 16px', fontFamily: 'var(--font-mono)', fontSize: '17px', color: 'var(--color-gold)', borderBottom: '1px solid var(--color-border)', fontWeight: 500 }}>{rate}%</td>
                   </tr>
                 )
               })}
@@ -142,6 +174,59 @@ export default function CashFlowPage() {
           </table>
         </div>
       </div>
+
+      {/* Top Merchants */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: 'easeOut', delay: 0.1 }}
+        style={card}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
+          <p style={sectionLabel}>Top Merchants, Last 30 Days</p>
+          {merchantData && (
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-muted)' }}>
+              Total spend: <span style={{ color: 'var(--color-text)' }}>{fmt(merchantData.totalSpend)}</span>
+            </p>
+          )}
+        </div>
+
+        {!merchantData ? (
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-muted)', textAlign: 'center', padding: '20px 0' }}>
+            Loading merchant data...
+          </p>
+        ) : merchantData.merchants.length === 0 ? (
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-muted)', textAlign: 'center', padding: '20px 0' }}>
+            No expense transactions found in the last 30 days.
+          </p>
+        ) : (
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
+          >
+            {merchantData.merchants.map((merchant, i) => (
+              <motion.div
+                key={merchant.name}
+                variants={merchantItemVariants}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+              >
+                <MerchantBar
+                  name={merchant.name}
+                  totalSpent={merchant.totalSpent}
+                  transactionCount={merchant.transactionCount}
+                  category={merchant.category}
+                  percentOfTotal={merchant.percentOfTotal}
+                  maxPercent={merchantData.merchants[0].percentOfTotal}
+                  lastDate={merchant.lastDate}
+                  formatter={fmt}
+                  isLast={i === merchantData.merchants.length - 1}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </motion.div>
     </div>
   )
 }

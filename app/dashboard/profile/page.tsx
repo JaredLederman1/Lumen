@@ -18,7 +18,7 @@ const card: React.CSSProperties = {
 
 const sectionLabel: React.CSSProperties = {
   fontFamily: 'var(--font-mono)',
-  fontSize: '10px',
+  fontSize: '12px',
   color: 'var(--color-text-muted)',
   textTransform: 'uppercase',
   letterSpacing: '0.16em',
@@ -27,7 +27,7 @@ const sectionLabel: React.CSSProperties = {
 
 const fieldLabel: React.CSSProperties = {
   fontFamily: 'var(--font-mono)',
-  fontSize: '10px',
+  fontSize: '12px',
   color: 'var(--color-text-muted)',
   textTransform: 'uppercase',
   letterSpacing: '0.14em',
@@ -38,7 +38,7 @@ const fieldLabel: React.CSSProperties = {
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '10px 12px',
-  fontSize: '13px',
+  fontSize: '16px',
 }
 
 // ── Urgency color map ─────────────────────────────────────────────────────────
@@ -155,21 +155,21 @@ export default function ProfilePage() {
           backgroundColor: 'var(--color-gold-subtle)',
           border: '1px solid var(--color-gold-border)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--color-gold)',
+          fontFamily: 'var(--font-mono)', fontSize: '17px', color: 'var(--color-gold)',
           letterSpacing: '0.05em', flexShrink: 0,
         }}>
           {initials}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{
-            fontFamily: 'var(--font-serif)', fontSize: '20px', fontWeight: 400,
+            fontFamily: 'var(--font-serif)', fontSize: '24px', fontWeight: 400,
             color: 'var(--color-text)', marginBottom: '4px',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
             {email ?? 'Your Profile'}
           </p>
           {totals && (
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--color-text-mid)' }}>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-text-mid)' }}>
               Contract value {fmt(totals.totalContractValue)}/yr &middot; {fmt(totals.totalBenefitsValue)}/yr in benefits
             </p>
           )}
@@ -189,7 +189,7 @@ export default function ProfilePage() {
             <button
               onClick={startEdit}
               style={{
-                fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '0.1em',
+                fontFamily: 'var(--font-mono)', fontSize: '12px', letterSpacing: '0.1em',
                 textTransform: 'uppercase', color: 'var(--color-gold)', background: 'none',
                 border: '1px solid var(--color-gold-border)', borderRadius: '2px',
                 padding: '5px 12px', cursor: 'pointer',
@@ -203,7 +203,7 @@ export default function ProfilePage() {
         </div>
 
         {loading ? (
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-muted)' }}>Loading...</p>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--color-text-muted)' }}>Loading...</p>
         ) : !editing ? (
           profile ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
@@ -214,10 +214,10 @@ export default function ProfilePage() {
                 { label: 'Retirement age', value: `${profile.retirementAge} years old`   },
               ].map(({ label: lbl, value }) => (
                 <div key={lbl}>
-                  <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: '4px' }}>
+                  <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: '4px' }}>
                     {lbl}
                   </p>
-                  <p style={{ fontFamily: 'var(--font-serif)', fontSize: '22px', fontWeight: 400, color: 'var(--color-text)' }}>
+                  <p style={{ fontFamily: 'var(--font-serif)', fontSize: '26px', fontWeight: 400, color: 'var(--color-text)' }}>
                     {value}
                   </p>
                 </div>
@@ -225,14 +225,14 @@ export default function ProfilePage() {
             </div>
           ) : (
             <div style={{ padding: '8px 0' }}>
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
                 No profile data yet. Complete the onboarding flow to set your financial baseline.
               </p>
               <Link href="/onboarding" style={{
                 display: 'inline-block', padding: '10px 20px',
                 backgroundColor: 'var(--color-gold)', color: 'var(--color-surface)',
                 borderRadius: '2px', textDecoration: 'none',
-                fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.06em',
+                fontFamily: 'var(--font-mono)', fontSize: '13px', letterSpacing: '0.06em',
               }}>
                 Complete onboarding
               </Link>
@@ -268,7 +268,7 @@ export default function ProfilePage() {
                 </div>
               </div>
               {saveError && (
-                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--color-negative)', marginBottom: '14px' }}>
+                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-negative)', marginBottom: '14px' }}>
                   {saveError}
                 </p>
               )}
@@ -276,7 +276,7 @@ export default function ProfilePage() {
                 <button onClick={handleSave} disabled={saving} style={{
                   padding: '10px 24px', backgroundColor: 'var(--color-gold)', border: 'none',
                   borderRadius: '2px', color: 'var(--color-surface)', fontFamily: 'var(--font-mono)',
-                  fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase',
+                  fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase',
                   cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.65 : 1,
                 }}>
                   {saving ? 'Saving...' : 'Save'}
@@ -285,7 +285,7 @@ export default function ProfilePage() {
                   padding: '10px 18px', backgroundColor: 'transparent',
                   border: '1px solid var(--color-border)', borderRadius: '2px',
                   color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)',
-                  fontSize: '11px', letterSpacing: '0.08em', cursor: 'pointer',
+                  fontSize: '13px', letterSpacing: '0.08em', cursor: 'pointer',
                 }}
                   onMouseEnter={e => (e.currentTarget.style.color = 'var(--color-text)')}
                   onMouseLeave={e => (e.currentTarget.style.color = 'var(--color-text-muted)')}
@@ -309,7 +309,7 @@ export default function ProfilePage() {
           <p style={{ ...sectionLabel, marginBottom: 0 }}>Benefits action items</p>
           {hasBenefits && actionItems.length > 0 && (
             <p style={{
-              fontFamily: 'var(--font-mono)', fontSize: '11px',
+              fontFamily: 'var(--font-mono)', fontSize: '13px',
               color: completedCount === actionItems.length ? 'var(--color-positive)' : 'var(--color-text-mid)',
             }}>
               {completedCount} / {actionItems.length} complete
@@ -318,19 +318,19 @@ export default function ProfilePage() {
         </div>
 
         {loading && (
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-muted)' }}>Loading...</p>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--color-text-muted)' }}>Loading...</p>
         )}
 
         {!loading && !hasBenefits && (
           <div style={{ padding: '8px 0' }}>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
               Upload your employment contract to generate your personalized action checklist.
             </p>
             <Link href="/dashboard/benefits" style={{
               display: 'inline-block', padding: '10px 20px',
               backgroundColor: 'var(--color-gold)', color: 'var(--color-surface)',
               borderRadius: '2px', textDecoration: 'none',
-              fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.06em',
+              fontFamily: 'var(--font-mono)', fontSize: '13px', letterSpacing: '0.06em',
             }}>
               Analyze contract
             </Link>
@@ -338,7 +338,7 @@ export default function ProfilePage() {
         )}
 
         {!loading && hasBenefits && actionItems.length === 0 && (
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-positive)' }}>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--color-positive)' }}>
             No action items. All benefits appear to be captured.
           </p>
         )}
@@ -385,7 +385,7 @@ export default function ProfilePage() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
                       <span style={{
-                        fontFamily: 'var(--font-mono)', fontSize: '12px', fontWeight: 500,
+                        fontFamily: 'var(--font-mono)', fontSize: '14px', fontWeight: 500,
                         color: isDone ? 'var(--color-text-muted)' : 'var(--color-text)',
                         textDecoration: isDone ? 'line-through' : 'none',
                         transition: 'all 200ms ease',
@@ -394,21 +394,21 @@ export default function ProfilePage() {
                       </span>
                       {item.annualValue && (
                         <span style={{
-                          fontFamily: 'var(--font-serif)', fontSize: '12px',
+                          fontFamily: 'var(--font-serif)', fontSize: '14px',
                           color: isDone ? 'var(--color-text-muted)' : 'var(--color-text-mid)', fontWeight: 300,
                         }}>
                           {fmt(item.annualValue)}/yr
                         </span>
                       )}
                       <span style={{
-                        fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.1em',
+                        fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.1em',
                         textTransform: 'uppercase', color: c.dot, opacity: isDone ? 0.4 : 1,
                       }}>
                         {item.urgency}
                       </span>
                     </div>
                     <p style={{
-                      fontFamily: 'var(--font-mono)', fontSize: '11px', lineHeight: 1.6,
+                      fontFamily: 'var(--font-mono)', fontSize: '13px', lineHeight: 1.6,
                       color: isDone ? 'var(--color-text-muted)' : 'var(--color-text-mid)',
                       textDecoration: isDone ? 'line-through' : 'none',
                       transition: 'all 200ms ease',
@@ -432,10 +432,10 @@ export default function ProfilePage() {
           style={{ ...card, padding: '20px 28px' }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--color-text-muted)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-muted)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
               Completion
             </p>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--color-text-mid)' }}>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-mid)' }}>
               {Math.round((completedCount / actionItems.length) * 100)}%
             </p>
           </div>

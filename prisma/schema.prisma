@@ -14,6 +14,20 @@ model User {
   snapshots          NetWorthSnapshot[]
   onboardingProfile  OnboardingProfile?
   employmentBenefits EmploymentBenefits?
+  budget             Budget?
+}
+
+model Budget {
+  id            String   @id @default(cuid())
+  userId        String   @unique @map("user_id")
+  strategy      String
+  monthlyIncome Float    @map("monthly_income")
+  categories    Json
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@map("budgets")
 }
 
 model Account {

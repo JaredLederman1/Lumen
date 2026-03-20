@@ -89,7 +89,7 @@ export default function SignupPage() {
       if (authError) {
         setError(authError.message)
       } else {
-        router.push('/onboarding')
+        router.push(`/auth/mfa/enroll?email=${encodeURIComponent(email)}`)
       }
     } catch {
       setError('Something went wrong. Please try again.')

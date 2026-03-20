@@ -48,7 +48,7 @@ export default function DonutChart({ data }: DonutChartProps) {
                 borderRadius: '2px',
                 color: '#F0F2F8',
                 fontFamily: 'var(--font-mono)',
-                fontSize: '11px',
+                fontSize: '13px',
                 boxShadow: '0 4px 16px rgba(0,0,0,0.40)',
               }}
             />
@@ -76,7 +76,7 @@ export default function DonutChart({ data }: DonutChartProps) {
                 flexShrink: 0,
               }} />
               <span style={{
-                fontSize: '11px',
+                fontSize: '13px',
                 color: '#A8B4C0',
                 fontFamily: 'var(--font-mono)',
                 letterSpacing: '0.03em',
@@ -85,7 +85,7 @@ export default function DonutChart({ data }: DonutChartProps) {
               </span>
             </div>
             <span style={{
-              fontSize: '11px',
+              fontSize: '13px',
               color: '#F0F2F8',
               fontFamily: 'var(--font-mono)',
               fontWeight: 500,

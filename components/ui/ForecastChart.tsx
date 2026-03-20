@@ -44,7 +44,7 @@ export default function ForecastChart({ data, emergencyFundMonths }: ForecastCha
               borderRadius: '2px',
               color: '#F0F2F8',
               fontFamily: 'var(--font-mono)',
-              fontSize: '11px',
+              fontSize: '13px',
               boxShadow: '0 4px 16px rgba(0,0,0,0.40)',
             }}
           />
@@ -78,8 +78,8 @@ export default function ForecastChart({ data, emergencyFundMonths }: ForecastCha
         alignItems: 'center',
         gap: '10px',
       }}>
-        <span style={{ fontSize: '16px', color: '#4CAF7D' }}>◎</span>
-        <span style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: '#4CAF7D', letterSpacing: '0.02em' }}>
+        <span style={{ fontSize: '19px', color: '#4CAF7D' }}>◎</span>
+        <span style={{ fontSize: '14px', fontFamily: 'var(--font-mono)', color: '#4CAF7D', letterSpacing: '0.02em' }}>
           Projected emergency fund coverage: <strong>{emergencyFundMonths.toFixed(1)} months</strong>
         </span>
       </div>

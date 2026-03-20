@@ -32,7 +32,7 @@ const card: React.CSSProperties = {
 
 const sectionLabel: React.CSSProperties = {
   fontFamily: 'var(--font-mono)',
-  fontSize: '10px',
+  fontSize: '12px',
   color: '#A89880',
   textTransform: 'uppercase',
   letterSpacing: '0.16em',
@@ -44,9 +44,9 @@ function fmt(n: number) {
 }
 
 function StatusBadge({ captured }: { captured: boolean | null }) {
-  if (captured === true)  return <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#3D7A54', backgroundColor: 'rgba(61,122,84,0.08)', padding: '3px 7px', borderRadius: '2px' }}>Captured</span>
-  if (captured === false) return <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8B3A3A', backgroundColor: 'rgba(139,58,58,0.08)', padding: '3px 7px', borderRadius: '2px' }}>Not captured</span>
-  return <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8A95A3', backgroundColor: 'rgba(0,0,0,0.04)', padding: '3px 7px', borderRadius: '2px' }}>Unverified</span>
+  if (captured === true)  return <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#3D7A54', backgroundColor: 'rgba(61,122,84,0.08)', padding: '3px 7px', borderRadius: '2px' }}>Captured</span>
+  if (captured === false) return <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8B3A3A', backgroundColor: 'rgba(139,58,58,0.08)', padding: '3px 7px', borderRadius: '2px' }}>Not captured</span>
+  return <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8A95A3', backgroundColor: 'rgba(0,0,0,0.04)', padding: '3px 7px', borderRadius: '2px' }}>Unverified</span>
 }
 
 const urgencyDot: Record<BenefitStatus['urgency'], string> = {
@@ -144,13 +144,13 @@ export default function BenefitsPage() {
 
       {/* Header */}
       <div>
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#B8913A', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: '8px' }}>
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#B8913A', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: '8px' }}>
           Benefits
         </p>
-        <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '26px', fontWeight: 400, color: '#1A1A1A', marginBottom: '6px' }}>
+        <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '31px', fontWeight: 400, color: '#1A1A1A', marginBottom: '6px' }}>
           Employment Contract Analyzer
         </h1>
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#8A95A3', lineHeight: 1.6 }}>
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: '#8A95A3', lineHeight: 1.6 }}>
           Upload your offer letter or benefits summary. Illumin extracts every element of your compensation, then cross-checks your transaction history to surface what you are likely leaving uncaptured.
         </p>
       </div>
@@ -162,13 +162,13 @@ export default function BenefitsPage() {
           <motion.div key="loading" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.3 }}>
             <div style={card}>
               <p style={sectionLabel}>Analyzing contract</p>
-              <p style={{ fontFamily: 'var(--font-serif)', fontSize: '22px', fontWeight: 300, color: '#1A1A1A', marginBottom: '28px' }}>
+              <p style={{ fontFamily: 'var(--font-serif)', fontSize: '26px', fontWeight: 300, color: '#1A1A1A', marginBottom: '28px' }}>
                 {LOADING_PHASES[loadingPhase]}
               </p>
               <div style={{ height: '2px', backgroundColor: 'rgba(184,145,58,0.12)', borderRadius: '1px', marginBottom: '10px', overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${progress}%`, backgroundColor: '#B8913A', transition: 'width 360ms ease', borderRadius: '1px' }} />
               </div>
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#8A95A3', letterSpacing: '0.08em' }}>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#8A95A3', letterSpacing: '0.08em' }}>
                 {Math.round(progress)}%
               </p>
             </div>
@@ -198,33 +198,33 @@ export default function BenefitsPage() {
                 }}
               >
                 <input ref={inputRef} type="file" accept="application/pdf" style={{ display: 'none' }} onChange={ev => { const f = ev.target.files?.[0]; if (f) handleFile(f) }} />
-                <div style={{ fontSize: '24px', marginBottom: '10px', opacity: 0.35 }}>⬆</div>
+                <div style={{ fontSize: '29px', marginBottom: '10px', opacity: 0.35 }}>⬆</div>
                 {file ? (
                   <>
-                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#1A1A1A', marginBottom: '3px' }}>{file.name}</p>
-                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#8A95A3' }}>{(file.size / 1024).toFixed(0)} KB · PDF</p>
+                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: '#1A1A1A', marginBottom: '3px' }}>{file.name}</p>
+                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: '#8A95A3' }}>{(file.size / 1024).toFixed(0)} KB · PDF</p>
                   </>
                 ) : (
                   <>
-                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#8A95A3', marginBottom: '3px' }}>Drop your PDF here or click to browse</p>
-                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#C4B8A8' }}>Offer letters, benefits summaries, employee handbooks &middot; max 20MB</p>
+                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: '#8A95A3', marginBottom: '3px' }}>Drop your PDF here or click to browse</p>
+                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: '#C4B8A8' }}>Offer letters, benefits summaries, employee handbooks &middot; max 20MB</p>
                   </>
                 )}
               </div>
 
-              {error && <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#8B3A3A', marginBottom: '14px' }}>{error}</p>}
+              {error && <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: '#8B3A3A', marginBottom: '14px' }}>{error}</p>}
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <button
                   onClick={analyze}
                   disabled={!file}
-                  style={{ padding: '11px 26px', backgroundColor: file ? '#B8913A' : 'rgba(184,145,58,0.15)', color: file ? '#FFFFFF' : '#A89880', border: 'none', borderRadius: '2px', fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.06em', cursor: file ? 'pointer' : 'not-allowed', transition: 'all 150ms ease' }}
+                  style={{ padding: '11px 26px', backgroundColor: file ? '#B8913A' : 'rgba(184,145,58,0.15)', color: file ? '#FFFFFF' : '#A89880', border: 'none', borderRadius: '2px', fontFamily: 'var(--font-mono)', fontSize: '13px', letterSpacing: '0.06em', cursor: file ? 'pointer' : 'not-allowed', transition: 'all 150ms ease' }}
                 >
                   Analyze contract
                 </button>
               </div>
 
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#C4B8A8', marginTop: '16px' }}>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#C4B8A8', marginTop: '16px' }}>
                 Your document is never stored. Only extracted benefit data is saved to your profile.
               </p>
             </div>
@@ -261,8 +261,8 @@ export default function BenefitsPage() {
                 <motion.div key={stat.label} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07, duration: 0.3 }}
                   style={{ ...card, border: `1px solid ${stat.border}`, padding: '20px 24px' }}>
                   <p style={{ ...sectionLabel, marginBottom: '10px' }}>{stat.label}</p>
-                  <p style={{ fontFamily: 'var(--font-serif)', fontSize: '22px', fontWeight: 300, color: '#1A1A1A', marginBottom: '4px' }}>{stat.value}</p>
-                  {stat.sub && <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#8A95A3' }}>{stat.sub}</p>}
+                  <p style={{ fontFamily: 'var(--font-serif)', fontSize: '26px', fontWeight: 300, color: '#1A1A1A', marginBottom: '4px' }}>{stat.value}</p>
+                  {stat.sub && <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#8A95A3' }}>{stat.sub}</p>}
                 </motion.div>
               ))}
             </div>
@@ -298,9 +298,9 @@ export default function BenefitsPage() {
                   e.hasSeverance && e.severanceMonths && { label: 'Severance', value: `${e.severanceMonths} months`, sub: 'qualifying separation' },
                 ].filter(Boolean).map((stat, i) => stat && (
                   <div key={stat.label}>
-                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#A89880', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '5px' }}>{stat.label}</p>
-                    <p style={{ fontFamily: 'var(--font-serif)', fontSize: '18px', fontWeight: 300, color: '#1A1A1A', marginBottom: '2px' }}>{stat.value}</p>
-                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#8A95A3' }}>{stat.sub}</p>
+                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#A89880', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '5px' }}>{stat.label}</p>
+                    <p style={{ fontFamily: 'var(--font-serif)', fontSize: '22px', fontWeight: 300, color: '#1A1A1A', marginBottom: '2px' }}>{stat.value}</p>
+                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#8A95A3' }}>{stat.sub}</p>
                   </div>
                 ))}
               </div>
@@ -310,7 +310,7 @@ export default function BenefitsPage() {
             <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18, duration: 0.3 }} style={card}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
                 <p style={{ ...sectionLabel, marginBottom: 0 }}>Benefits utilization</p>
-                <Link href="/dashboard/profile" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#B8913A', textDecoration: 'none' }}>
+                <Link href="/dashboard/profile" style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: '#B8913A', textDecoration: 'none' }}>
                   View action checklist →
                 </Link>
               </div>
@@ -332,18 +332,18 @@ export default function BenefitsPage() {
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: item.urgency !== 'info' ? '8px' : '0' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                         <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: urgencyDot[item.urgency], flexShrink: 0 }} />
-                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#1A1A1A', fontWeight: 500 }}>{item.label}</span>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: '#1A1A1A', fontWeight: 500 }}>{item.label}</span>
                         {item.annualValue && (
-                          <span style={{ fontFamily: 'var(--font-serif)', fontSize: '13px', color: '#4A5568', fontWeight: 300 }}>{fmt(item.annualValue)}/yr</span>
+                          <span style={{ fontFamily: 'var(--font-serif)', fontSize: '16px', color: '#4A5568', fontWeight: 300 }}>{fmt(item.annualValue)}/yr</span>
                         )}
                       </div>
                       <StatusBadge captured={item.captured} />
                     </div>
-                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#4A5568', lineHeight: 1.6, paddingLeft: '14px', marginBottom: item.urgency !== 'info' && item.captured !== true ? '6px' : '0' }}>
+                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: '#4A5568', lineHeight: 1.6, paddingLeft: '14px', marginBottom: item.urgency !== 'info' && item.captured !== true ? '6px' : '0' }}>
                       {item.evidence}
                     </p>
                     {item.urgency !== 'info' && item.captured !== true && (
-                      <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#B8913A', lineHeight: 1.6, paddingLeft: '14px' }}>
+                      <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: '#B8913A', lineHeight: 1.6, paddingLeft: '14px' }}>
                         {item.action}
                       </p>
                     )}
@@ -354,7 +354,7 @@ export default function BenefitsPage() {
 
             <button
               onClick={() => { setFile(null); setResult(null) }}
-              style={{ alignSelf: 'flex-start', padding: '10px 20px', border: '1px solid rgba(184,145,58,0.2)', borderRadius: '2px', backgroundColor: 'transparent', fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#8A95A3', cursor: 'pointer' }}
+              style={{ alignSelf: 'flex-start', padding: '10px 20px', border: '1px solid rgba(184,145,58,0.2)', borderRadius: '2px', backgroundColor: 'transparent', fontFamily: 'var(--font-mono)', fontSize: '13px', color: '#8A95A3', cursor: 'pointer' }}
             >
               Analyze another document
             </button>
