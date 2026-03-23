@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+
 import AuthLayout from '@/components/AuthLayout'
 
 const fieldLabel: React.CSSProperties = {
@@ -159,18 +159,7 @@ export default function LoginPage() {
         </button>
       </form>
 
-      <p style={{
-        textAlign: 'center',
-        marginTop: '28px',
-        fontSize: '12px',
-        color: 'var(--color-text-muted)',
-        fontFamily: 'var(--font-mono)',
-      }}>
-        No account?{' '}
-        <Link href="/auth/signup" style={{ color: 'var(--color-gold)', textDecoration: 'none' }}>
-          Create one
-        </Link>
-      </p>
+      {/* Sign-up link removed */}
     </AuthLayout>
   )
 }

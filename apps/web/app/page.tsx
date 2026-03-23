@@ -33,7 +33,7 @@ export default function Page() {
           <p className={styles.eyebrow}>WEALTH INTELLIGENCE</p>
 
           <h1 className={styles.headline}>
-            You can&apos;t fix<br />what you can&apos;t see.
+            Clarity is the rarest asset.<br />Illumin gives it to you.
           </h1>
 
           <p className={styles.subhead}>
@@ -65,7 +65,7 @@ export default function Page() {
             <RevealText>Find out what your finances are actually doing.</RevealText>
           </h2>
           <p className={styles.ctaSubhead}>
-            Connect your accounts in two minutes. The engine analyzes your complete picture and tells you where you stand and what to do next. No advisor required. No minimum balance.
+            Join the waitlist in two minutes. Be among the first to see exactly where you stand and what to do next. No advisor required. No minimum balance.
           </p>
           <WaitlistForm />
         </div>
@@ -78,11 +78,6 @@ export default function Page() {
             <span className={styles.footerWordmark}>Illumin</span>
             <span className={styles.footerCopy}>© 2026 Illumin</span>
           </div>
-          <nav className={styles.footerRight} aria-label="Footer navigation">
-            <a href="#features"     className={styles.footerLink}>Features</a>
-            <a href="#calculator"   className={styles.footerLink}>How it works</a>
-            <a href="/auth/login"   className={styles.footerLink}>Sign in</a>
-          </nav>
         </div>
       </footer>
     </>

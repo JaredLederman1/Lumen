@@ -1212,3 +1212,30 @@
 
   .featureItem { flex-wrap: wrap; gap: 16px; padding: 24px; }
 }
+
+/* ── Calculator mobile overrides ─────────────────────────── */
+.calcBigInput {
+  /* base: inherits inline styles */
+}
+
+.calcRevealGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 56px;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .calcBigInput {
+    font-size: 48px !important;
+    border-bottom: none !important;
+  }
+  .calcBigInput::placeholder {
+    font-size: 28px;
+  }
+
+  .calcRevealGrid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+}

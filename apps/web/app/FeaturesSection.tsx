@@ -32,7 +32,7 @@ export default function FeaturesSection() {
         <div className={styles.featuresHeader}>
           <h2 className={styles.featuresHeadline}>See everything. Understand everything.</h2>
           <p className={styles.featuresDesc}>
-            Every account connected. Every transaction categorized. Every pattern surfaced. Not just a record of what happened, a picture of what it means.
+            Every account, every transaction, every pattern. Connected, categorized, and finally making sense.
           </p>
         </div>
       </ScrollReveal>
@@ -44,7 +44,7 @@ export default function FeaturesSection() {
             <span className={styles.featureLabel}>Spending Intelligence</span>
             <h3 className={styles.featureH3}>Every transaction, explained.</h3>
             <p className={styles.featureText}>
-              Transactions categorized automatically, with rules you control. Correct a category once and Illumin applies it to every future transaction from that merchant. The data works for you, not the other way around.
+              Transactions categorized automatically, with rules you control. Fix a category once and Illumin remembers it for every future transaction from that merchant. Your data, working on your terms.
             </p>
           </div>
           <div className={styles.featureRight}>
@@ -68,7 +68,7 @@ export default function FeaturesSection() {
             <span className={styles.featureLabel}>Cash Flow</span>
             <h3 className={styles.featureH3}>Income, expenses, and what&apos;s actually left.</h3>
             <p className={styles.featureText}>
-              A month-by-month view of what you earn, what you spend, and the trend over time. Not just a snapshot. A pattern you can act on.
+              A month-by-month view of what you earn, what you spend, and where it&apos;s all trending. A pattern you can actually act on.
             </p>
           </div>
           <div className={styles.featureRight}>
@@ -94,7 +94,7 @@ export default function FeaturesSection() {
             <span className={styles.featureLabel}>Subscriptions</span>
             <h3 className={styles.featureH3}>The charges you stopped noticing.</h3>
             <p className={styles.featureText}>
-              Recurring charges detected from your transaction history automatically. No manual entry. See the real monthly total of everything running in the background.
+              Every recurring charge pulled automatically from your transaction history. No manual entry. Just the real monthly total of everything quietly draining your account.
             </p>
           </div>
           <div className={styles.featureRight}>

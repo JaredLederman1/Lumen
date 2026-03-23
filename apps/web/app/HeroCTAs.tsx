@@ -7,7 +7,7 @@ export default function HeroCTAs() {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
   return (
-    <div className={styles.ctas}>
+    <div className={styles.ctas} data-hero-ctas>
       <button className={styles.btnPrimary} onClick={() => scrollTo('calculator')}>
         CALCULATE YOUR COST
       </button>

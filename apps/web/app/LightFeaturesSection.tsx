@@ -16,9 +16,11 @@ const BALANCES = [
 ]
 
 export default function LightFeaturesSection() {
-  const figureRef  = useRef<HTMLSpanElement>(null)
-  const row0Ref    = useRef<HTMLDivElement>(null)
+  const figureRef    = useRef<HTMLSpanElement>(null)
+  const row0Ref      = useRef<HTMLDivElement>(null)
+  const sparkCardRef = useRef<HTMLDivElement>(null)
   const [counted, setCounted] = useState(false)
+  const [sparkRevealed, setSparkRevealed] = useState(false)
 
   // Trigger countUp once the opportunity cost row has scrolled 30% into view
   const { scrollYProgress } = useScroll({
@@ -35,14 +37,31 @@ export default function LightFeaturesSection() {
     })
   }, [counted, scrollYProgress])
 
+  // Reveal sparkline chart when the card scrolls into view
+  useEffect(() => {
+    const el = sparkCardRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setSparkRevealed(true)
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.2 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <section className={styles.lightFeatures}>
 
       <ScrollReveal>
         <div className={styles.featuresHeader}>
-          <h2 className={styles.featuresHeadline}>The number your advisor would show you first.</h2>
+          <h2 className={styles.featuresHeadline}>The numbers your advisor would show you first.</h2>
           <p className={styles.featuresDesc}>
-            Inaction has a dollar amount. Illumin calculates it from your real balances and projects it 30 years forward. This is the mechanic that changes behavior.
+            Inaction has a dollar amount. Illumin calculates it from your real balances and projects it 30 years forward. These are the numbers that change everything.
           </p>
         </div>
       </ScrollReveal>
@@ -54,7 +73,7 @@ export default function LightFeaturesSection() {
             <span className={styles.featureLabel}>Opportunity Cost</span>
             <h3 className={styles.featureH3}>The price of inaction.</h3>
             <p className={styles.featureText}>
-              Your idle cash has a cost. Illumin calculates exactly what it would be worth invested versus sitting in a checking account, and surfaces that number every time you log in. The gap is yours to close.
+              Your idle cash has a cost. Illumin calculates exactly what it would be worth invested versus sitting in a checking account, and puts that number in front of you every time you log in. The gap is yours to close.
             </p>
           </div>
 
@@ -80,12 +99,12 @@ export default function LightFeaturesSection() {
             <span className={styles.featureLabel}>Net Worth</span>
             <h3 className={styles.featureH3}>The number that actually measures progress.</h3>
             <p className={styles.featureText}>
-              Every account in one place, updating automatically. Assets, liabilities, investments, and debt. The one number that tells you if you are actually moving forward.
+              Every account in one place, updating automatically. Assets, liabilities, investments, debt. One number that tells you whether you&apos;re actually moving forward.
             </p>
           </div>
 
           <div className={styles.featureRight}>
-            <div className={styles.invertedCard}>
+            <div ref={sparkCardRef} className={styles.invertedCard}>
               <svg
                 viewBox="0 0 280 80"
                 width="100%"
@@ -97,7 +116,7 @@ export default function LightFeaturesSection() {
                 <polygon
                   points={SPARKLINE_AREA}
                   fill="var(--color-accent)"
-                  fillOpacity={0.08}
+                  className={`${styles.sparkArea} ${sparkRevealed ? styles.sparkAreaRevealed : ''}`}
                 />
                 <polyline
                   points={SPARKLINE}
@@ -106,6 +125,7 @@ export default function LightFeaturesSection() {
                   strokeWidth={1.5}
                   strokeLinejoin="round"
                   strokeLinecap="round"
+                  className={`${styles.sparkTrace} ${sparkRevealed ? styles.sparkTraceRevealed : ''}`}
                 />
               </svg>
 

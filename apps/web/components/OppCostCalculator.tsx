@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import styles from '@/app/landing.module.css'
 
@@ -69,7 +69,7 @@ const continueBtn: React.CSSProperties = {
 
 const bigNumStyle: React.CSSProperties = {
   fontFamily: 'var(--font-serif)',
-  fontSize: '80px',
+  fontSize: '52px',
   fontWeight: 300,
   color: 'var(--color-text)',
   lineHeight: 1,
@@ -135,11 +135,24 @@ export default function OppCostCalculator() {
     setIncomeDisplay(num ? formatNumber(num) : '')
   }
 
-  const handleContinue = () => {
+  const handleContinue = useCallback(() => {
     if (typeof step !== 'number') return
     if (step < 3) { setStep((step + 1) as Step); return }
     setStep('reveal')
-  }
+  }, [step])
+
+  // Allow Enter key to advance on all steps (including sliders)
+  useEffect(() => {
+    if (typeof step !== 'number') return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        handleContinue()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [step, handleContinue])
 
   const handleReset = () => {
     setStep(0)
@@ -198,6 +211,7 @@ export default function OppCostCalculator() {
               <input
                 type="text"
                 inputMode="numeric"
+                className={styles.calcBigInput}
                 value={ageRaw}
                 onChange={e => {
                   const raw = e.target.value.replace(/[^0-9]/g, '')
@@ -300,13 +314,14 @@ export default function OppCostCalculator() {
                 border: '1px solid var(--color-border)',
                 borderRadius: '2px',
               }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '10px' }}>
                   <span style={{
                     fontFamily: 'var(--font-mono)',
                     fontSize: '10px',
                     color: 'var(--color-text-muted)',
                     letterSpacing: '0.14em',
                     textTransform: 'uppercase' as const,
+                    flexShrink: 0,
                   }}>
                     That&apos;s
                   </span>
@@ -387,6 +402,8 @@ export default function OppCostCalculator() {
     </AnimatePresence>
   )
 
+  const doingWell = savingsRate >= 20
+
   // ── Reveal ─────────────────────────────────────────────────────────────────
   const renderReveal = () => (
     <motion.div
@@ -397,72 +414,139 @@ export default function OppCostCalculator() {
       style={{ width: '100%', maxWidth: '880px' }}
     >
       {/* Two-column layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '56px', marginBottom: '0', alignItems: 'start' }}>
+      <div className={styles.calcRevealGrid}>
 
         {/* Left: big number + context */}
         <div style={{ textAlign: 'left' }}>
-          <p style={{ ...muted, marginBottom: '20px' }}>Cost of waiting one year</p>
-          <p style={{
-            fontFamily: 'var(--font-serif)',
-            fontSize: '76px',
-            fontWeight: 300,
-            color: 'var(--color-text)',
-            lineHeight: 1,
-            letterSpacing: '-0.01em',
-            marginBottom: '28px',
-          }}>
-            {fmt(opportunityCost)}
-          </p>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            backgroundColor: 'rgba(184,145,58,0.10)',
-            border: '1px solid var(--color-gold)',
-            borderRadius: '2px',
-            padding: '5px 12px',
-            marginBottom: '24px',
-          }}>
-            <span style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: '10px',
-              color: 'var(--color-gold)',
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase' as const,
-              fontWeight: 500,
-            }}>
-              Every. Single. Year.
-            </span>
-          </div>
-          <p style={{
-            fontFamily: 'var(--font-serif)',
-            fontSize: '20px',
-            fontWeight: 300,
-            color: 'var(--color-text)',
-            lineHeight: 1.45,
-            marginBottom: '16px',
-          }}>
-            This is not a one-time loss. Every year you delay, you forfeit this amount in retirement wealth, permanently.
-          </p>
-          <p style={{
-            fontFamily: 'var(--font-serif)',
-            fontSize: '16px',
-            fontWeight: 300,
-            color: 'var(--color-text-mid)',
-            lineHeight: 1.5,
-            marginBottom: '20px',
-          }}>
-            Wait 5 years and the true cost is <strong style={{ color: 'var(--color-text)' }}>{fmt(opportunityCost * 5)}</strong>. Wait 10 years: <strong style={{ color: 'var(--color-text)' }}>{fmt(opportunityCost * 10)}</strong>. The clock does not pause.
-          </p>
-          <p style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: '11px',
-            color: 'var(--color-text-muted)',
-            lineHeight: 1.7,
-            letterSpacing: '0.02em',
-          }}>
-            Based on 7% annualized real return. S&amp;P 500 historical average. Calculated in today&apos;s dollars.
-          </p>
+          {doingWell ? (
+            <>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: 'rgba(45,106,79,0.10)',
+                border: '1px solid var(--color-positive)',
+                borderRadius: '2px',
+                padding: '5px 12px',
+                marginBottom: '24px',
+              }}>
+                <span style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '10px',
+                  color: 'var(--color-positive)',
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase' as const,
+                  fontWeight: 500,
+                }}>
+                  On track
+                </span>
+              </div>
+              <p style={{
+                fontFamily: 'var(--font-serif)',
+                fontSize: '40px',
+                fontWeight: 300,
+                color: 'var(--color-text)',
+                lineHeight: 1.15,
+                marginBottom: '24px',
+              }}>
+                You&apos;re doing well.
+              </p>
+              <p style={{
+                fontFamily: 'var(--font-serif)',
+                fontSize: '20px',
+                fontWeight: 300,
+                color: 'var(--color-text)',
+                lineHeight: 1.45,
+                marginBottom: '16px',
+              }}>
+                At {savingsRate}% savings, you&apos;re ahead of most people. Your projected retirement wealth is {fmt(wealthNow)}.
+              </p>
+              <p style={{
+                fontFamily: 'var(--font-serif)',
+                fontSize: '16px',
+                fontWeight: 300,
+                color: 'var(--color-text-mid)',
+                lineHeight: 1.5,
+                marginBottom: '20px',
+              }}>
+                Illumin is here to optimize your complete financial picture: benefits you&apos;re not using, subscriptions you forgot about, and the gap between where you are and where you could be.
+              </p>
+              <p style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '11px',
+                color: 'var(--color-text-muted)',
+                lineHeight: 1.7,
+                letterSpacing: '0.02em',
+              }}>
+                Based on 7% annualized real return. S&amp;P 500 historical average. Calculated in today&apos;s dollars.
+              </p>
+            </>
+          ) : (
+            <>
+              <p style={{ ...muted, marginBottom: '20px' }}>Cost of waiting one year</p>
+              <p style={{
+                fontFamily: 'var(--font-serif)',
+                fontSize: '76px',
+                fontWeight: 300,
+                color: 'var(--color-text)',
+                lineHeight: 1,
+                letterSpacing: '-0.01em',
+                marginBottom: '28px',
+              }}>
+                {fmt(opportunityCost)}
+              </p>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: 'rgba(184,145,58,0.10)',
+                border: '1px solid var(--color-gold)',
+                borderRadius: '2px',
+                padding: '5px 12px',
+                marginBottom: '24px',
+              }}>
+                <span style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '10px',
+                  color: 'var(--color-gold)',
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase' as const,
+                  fontWeight: 500,
+                }}>
+                  Every. Single. Year.
+                </span>
+              </div>
+              <p style={{
+                fontFamily: 'var(--font-serif)',
+                fontSize: '20px',
+                fontWeight: 300,
+                color: 'var(--color-text)',
+                lineHeight: 1.45,
+                marginBottom: '16px',
+              }}>
+                This is not a one-time loss. Every year you delay, you forfeit this amount in retirement wealth, permanently.
+              </p>
+              <p style={{
+                fontFamily: 'var(--font-serif)',
+                fontSize: '16px',
+                fontWeight: 300,
+                color: 'var(--color-text-mid)',
+                lineHeight: 1.5,
+                marginBottom: '20px',
+              }}>
+                Wait 5 years and the true cost is <strong style={{ color: 'var(--color-text)' }}>{fmt(opportunityCost * 5)}</strong>. Wait 10 years: <strong style={{ color: 'var(--color-text)' }}>{fmt(opportunityCost * 10)}</strong>. The clock does not pause.
+              </p>
+              <p style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '11px',
+                color: 'var(--color-text-muted)',
+                lineHeight: 1.7,
+                letterSpacing: '0.02em',
+              }}>
+                Based on 7% annualized real return. S&amp;P 500 historical average. Calculated in today&apos;s dollars.
+              </p>
+            </>
+          )}
           <button
             onClick={handleReset}
             style={{
@@ -644,56 +728,7 @@ export default function OppCostCalculator() {
         <div className={styles.calcSectionHeader}>
           <p className={styles.sectionEyebrow}>The calculation</p>
           <h2 className={styles.sectionHeadline}>See your number.</h2>
-          <p className={styles.sectionSub}>
-            Four inputs. The exact dollar cost of your current trajectory, and what closing the gap looks like.
-          </p>
         </div>
-
-        {/* Progress bar: 4 segments */}
-        <div style={{
-          height: '2px',
-          display: 'flex',
-          gap: '2px',
-          width: '100%',
-          maxWidth: step === 'reveal' ? '880px' : '480px',
-          marginBottom: '0',
-          transition: 'max-width 0.4s ease',
-        }}>
-          {[0, 1, 2, 3].map(i => (
-            <div
-              key={i}
-              style={{
-                flex: 1,
-                backgroundColor: i < filledSegs ? 'var(--color-gold)' : 'var(--color-border)',
-                transition: 'background-color 350ms ease',
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Step counter */}
-        {stepNum !== null && (
-          <div style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            width: '100%',
-            maxWidth: '480px',
-            marginTop: '8px',
-            marginBottom: '32px',
-          }}>
-            <span style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: '11px',
-              color: 'var(--color-text-muted)',
-              letterSpacing: '0.1em',
-            }}>
-              {stepNum + 1} / 4
-            </span>
-          </div>
-        )}
-
-        {/* Reveal spacer (no step counter shown) */}
-        {step === 'reveal' && <div style={{ height: '32px' }} />}
 
         {/* Content */}
         {step === 'reveal' ? (

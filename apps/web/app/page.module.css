@@ -196,6 +196,8 @@
 .featureLeft {
   display:        flex;
   flex-direction: column;
+  align-items:    center;
+  text-align:     center;
   gap:            16px;
 }
 
@@ -205,6 +207,7 @@
   text-transform: uppercase;
   letter-spacing: 0.15em;
   color:          var(--color-accent);
+  text-align:     center;
 }
 
 .featureH3 {
@@ -214,6 +217,7 @@
   color:       var(--color-foreground);
   margin:      0;
   line-height: 1.2;
+  text-align:  center;
 }
 
 .featureText {
@@ -223,6 +227,7 @@
   line-height: 1.65;
   max-width:   380px;
   margin:      0;
+  text-align:  center;
 }
 
 /* ── FEATURE RIGHT ────────────────────────────────────────── */
@@ -433,6 +438,33 @@
 .sparkline {
   display: block;
   margin-bottom: 20px;
+}
+
+/* Line trace: starts fully hidden via dashoffset, then draws in */
+.sparkTrace {
+  stroke-dasharray:  400;
+  stroke-dashoffset: 400;
+}
+
+.sparkTraceRevealed {
+  animation: traceLine 1.6s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+@keyframes traceLine {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Fill area: fades in after the line finishes */
+.sparkArea {
+  fill-opacity: 0;
+}
+
+.sparkAreaRevealed {
+  animation: fadeArea 0.8s ease 1.2s forwards;
+}
+
+@keyframes fadeArea {
+  to { fill-opacity: 0.08; }
 }
 
 .sparkBalances {
@@ -660,7 +692,6 @@
 
   .footer       { padding: 40px 32px; }
   .footerInner  { flex-direction: column; gap: 32px; text-align: center; }
-  .footerRight  { flex-wrap: wrap; justify-content: center; gap: 20px; }
 }
 
 /* ── MOBILE (<=768px) ──────────────────────────────────────── */
@@ -668,30 +699,31 @@
 @media (max-width: 768px) {
   .hero {
     height: 100svh;
-    align-items: flex-end;
-    padding-bottom: 60px;
+    align-items: center;
+    justify-content: center;
+    padding-top: 40px;
   }
 
   .content {
     padding: 0 24px;
-    align-items: flex-start;
-    text-align: left;
+    align-items: center;
+    text-align: center;
   }
 
   .headline {
     font-size: clamp(2.5rem, 10vw, 4rem);
-    text-align: left;
+    text-align: center;
   }
 
   .subhead {
     font-size: 1rem;
-    text-align: left;
+    text-align: center;
     max-width: 100%;
   }
 
   .ctas {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     gap: 12px;
     width: 100%;
   }
@@ -713,13 +745,29 @@
   }
 
   .featuresHeader {
-    text-align: left;
+    text-align: center;
+  }
+
+  .featuresHeadline {
+    text-align: center;
+  }
+
+  .featuresDesc {
+    text-align: center;
   }
 
   .featureRow {
+    grid-template-columns: 1fr;
     gap: 32px;
     padding: 48px 0;
   }
+
+  /* Always show text first, graphic second on mobile (override .featureRowReverse) */
+  .featureLeft  { order: 1 !important; text-align: center; }
+  .featureRight { order: 2 !important; }
+  .featureText  { max-width: 100%; text-align: center; }
+  .featureH3    { text-align: center; }
+  .featureLabel { text-align: center; }
 
   .lightFeatures {
     padding: 60px 20px;
@@ -731,11 +779,11 @@
 
   .ctaHeadline {
     font-size: clamp(2rem, 8vw, 3rem);
-    text-align: left;
+    text-align: center;
   }
 
   .ctaSubhead {
-    text-align: left;
+    text-align: center;
   }
 
   .waitlistForm {
@@ -749,5 +797,9 @@
 
   .footer {
     padding: 40px 20px;
+  }
+
+  .footerRight {
+    display: none;
   }
 }

@@ -55,7 +55,12 @@ function strengthColor(score: number): string {
   return 'var(--color-positive)'
 }
 
+const ACCESS_CODE = 'illumin2026'
+
 export default function SignupPage() {
+  const [accessCode, setAccessCode] = useState('')
+  const [unlocked, setUnlocked]     = useState(false)
+  const [codeError, setCodeError]   = useState(false)
   const [name, setName]             = useState('')
   const [email, setEmail]           = useState('')
   const [password, setPassword]     = useState('')
@@ -97,6 +102,89 @@ export default function SignupPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (!unlocked) {
+    return (
+      <AuthLayout>
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <div style={{
+            fontFamily: 'var(--font-serif)',
+            fontSize: '18px',
+            fontWeight: 400,
+            color: 'var(--color-gold)',
+            letterSpacing: '0.24em',
+            textTransform: 'uppercase',
+            marginBottom: '10px',
+          }}>
+            Illumin
+          </div>
+          <p style={{
+            fontSize: '16px',
+            color: 'var(--color-text)',
+            fontFamily: 'var(--font-serif)',
+            fontWeight: 300,
+          }}>
+            Enter access code
+          </p>
+        </div>
+
+        <form
+          onSubmit={e => {
+            e.preventDefault()
+            if (accessCode === ACCESS_CODE) {
+              setUnlocked(true)
+              setCodeError(false)
+            } else {
+              setCodeError(true)
+            }
+          }}
+          style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}
+        >
+          <div>
+            <label style={fieldLabel}>Access Code</label>
+            <input
+              type="password"
+              value={accessCode}
+              onChange={e => { setAccessCode(e.target.value); setCodeError(false) }}
+              required
+              autoComplete="off"
+              style={inputStyle}
+              placeholder="Enter code to continue"
+            />
+          </div>
+
+          {codeError && (
+            <p style={{
+              fontSize: '12px',
+              color: 'var(--color-negative)',
+              fontFamily: 'var(--font-mono)',
+              margin: 0,
+              lineHeight: 1.5,
+            }}>
+              Invalid access code.
+            </p>
+          )}
+
+          <button type="submit" style={primaryBtn(false)}>
+            Continue
+          </button>
+        </form>
+
+        <p style={{
+          textAlign: 'center',
+          marginTop: '28px',
+          fontSize: '12px',
+          color: 'var(--color-text-muted)',
+          fontFamily: 'var(--font-mono)',
+        }}>
+          Already have an account?{' '}
+          <Link href="/auth/login" style={{ color: 'var(--color-gold)', textDecoration: 'none' }}>
+            Sign in
+          </Link>
+        </p>
+      </AuthLayout>
+    )
   }
 
   return (
