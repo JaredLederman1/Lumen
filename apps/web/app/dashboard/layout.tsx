@@ -27,11 +27,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <PageTransition>{children}</PageTransition>
             </main>
 
-            {/* Mobile bottom nav, hidden on desktop via CSS */}
-            <div className="mobile-nav">
-              <MobileNav />
-            </div>
           </div>
+        </div>
+
+        {/* Mobile bottom nav, fixed at bottom, hidden on desktop via CSS */}
+        <div className="mobile-nav">
+          <MobileNav />
         </div>
         <GlobalTooltipRenderer />
         <CoachWidget />

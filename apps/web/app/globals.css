@@ -150,12 +150,20 @@ input[type="number"] {
   }
 
   .mobile-nav {
-    display: flex;
+    display: block;
   }
 
   .dashboard-main {
-    padding: 16px 16px 80px 16px;
+    padding: 16px 16px 130px 16px;
   }
+}
+
+.mobile-nav-fixed {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 90;
 }
 
 ::-webkit-scrollbar {
