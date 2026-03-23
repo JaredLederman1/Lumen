@@ -87,7 +87,6 @@ export default function MobileNav() {
       ? pathname === '/dashboard'
       : pathname.startsWith(href)
 
-  // onPress handler for category buttons
   const handleCategoryTap = (catId: string) => {
     setOpenCategory(prev => prev === catId ? null : catId)
   }
@@ -96,153 +95,158 @@ export default function MobileNav() {
     setOpenCategory(null)
   }
 
+  const openCat = openCategory ? NAV_CATEGORIES.find(c => c.id === openCategory) : null
+
   return (
-    <>
-      {/* Subcategory tray, slides in from right */}
-      <AnimatePresence>
-        {openCategory && (() => {
-          const cat = NAV_CATEGORIES.find(c => c.id === openCategory)
-          if (!cat) return null
-          return (
-            <motion.div
-              key={cat.id}
-              initial={{ x: '100%', opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: '100%', opacity: 0 }}
-              transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-              style={{
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center',
-                backgroundColor: colors.surface,
-                borderTop: `1px solid ${colors.goldBorder}`,
-                paddingLeft: spacing.pagePad,
-                paddingRight: spacing.pagePad,
-                height: 52,
-                gap: 4,
-                overflowX: 'auto',
-              }}
-            >
-              {/* Back button */}
-              <button
-                // onPress
-                onClick={() => setOpenCategory(null)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: spacing.tapTarget,
-                  minWidth: 36,
-                  background: 'none',
-                  border: 'none',
-                  color: colors.textMuted,
-                  fontSize: 16,
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                  padding: 0,
-                }}
-              >
-                {'\u2190'}
-              </button>
-
-              {cat.items.map(item => {
-                const active = isSubActive(item.href)
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    // onPress
-                    onClick={handleSubTap}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 6,
-                      textDecoration: 'none',
-                      minHeight: spacing.tapTarget,
-                      padding: '0 12px',
-                      borderRadius: 2,
-                      backgroundColor: active ? colors.goldSubtle : 'transparent',
-                      border: active ? `1px solid ${colors.goldBorder}` : '1px solid transparent',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <span style={{
-                      fontSize: 14,
-                      color: active ? colors.gold : colors.textMuted,
-                      lineHeight: 1,
-                    }}>
-                      {item.icon}
-                    </span>
-                    <span style={{
-                      fontFamily: fonts.mono,
-                      fontSize: 11,
-                      color: active ? colors.gold : colors.textMuted,
-                      letterSpacing: '0.06em',
-                      whiteSpace: 'nowrap',
-                    }}>
-                      {item.label}
-                    </span>
-                  </Link>
-                )
-              })}
-            </motion.div>
-          )
-        })()}
-      </AnimatePresence>
-
-      {/* Main category bar */}
-      <nav style={{
-        display: 'flex',
-        flexDirection: 'row',
-        backgroundColor: colors.surface,
-        borderTop: `1px solid ${colors.goldBorder}`,
-        paddingBottom: 'env(safe-area-inset-bottom)',
-        height: 64,
-        width: '100%',
-      }}>
-        {NAV_CATEGORIES.map(cat => {
-          const active = isCategoryActive(cat)
-          const isOpen = openCategory === cat.id
-          return (
+    <div style={{
+      backgroundColor: colors.surface,
+      borderTop: `1px solid ${colors.goldBorder}`,
+      paddingBottom: 'env(safe-area-inset-bottom)',
+      width: '100%',
+      overflow: 'hidden',
+    }}>
+      <AnimatePresence mode="wait">
+        {openCat ? (
+          /* Subcategory tray replaces the main bar */
+          <motion.div
+            key={`sub-${openCat.id}`}
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              height: 64,
+              paddingLeft: 8,
+              paddingRight: spacing.pagePad,
+              gap: 4,
+              overflowX: 'auto',
+            }}
+          >
+            {/* Back button */}
             <button
-              key={cat.id}
               // onPress
-              onClick={() => handleCategoryTap(cat.id)}
+              onClick={() => setOpenCategory(null)}
               style={{
-                flex: 1,
                 display: 'flex',
-                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 3,
                 minHeight: spacing.tapTarget,
-                background: isOpen ? colors.goldSubtle : 'transparent',
+                minWidth: 40,
+                background: 'none',
                 border: 'none',
-                borderTop: (isOpen || active) ? `2px solid ${colors.gold}` : '2px solid transparent',
+                color: colors.textMuted,
+                fontSize: 16,
                 cursor: 'pointer',
+                flexShrink: 0,
                 padding: 0,
               }}
             >
-              <span style={{
-                fontSize: 18,
-                color: isOpen ? colors.gold : active ? colors.gold : colors.textMuted,
-                lineHeight: 1,
-              }}>
-                {cat.icon}
-              </span>
-              <span style={{
-                fontFamily: fonts.mono,
-                fontSize: 9,
-                color: isOpen ? colors.gold : active ? colors.gold : colors.textMuted,
-                letterSpacing: '0.12em',
-              }}>
-                {cat.label.toUpperCase()}
-              </span>
+              {'\u2190'}
             </button>
-          )
-        })}
-      </nav>
-    </>
+
+            {openCat.items.map(item => {
+              const active = isSubActive(item.href)
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  // onPress
+                  onClick={handleSubTap}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                    textDecoration: 'none',
+                    minHeight: spacing.tapTarget,
+                    padding: '0 12px',
+                    borderRadius: 2,
+                    backgroundColor: active ? colors.goldSubtle : 'transparent',
+                    border: active ? `1px solid ${colors.goldBorder}` : '1px solid transparent',
+                    flexShrink: 0,
+                  }}
+                >
+                  <span style={{
+                    fontSize: 14,
+                    color: active ? colors.gold : colors.textMuted,
+                    lineHeight: 1,
+                  }}>
+                    {item.icon}
+                  </span>
+                  <span style={{
+                    fontFamily: fonts.mono,
+                    fontSize: 11,
+                    color: active ? colors.gold : colors.textMuted,
+                    letterSpacing: '0.06em',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {item.label}
+                  </span>
+                </Link>
+              )
+            })}
+          </motion.div>
+        ) : (
+          /* Main category bar */
+          <motion.nav
+            key="categories"
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '-100%' }}
+            transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              height: 64,
+              width: '100%',
+            }}
+          >
+            {NAV_CATEGORIES.map(cat => {
+              const active = isCategoryActive(cat)
+              return (
+                <button
+                  key={cat.id}
+                  // onPress
+                  onClick={() => handleCategoryTap(cat.id)}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 3,
+                    minHeight: spacing.tapTarget,
+                    background: 'transparent',
+                    border: 'none',
+                    borderTop: active ? `2px solid ${colors.gold}` : '2px solid transparent',
+                    cursor: 'pointer',
+                    padding: 0,
+                  }}
+                >
+                  <span style={{
+                    fontSize: 18,
+                    color: active ? colors.gold : colors.textMuted,
+                    lineHeight: 1,
+                  }}>
+                    {cat.icon}
+                  </span>
+                  <span style={{
+                    fontFamily: fonts.mono,
+                    fontSize: 9,
+                    color: active ? colors.gold : colors.textMuted,
+                    letterSpacing: '0.12em',
+                  }}>
+                    {cat.label.toUpperCase()}
+                  </span>
+                </button>
+              )
+            })}
+          </motion.nav>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
