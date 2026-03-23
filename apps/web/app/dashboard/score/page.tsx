@@ -1,0 +1,307 @@
+'use client'
+
+import { motion } from 'framer-motion'
+import Link from 'next/link'
+import { useDashboard } from '@/lib/dashboardData'
+import type { Finding } from '@illumin/types'
+import { useIsMobile } from '@/hooks/useIsMobile'
+import MobileCard from '@/components/ui/MobileCard'
+import { colors, fonts, spacing } from '@/lib/theme'
+
+function fmt(n: number) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
+}
+
+function urgencyColor(type: Finding['type']) {
+  if (type === 'critical') return { bg: 'rgba(224,92,110,0.10)', border: 'rgba(224,92,110,0.20)', dot: '#E05C6E', label: '#E05C6E' }
+  if (type === 'warning')  return { bg: 'rgba(184,145,58,0.08)', border: 'rgba(184,145,58,0.20)', dot: '#B8913A', label: '#B8913A' }
+  return { bg: 'rgba(76,175,125,0.10)', border: 'rgba(76,175,125,0.20)', dot: '#4CAF7D', label: '#4CAF7D' }
+}
+
+function ScoreRing({ score }: { score: number }) {
+  const r = 52
+  const circ = 2 * Math.PI * r
+  const dashOffset = circ * (1 - score / 100)
+  return (
+    <svg width="128" height="128" viewBox="0 0 128 128" style={{ transform: 'rotate(-90deg)' }}>
+      <circle cx="64" cy="64" r={r} fill="none" stroke="rgba(184,145,58,0.1)" strokeWidth="8" />
+      <circle
+        cx="64" cy="64" r={r} fill="none"
+        stroke="#B8913A" strokeWidth="8"
+        strokeDasharray={circ}
+        strokeDashoffset={dashOffset}
+        strokeLinecap="round"
+        style={{ transition: 'stroke-dashoffset 1s ease' }}
+      />
+    </svg>
+  )
+}
+
+function ScoreDesktop() {
+  const { loading, authToken, scoreReport: report } = useDashboard()
+
+  const scoreLabel = !report ? '' : report.overallScore >= 80 ? 'Strong' : report.overallScore >= 60 ? 'On Track' : report.overallScore >= 40 ? 'Needs Work' : 'At Risk'
+
+  return (
+    <div style={{ padding: '40px 48px', maxWidth: '900px' }}>
+      <div style={{ marginBottom: '36px' }}>
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#B8913A', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: '10px' }}>
+          Financial Score
+        </p>
+        <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '38px', fontWeight: 400, color: '#F0F2F8', marginBottom: '8px' }}>
+          Your Score Report
+        </h1>
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', color: '#6B7A8D', lineHeight: 1.6 }}>
+          A composite view of your financial health across benefits utilization, savings behavior, and retirement planning.
+        </p>
+      </div>
+
+      {loading && (
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: '#6B7A8D' }}>Loading…</p>
+      )}
+
+      {!loading && !authToken && (
+        <div style={{ backgroundColor: 'rgba(224,92,110,0.08)', border: '1px solid rgba(224,92,110,0.20)', borderRadius: '6px', padding: '16px 20px' }}>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: '#E05C6E' }}>Sign in to view your score.</p>
+        </div>
+      )}
+
+      {report && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '40px',
+            backgroundColor: 'rgba(184,145,58,0.06)',
+            border: '1px solid rgba(184,145,58,0.15)',
+            borderRadius: '8px', padding: '32px 36px', marginBottom: '32px',
+          }}>
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <ScoreRing score={report.overallScore} />
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: '43px', fontWeight: 300, color: '#F0F2F8' }}>{report.overallScore}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#B8913A', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{scoreLabel}</span>
+              </div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {report.dimensions.map(d => (
+                  <div key={d.name}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', color: '#6B7A8D' }}>{d.name}</span>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', color: '#F0F2F8' }}>{d.score}</span>
+                    </div>
+                    <div style={{ height: '4px', backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: '2px', overflow: 'hidden' }}>
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${d.score}%` }}
+                        transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+                        style={{ height: '100%', backgroundColor: '#B8913A', borderRadius: '2px' }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {report.findings.length > 0 ? (
+            <>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#6B7A8D', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '16px' }}>
+                Action items ({report.findings.length})
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '32px' }}>
+                {report.findings.map((f, i) => {
+                  const c = urgencyColor(f.type)
+                  return (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.06, duration: 0.3 }}
+                      style={{ backgroundColor: c.bg, border: `1px solid ${c.border}`, borderRadius: '6px', padding: '16px 20px' }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: c.dot, flexShrink: 0 }} />
+                            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '17px', color: '#F0F2F8', fontWeight: 500 }}>{f.title}</span>
+                            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: c.label, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{f.type}</span>
+                          </div>
+                          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', color: '#6B7A8D', lineHeight: 1.6, paddingLeft: '14px' }}>{f.description}</p>
+                        </div>
+                        {f.dollarImpact > 0 && (
+                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                            <p style={{ fontFamily: 'var(--font-sans)', fontSize: '26px', fontWeight: 300, color: '#F0F2F8' }}>{fmt(f.dollarImpact)}</p>
+                            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#6B7A8D' }}>per year</p>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </div>
+            </>
+          ) : (
+            <div style={{ backgroundColor: 'rgba(76,175,125,0.10)', border: '1px solid rgba(76,175,125,0.20)', borderRadius: '6px', padding: '20px 24px', marginBottom: '32px' }}>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: '#4CAF7D' }}>No critical findings. Upload your employment contract to unlock a full benefits analysis.</p>
+            </div>
+          )}
+
+          {!report.dimensions.find(d => d.name === 'Benefits Utilization') && (
+            <Link href="/dashboard/benefits" style={{
+              display: 'inline-block', padding: '12px 24px',
+              backgroundColor: '#B8913A', color: '#0D1018',
+              borderRadius: '4px', fontFamily: 'var(--font-mono)',
+              fontSize: '14px', textDecoration: 'none', letterSpacing: '0.06em',
+            }}>
+              Upload contract to complete analysis →
+            </Link>
+          )}
+
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#6B7A8D', marginTop: '28px' }}>
+            Generated {new Date(report.generatedAt).toLocaleString()}
+          </p>
+        </motion.div>
+      )}
+    </div>
+  )
+}
+
+function ScoreMobile() {
+  const { loading, authToken, scoreReport: report } = useDashboard()
+
+  const scoreLabel = !report ? '' : report.overallScore >= 80 ? 'Strong' : report.overallScore >= 60 ? 'On Track' : report.overallScore >= 40 ? 'Needs Work' : 'At Risk'
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sectionGap, padding: `${spacing.cardPad}px ${spacing.pagePad}px` }}>
+
+      {/* Page header */}
+      <div>
+        <p style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.gold, letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 6 }}>
+          Financial Score
+        </p>
+        <h1 style={{ fontFamily: fonts.serif, fontSize: 28, fontWeight: 400, color: colors.text, marginBottom: 4 }}>
+          Your Score Report
+        </h1>
+        <p style={{ fontFamily: fonts.mono, fontSize: 13, color: colors.textMuted, lineHeight: 1.6 }}>
+          A composite view of your financial health across benefits utilization, savings behavior, and retirement planning.
+        </p>
+      </div>
+
+      {loading && (
+        <p style={{ fontFamily: fonts.mono, fontSize: 14, color: colors.textMuted }}>Loading…</p>
+      )}
+
+      {!loading && !authToken && (
+        <MobileCard style={{ borderColor: 'rgba(224,92,110,0.20)', backgroundColor: 'rgba(224,92,110,0.08)' }}>
+          <p style={{ fontFamily: fonts.mono, fontSize: 14, color: '#E05C6E' }}>Sign in to view your score.</p>
+        </MobileCard>
+      )}
+
+      {report && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+          style={{ display: 'flex', flexDirection: 'column', gap: spacing.sectionGap }}
+        >
+
+          {/* Score ring card */}
+          <MobileCard>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 8, paddingBottom: 8 }}>
+              <div style={{ position: 'relative', width: 128, height: 128, marginBottom: 12 }}>
+                <ScoreRing score={report.overallScore} />
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontFamily: fonts.sans, fontSize: 40, fontWeight: 300, color: colors.text }}>{report.overallScore}</span>
+                  <span style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.gold, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{scoreLabel}</span>
+                </div>
+              </div>
+            </div>
+          </MobileCard>
+
+          {/* Dimension bars */}
+          <MobileCard>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.rowGap }}>
+              {report.dimensions.map(d => (
+                <div key={d.name} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontFamily: fonts.mono, fontSize: 14, color: colors.textMuted }}>{d.name}</span>
+                    <span style={{ fontFamily: fonts.mono, fontSize: 14, color: colors.text }}>{d.score}</span>
+                  </div>
+                  <div style={{ height: 4, backgroundColor: colors.surfaceAlt, borderRadius: 2, overflow: 'hidden' }}>
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${d.score}%` }}
+                      transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+                      style={{ height: '100%', backgroundColor: colors.gold, borderRadius: 2 }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </MobileCard>
+
+          {/* Findings */}
+          {report.findings.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.tightGap }}>
+              <p style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 2 }}>
+                Action items ({report.findings.length})
+              </p>
+              {report.findings.map((f, i) => {
+                const c = urgencyColor(f.type)
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.06, duration: 0.3 }}
+                  >
+                    <MobileCard style={{ backgroundColor: c.bg, borderColor: c.border }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: c.dot, flexShrink: 0 }} />
+                        <span style={{ fontFamily: fonts.mono, fontSize: 14, color: colors.text, fontWeight: 500, flex: 1 }}>{f.title}</span>
+                        <span style={{ fontFamily: fonts.mono, fontSize: 11, color: c.label, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{f.type}</span>
+                      </div>
+                      <p style={{ fontFamily: fonts.mono, fontSize: 13, color: colors.textMuted, lineHeight: 1.6, paddingLeft: 14 }}>{f.description}</p>
+                      {f.dollarImpact > 0 && (
+                        <div style={{ paddingLeft: 14, marginTop: 8 }}>
+                          <span style={{ fontFamily: fonts.sans, fontSize: 20, fontWeight: 300, color: colors.text }}>{fmt(f.dollarImpact)}</span>
+                          <span style={{ fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted, marginLeft: 6 }}>per year</span>
+                        </div>
+                      )}
+                    </MobileCard>
+                  </motion.div>
+                )
+              })}
+            </div>
+          ) : (
+            <MobileCard style={{ backgroundColor: 'rgba(76,175,125,0.10)', borderColor: 'rgba(76,175,125,0.20)' }}>
+              <p style={{ fontFamily: fonts.mono, fontSize: 13, color: '#4CAF7D' }}>No critical findings. Upload your employment contract to unlock a full benefits analysis.</p>
+            </MobileCard>
+          )}
+
+          {!report.dimensions.find(d => d.name === 'Benefits Utilization') && (
+            <Link href="/dashboard/benefits" style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              minHeight: spacing.tapTarget,
+              backgroundColor: colors.gold, color: '#0D1018',
+              borderRadius: 4, fontFamily: fonts.mono,
+              fontSize: 14, textDecoration: 'none', letterSpacing: '0.06em',
+            }}>
+              Upload contract to complete analysis
+            </Link>
+          )}
+
+          <p style={{ fontFamily: fonts.mono, fontSize: 12, color: colors.textMuted }}>
+            Generated {new Date(report.generatedAt).toLocaleString()}
+          </p>
+
+        </motion.div>
+      )}
+    </div>
+  )
+}
+
+export default function ScorePage() {
+  const isMobile = useIsMobile()
+  return isMobile ? <ScoreMobile /> : <ScoreDesktop />
+}

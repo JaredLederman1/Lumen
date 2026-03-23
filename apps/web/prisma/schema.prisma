@@ -1,0 +1,260 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  createdAt          DateTime            @default(now()) @map("created_at")
+  accounts           Account[]
+  snapshots          NetWorthSnapshot[]
+  onboardingProfile  OnboardingProfile?
+  employmentBenefits EmploymentBenefits?
+  budget             Budget?
+  categoryRules       CategoryRule[]
+  merchantRenameRules MerchantRenameRule[]
+  financialActions    FinancialAction[]
+  checklistItems      ChecklistItem[]
+  recurringExclusions RecurringExclusion[]
+  budgetRollovers     BudgetRollover[]
+  analyticsHoldings   AnalyticsHolding[]
+}
+
+model FinancialAction {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  label       String
+  description String?
+  priority    Int      @default(0)
+  category    String   @default("general")
+  done        Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("financial_actions")
+}
+
+model Budget {
+  id            String   @id @default(cuid())
+  userId        String   @unique @map("user_id")
+  strategy      String
+  monthlyIncome Float    @map("monthly_income")
+  categories    Json
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@map("budgets")
+}
+
+model Account {
+  id              String        @id @default(cuid())
+  userId          String        @map("user_id")
+  institutionName String        @map("institution_name")
+  accountType     String        @map("account_type")
+  balance         Float         @default(0)
+  last4           String?
+  classification  String        @default("asset")
+  plaidAccountId  String?       @unique @map("plaid_account_id")
+  plaidAccessToken String?       @map("plaid_access_token")
+  plaidItemId     String?       @map("plaid_item_id")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  user            User          @relation(fields: [userId], references: [id])
+  transactions       Transaction[]
+  holdings           Holding[]
+  analyticsHoldings  AnalyticsHolding[]
+
+  @@map("accounts")
+}
+
+model Security {
+  id              String    @id @default(cuid())
+  plaidSecurityId String?   @unique @map("plaid_security_id")
+  ticker          String?
+  name            String
+  type            String
+  closePrice      Float?    @map("close_price")
+  closePriceAt    DateTime? @map("close_price_at")
+  isoCode         String?   @map("iso_code")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  holdings        Holding[]
+
+  @@map("securities")
+}
+
+model Holding {
+  id         String   @id @default(cuid())
+  accountId  String   @map("account_id")
+  securityId String   @map("security_id")
+  quantity   Float
+  costBasis  Float?   @map("cost_basis")
+  value      Float
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  account    Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  security   Security @relation(fields: [securityId], references: [id])
+
+  @@unique([accountId, securityId])
+  @@map("holdings")
+}
+
+model AnalyticsHolding {
+  id           String   @id @default(cuid())
+  accountId    String   @map("account_id")
+  userId       String   @map("user_id")
+  ticker       String
+  name         String
+  assetClass   String   @map("asset_class")
+  sector       String?
+  geography    String?
+  quantity     Float
+  costBasis    Float?   @map("cost_basis")
+  currentPrice Float    @map("current_price")
+  currentValue Float    @map("current_value")
+  beta         Float?
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+  account      Account  @relation(fields: [accountId], references: [id])
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@unique([accountId, ticker])
+  @@map("analytics_holdings")
+}
+
+model Transaction {
+  id           String   @id @default(cuid())
+  accountId    String   @map("account_id")
+  merchantName String?  @map("merchant_name")
+  amount       Float
+  category     String?
+  date         DateTime
+  pending      Boolean  @default(false)
+  tags         String[] @default([])
+  account      Account  @relation(fields: [accountId], references: [id])
+
+  @@map("transactions")
+}
+
+model NetWorthSnapshot {
+  id               String   @id @default(cuid())
+  userId           String   @map("user_id")
+  totalAssets      Float    @map("total_assets")
+  totalLiabilities Float    @map("total_liabilities")
+  recordedAt       DateTime @default(now()) @map("recorded_at")
+  user             User     @relation(fields: [userId], references: [id])
+
+  @@map("net_worth_snapshots")
+}
+
+model OnboardingProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique @map("user_id")
+  age           Int
+  annualIncome  Float    @map("annual_income")
+  savingsRate   Float    @map("savings_rate")
+  retirementAge Int      @map("retirement_age")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@map("onboarding_profiles")
+}
+
+model CategoryRule {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  merchantName String   @map("merchant_name")
+  category     String
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, merchantName])
+  @@map("category_rules")
+}
+
+model MerchantRenameRule {
+  id               String   @id @default(cuid())
+  userId           String   @map("user_id")
+  originalName     String   @map("original_name")
+  renamedTo        String   @map("renamed_to")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  user             User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, originalName])
+  @@map("merchant_rename_rules")
+}
+
+model ChecklistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  text      String
+  completed Boolean  @default(false)
+  source    String   @default("ai_coach")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RecurringExclusion {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  merchantName String   @map("merchant_name")
+  createdAt    DateTime @default(now()) @map("created_at")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, merchantName])
+  @@map("recurring_exclusions")
+}
+
+model BudgetRollover {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  categoryName String   @map("category_name")
+  periodYear   Int      @map("period_year")
+  periodMonth  Int      @map("period_month")
+  budgeted     Float
+  spent        Float
+  rollover     Float
+  createdAt    DateTime @default(now()) @map("created_at")
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, categoryName, periodYear, periodMonth])
+  @@map("budget_rollovers")
+}
+
+model EmploymentBenefits {
+  id                   String   @id @default(cuid())
+  userId               String   @unique @map("user_id")
+  extractedAt          DateTime @default(now()) @map("extracted_at")
+  rawExtraction        Json     @map("raw_extraction")
+  has401k              Boolean  @default(false) @map("has_401k")
+  matchRate            Float?   @map("match_rate")
+  matchCap             Float?   @map("match_cap")
+  vestingYears         Int?     @map("vesting_years")
+  hasHSA               Boolean  @default(false) @map("has_hsa")
+  hsaEmployerContrib   Float?   @map("hsa_employer_contrib")
+  hasFSA               Boolean  @default(false) @map("has_fsa")
+  fsaLimit             Float?   @map("fsa_limit")
+  hasRSUs              Boolean  @default(false) @map("has_rsus")
+  rsuGrantValue        Float?   @map("rsu_grant_value")
+  stockOptionShares    Float?   @map("stock_option_shares")
+  paidSickLeaveDays    Int?     @map("paid_sick_leave_days")
+  hasESPP              Boolean  @default(false) @map("has_espp")
+  esppDiscount         Float?   @map("espp_discount")
+  hasCommuterBenefits  Boolean  @default(false) @map("has_commuter_benefits")
+  commuterMonthlyLimit Float?   @map("commuter_monthly_limit")
+  tuitionReimbursement Float?   @map("tuition_reimbursement")
+  wellnessStipend      Float?   @map("wellness_stipend")
+  totalAnnualValue     Float?   @map("total_annual_value")
+  capturedAnnualValue  Float?   @map("captured_annual_value")
+  actionItemsDone      Json     @default("[]") @map("action_items_done")
+  user                 User     @relation(fields: [userId], references: [id])
+
+  @@map("employment_benefits")
+}
