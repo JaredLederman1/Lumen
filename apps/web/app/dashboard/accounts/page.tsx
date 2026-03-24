@@ -206,13 +206,19 @@ function InstitutionGroup({
 
 function ConnectButton({
   onSuccess,
+  onConnecting,
 }: {
   onSuccess: (accounts: Account[]) => void
+  onConnecting?: () => void
 }) {
   const { authToken } = useDashboard()
   const [linkToken, setLinkToken] = useState<string | null>(null)
   const [connecting, setConnecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const onConnectingRef = useRef(onConnecting)
+  onConnectingRef.current = onConnecting
+  const onSuccessRef = useRef(onSuccess)
+  onSuccessRef.current = onSuccess
 
   useEffect(() => {
     const headers: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
@@ -229,6 +235,7 @@ function ConnectButton({
     async (publicToken: string, metadata: PlaidOnSuccessMetadata) => {
       setConnecting(true)
       setError(null)
+      onConnectingRef.current?.()
       try {
         const authHeaders: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
         const res = await fetch('/api/plaid/exchange-token', {
@@ -242,14 +249,14 @@ function ConnectButton({
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error ?? 'Exchange failed')
-        onSuccess(data.accounts ?? [])
+        onSuccessRef.current(data.accounts ?? [])
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Connection failed')
       } finally {
         setConnecting(false)
       }
     },
-    [onSuccess, authToken]
+    [authToken]
   )
 
   const { open, ready } = usePlaidLink({
@@ -280,11 +287,15 @@ function ConnectButton({
 }
 
 // Shared Plaid connect logic extracted for mobile use
-function useMobilePlaidConnect(onSuccess: (accounts: Account[]) => void) {
+function useMobilePlaidConnect(onSuccess: (accounts: Account[]) => void, onConnecting?: () => void) {
   const { authToken } = useDashboard()
   const [linkToken, setLinkToken] = useState<string | null>(null)
   const [connecting, setConnecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const onConnectingRef = useRef(onConnecting)
+  onConnectingRef.current = onConnecting
+  const onSuccessRef = useRef(onSuccess)
+  onSuccessRef.current = onSuccess
 
   useEffect(() => {
     const headers: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
@@ -301,6 +312,7 @@ function useMobilePlaidConnect(onSuccess: (accounts: Account[]) => void) {
     async (publicToken: string, metadata: PlaidOnSuccessMetadata) => {
       setConnecting(true)
       setError(null)
+      onConnectingRef.current?.()
       try {
         const authHeaders: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
         const res = await fetch('/api/plaid/exchange-token', {
@@ -314,14 +326,14 @@ function useMobilePlaidConnect(onSuccess: (accounts: Account[]) => void) {
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error ?? 'Exchange failed')
-        onSuccess(data.accounts ?? [])
+        onSuccessRef.current(data.accounts ?? [])
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Connection failed')
       } finally {
         setConnecting(false)
       }
     },
-    [onSuccess, authToken]
+    [authToken]
   )
 
   const { open, ready } = usePlaidLink({
@@ -332,9 +344,110 @@ function useMobilePlaidConnect(onSuccess: (accounts: Account[]) => void) {
   return { open, ready, connecting, error }
 }
 
+const SYNC_STEPS = [
+  'Connecting to your institution...',
+  'Verifying credentials...',
+  'Retrieving account details...',
+  'Fetching balances...',
+  'Syncing recent transactions...',
+  'Almost there...',
+]
+
+function SyncingOverlay({ done }: { done: boolean }) {
+  const [progress, setProgress] = useState(0)
+  const [stepIndex, setStepIndex] = useState(0)
+
+  useEffect(() => {
+    if (done) {
+      setProgress(100)
+      setStepIndex(SYNC_STEPS.length - 1)
+      return
+    }
+    // Simulate progress: fast at first, slows down, never exceeds 92 until done
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 92) return prev
+        const remaining = 92 - prev
+        const increment = Math.max(0.3, remaining * 0.04)
+        return Math.min(92, prev + increment)
+      })
+    }, 150)
+    return () => clearInterval(interval)
+  }, [done])
+
+  useEffect(() => {
+    if (done) {
+      setStepIndex(SYNC_STEPS.length - 1)
+      return
+    }
+    // Advance step label based on progress thresholds
+    if (progress < 12) setStepIndex(0)
+    else if (progress < 30) setStepIndex(1)
+    else if (progress < 50) setStepIndex(2)
+    else if (progress < 70) setStepIndex(3)
+    else if (progress < 88) setStepIndex(4)
+    else setStepIndex(5)
+  }, [progress, done])
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        backgroundColor: 'rgba(8, 10, 14, 0.88)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '28px',
+      }}
+    >
+      <div style={{ textAlign: 'center' }}>
+        <p style={{
+          fontFamily: 'var(--font-serif)', fontSize: '22px', color: '#F0F2F8',
+          fontWeight: 400, marginBottom: '6px',
+        }}>
+          Syncing your accounts
+        </p>
+        <p style={{
+          fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#6B7A8D',
+          letterSpacing: '0.06em', height: '18px',
+        }}>
+          {SYNC_STEPS[stepIndex]}
+        </p>
+      </div>
+
+      {/* Progress bar */}
+      <div style={{ width: '320px', maxWidth: '80vw' }}>
+        <div style={{
+          width: '100%', height: '4px', borderRadius: '2px',
+          backgroundColor: 'rgba(184,145,58,0.12)',
+          overflow: 'hidden',
+        }}>
+          <motion.div
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+            style={{
+              height: '100%', borderRadius: '2px',
+              backgroundColor: '#B8913A',
+            }}
+          />
+        </div>
+        <p style={{
+          fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#6B7A8D',
+          letterSpacing: '0.08em', textAlign: 'right', marginTop: '8px',
+        }}>
+          {Math.round(progress)}%
+        </p>
+      </div>
+    </motion.div>
+  )
+}
+
 function AccountsContent() {
   const { loading, accounts, setAccounts, refresh, authToken } = useDashboard()
   const [resetting, setResetting] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+  const [syncDone, setSyncDone] = useState(false)
   const [banner, setBanner] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
   const handleRemove = (id: string) => {
@@ -348,13 +461,17 @@ function AccountsContent() {
   }
 
   const handleConnectSuccess = async (newAccounts: Account[]) => {
-    setBanner({ type: 'success', message: `${newAccounts.length} account${newAccounts.length !== 1 ? 's' : ''} connected successfully. Syncing transactions...` })
     const authHeaders: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
     try {
       await fetch('/api/plaid/sync', { method: 'POST', headers: authHeaders })
     } catch {}
     await refresh()
-    setBanner({ type: 'success', message: `${newAccounts.length} account${newAccounts.length !== 1 ? 's' : ''} connected successfully.` })
+    setSyncDone(true)
+    setTimeout(() => {
+      setSyncing(false)
+      setSyncDone(false)
+      setBanner({ type: 'success', message: `${newAccounts.length} account${newAccounts.length !== 1 ? 's' : ''} connected successfully.` })
+    }, 800)
   }
 
   const handleReset = async () => {
@@ -406,6 +523,9 @@ function AccountsContent() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <AnimatePresence>
+        {syncing && <SyncingOverlay done={syncDone} />}
+      </AnimatePresence>
       {banner && (
         <div style={{
           padding: '13px 18px',
@@ -499,7 +619,7 @@ function AccountsContent() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
           <p style={labelStyle}>Connected Accounts</p>
 
-          <ConnectButton onSuccess={handleConnectSuccess} />
+          <ConnectButton onSuccess={handleConnectSuccess} onConnecting={() => setSyncing(true)} />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -527,6 +647,8 @@ function AccountsContent() {
 
 function AccountsMobileContent() {
   const { loading, accounts, setAccounts, refresh, authToken } = useDashboard()
+  const [syncing, setSyncing] = useState(false)
+  const [syncDone, setSyncDone] = useState(false)
   const [banner, setBanner] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
   const handleRemove = (id: string) => {
@@ -540,16 +662,20 @@ function AccountsMobileContent() {
   }
 
   const handleConnectSuccess = async (newAccounts: Account[]) => {
-    setBanner({ type: 'success', message: `${newAccounts.length} account${newAccounts.length !== 1 ? 's' : ''} connected successfully. Syncing transactions...` })
     const authHeaders: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
     try {
       await fetch('/api/plaid/sync', { method: 'POST', headers: authHeaders })
     } catch {}
     await refresh()
-    setBanner({ type: 'success', message: `${newAccounts.length} account${newAccounts.length !== 1 ? 's' : ''} connected successfully.` })
+    setSyncDone(true)
+    setTimeout(() => {
+      setSyncing(false)
+      setSyncDone(false)
+      setBanner({ type: 'success', message: `${newAccounts.length} account${newAccounts.length !== 1 ? 's' : ''} connected successfully.` })
+    }, 800)
   }
 
-  const { open, ready, connecting, error: connectError } = useMobilePlaidConnect(handleConnectSuccess)
+  const { open, ready, connecting, error: connectError } = useMobilePlaidConnect(handleConnectSuccess, () => setSyncing(true))
 
   const grouped = accounts.reduce<Record<string, Account[]>>((acc, a) => {
     if (!acc[a.institutionName]) acc[a.institutionName] = []
@@ -568,6 +694,9 @@ function AccountsMobileContent() {
       transition={{ duration: 0.35 }}
       style={{ display: 'flex', flexDirection: 'column', gap: spacing.sectionGap }}
     >
+      <AnimatePresence>
+        {syncing && <SyncingOverlay done={syncDone} />}
+      </AnimatePresence>
       {/* Banner */}
       {banner && (
         <div style={{

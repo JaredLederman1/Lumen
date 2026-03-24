@@ -83,11 +83,15 @@ export async function GET(request: NextRequest) {
     const avgExpenses = monthValues.reduce((s, m) => s + m.expenses, 0) / count
     const avgSavings  = avgIncome - avgExpenses
 
+    const liquidTypes = new Set(['checking', 'CHECKING', 'savings', 'SAVINGS'])
     const checkingBalance = accounts.find(
       a => a.accountType === 'checking' || a.accountType === 'CHECKING'
     )?.balance ?? (accounts[0]?.balance ?? 0)
+    const totalLiquidBalance = accounts
+      .filter(a => liquidTypes.has(a.accountType))
+      .reduce((s, a) => s + a.balance, 0) || checkingBalance
 
-    const emergencyFundMonths = avgExpenses > 0 ? checkingBalance / avgExpenses : 0
+    const emergencyFundMonths = avgExpenses > 0 ? totalLiquidBalance / avgExpenses : 0
 
     // Last 3 months of actuals, anchoring the final point at current checking balance
     const sortedEntries = Object.entries(byMonth).sort(([a], [b]) => a.localeCompare(b)).slice(-3)

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useDashboard } from '@/lib/dashboardData'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { spacing } from '@/lib/theme'
+import DataTooltip from '@/components/ui/DataTooltip'
 
 interface Goal {
   id: string
@@ -88,19 +89,39 @@ function GoalCard({ goal, delay }: { goal: Goal; delay: number }) {
         <div>
           <p style={labelStyle}>Current</p>
           <p style={{ fontFamily: 'var(--font-sans)', fontSize: '24px', color: 'var(--color-text)', fontWeight: 400 }}>
-            {fmt(goal.current)}
+            <DataTooltip
+              value={goal.current}
+              title={`${goal.name}: Current`}
+              computationNote="Current balance from connected accounts"
+              sources={[{ label: 'Account balance', value: goal.current, type: 'sum' as const }]}
+            />
           </p>
         </div>
         <div>
           <p style={labelStyle}>Target</p>
           <p style={{ fontFamily: 'var(--font-sans)', fontSize: '24px', color: 'var(--color-text)', fontWeight: 400 }}>
-            {fmt(goal.target)}
+            <DataTooltip
+              value={goal.target}
+              title={`${goal.name}: Target`}
+              computationNote="Target amount based on your financial profile"
+              sources={[{ label: 'Goal target', value: goal.target, type: 'sum' as const }]}
+            />
           </p>
         </div>
         <div>
           <p style={labelStyle}>Monthly Needed</p>
           <p style={{ fontFamily: 'var(--font-sans)', fontSize: '24px', color: 'var(--color-gold)', fontWeight: 400 }}>
-            {goal.monthlyContributionNeeded != null ? fmt(goal.monthlyContributionNeeded) : '--'}
+            {goal.monthlyContributionNeeded != null ? (
+              <DataTooltip
+                value={goal.monthlyContributionNeeded}
+                title={`${goal.name}: Monthly Needed`}
+                computationNote="(Target - Current) / months to goal"
+                sources={[
+                  { label: 'Remaining gap', value: goal.target - goal.current, type: 'sum' as const },
+                  { label: 'Monthly contribution', value: goal.monthlyContributionNeeded, type: 'average' as const },
+                ]}
+              />
+            ) : '--'}
           </p>
         </div>
       </div>

@@ -39,8 +39,8 @@ const primaryBtn = (loading: boolean): React.CSSProperties => ({
 })
 
 const ADMIN_CREDENTIALS = {
-  username: 'jonathan.lederman@gmail.com',
-  password: 'jonathanlederman',
+  username: 'jared.a.lederman@gmail.com',
+  password: 'REDACTED',
 }
 
 export default function AdminLoginPage() {

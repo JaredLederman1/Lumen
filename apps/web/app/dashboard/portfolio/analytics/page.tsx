@@ -407,7 +407,8 @@ function RiskReturnScatter({
           <Scatter data={benchData} fill="var(--color-gold)" opacity={0.7} name="Benchmark" />
           <Scatter data={data} fill="var(--color-positive)" opacity={0.75} name="Holdings" />
           <Legend
-            wrapperStyle={{ fontFamily: 'var(--font-mono)', fontSize: '10px', paddingTop: '8px' }}
+            wrapperStyle={{ fontFamily: 'var(--font-mono)', fontSize: '10px', paddingTop: '24px', textAlign: 'center' }}
+            align="center"
           />
         </ScatterChart>
       </ResponsiveContainer>
@@ -485,7 +486,8 @@ function SectorVsBenchmark({
             }}
           />
           <Legend
-            wrapperStyle={{ fontFamily: 'var(--font-mono)', fontSize: '10px', paddingTop: '8px' }}
+            wrapperStyle={{ fontFamily: 'var(--font-mono)', fontSize: '10px', paddingTop: '24px', textAlign: 'center' }}
+            align="center"
           />
           <Bar dataKey="portfolio" name="Your portfolio" fill="var(--color-gold)" opacity={0.8} radius={[2, 2, 0, 0]} />
           <Bar dataKey="benchmark" name="S&P 500 (benchmark)" fill="var(--color-info)" opacity={0.6} radius={[2, 2, 0, 0]} />

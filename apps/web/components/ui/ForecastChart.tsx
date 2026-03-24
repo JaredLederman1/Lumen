@@ -13,10 +13,13 @@ function formatK(value: number) {
 }
 
 export default function ForecastChart({ data, emergencyFundMonths, height = 220 }: ForecastChartProps) {
-  const chartData = data.map(d => ({
+  // Build chart data with overlap at the transition point so the line is continuous.
+  // The last actual point is duplicated into the projected series.
+  const lastActualIdx = data.findLastIndex(d => !d.projected)
+  const chartData = data.map((d, i) => ({
     month: d.month,
     actual: d.projected ? null : d.balance,
-    projected: d.projected ? d.balance : null,
+    projected: d.projected || i === lastActualIdx ? d.balance : null,
   }))
 
   return (
@@ -72,17 +75,29 @@ export default function ForecastChart({ data, emergencyFundMonths, height = 220 
       <div style={{
         marginTop: '20px',
         padding: '14px 18px',
-        backgroundColor: 'rgba(76,175,125,0.10)',
-        border: '1px solid rgba(76,175,125,0.18)',
+        backgroundColor: emergencyFundMonths < 6 ? 'rgba(224,92,110,0.10)' : emergencyFundMonths < 12 ? 'rgba(184,145,58,0.10)' : 'rgba(76,175,125,0.10)',
+        border: `1px solid ${emergencyFundMonths < 6 ? 'rgba(224,92,110,0.18)' : emergencyFundMonths < 12 ? 'rgba(184,145,58,0.18)' : 'rgba(76,175,125,0.18)'}`,
         borderRadius: '2px',
         display: 'flex',
-        alignItems: 'center',
-        gap: '10px',
+        flexDirection: 'column' as const,
+        gap: '8px',
       }}>
-        <span style={{ fontSize: '19px', color: '#4CAF7D' }}>◎</span>
-        <span style={{ fontSize: '14px', fontFamily: 'var(--font-mono)', color: '#4CAF7D', letterSpacing: '0.02em' }}>
-          Projected emergency fund coverage: <strong>{emergencyFundMonths.toFixed(1)} months</strong>
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '19px', color: emergencyFundMonths < 6 ? '#E05C6E' : emergencyFundMonths < 12 ? '#B8913A' : '#4CAF7D' }}>◎</span>
+          <span style={{ fontSize: '14px', fontFamily: 'var(--font-mono)', color: emergencyFundMonths < 6 ? '#E05C6E' : emergencyFundMonths < 12 ? '#B8913A' : '#4CAF7D', letterSpacing: '0.02em' }}>
+            Projected emergency fund coverage: <strong>{emergencyFundMonths.toFixed(1)} months</strong>
+          </span>
+        </div>
+        {emergencyFundMonths < 6 && (
+          <p style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: '#E05C6E', letterSpacing: '0.02em', margin: '0 0 0 29px', lineHeight: 1.6 }}>
+            Your emergency fund is below the recommended 6-month minimum. Prioritize building this buffer before other financial goals.
+          </p>
+        )}
+        {emergencyFundMonths >= 6 && emergencyFundMonths < 12 && (
+          <p style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: '#B8913A', letterSpacing: '0.02em', margin: '0 0 0 29px', lineHeight: 1.6 }}>
+            You meet the minimum, but consider saving more in case of emergency. 12 months of coverage provides a stronger safety net.
+          </p>
+        )}
       </div>
     </div>
   )

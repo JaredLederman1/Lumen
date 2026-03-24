@@ -38,7 +38,7 @@ export default function AdminPage() {
       router.replace('/admin/login')
       return
     }
-    setAdminEmail('jonathanlederman')
+    setAdminEmail('jared.a.lederman@gmail.com')
     setLoading(false)
   }, [router])
 
