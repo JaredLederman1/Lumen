@@ -61,6 +61,15 @@ export async function getHistoricalPrices(
   startDate: Date,
   endDate: Date,
 ): Promise<PriceHistoryResult> {
+  // Clamp endDate to yesterday to avoid incomplete intraday rows
+  // where close is null (market still open), which causes yahoo-finance2 to throw.
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+  yesterday.setHours(23, 59, 59, 999)
+  if (endDate > yesterday) {
+    endDate = yesterday
+  }
+
   const skippedTickers = new Map<string, SkipReason>()
 
   // Classify and normalize each ticker

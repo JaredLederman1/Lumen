@@ -38,10 +38,13 @@ const primaryBtn = (loading: boolean): React.CSSProperties => ({
   marginTop: '8px',
 })
 
-const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? ''
+const ADMIN_CREDENTIALS = {
+  username: 'jonathan.lederman@gmail.com',
+  password: 'jonathanlederman',
+}
 
 export default function AdminLoginPage() {
-  const [email, setEmail]       = useState('')
+  const [username, setUsername]  = useState('')
   const [password, setPassword] = useState('')
   const [showPwd, setShowPwd]   = useState(false)
   const [error, setError]       = useState<string | null>(null)
@@ -53,18 +56,24 @@ export default function AdminLoginPage() {
     setLoading(true)
     setError(null)
     try {
-      const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
-      if (authError) {
-        setError(authError.message)
-        return
+      if (
+        username === ADMIN_CREDENTIALS.username &&
+        password === ADMIN_CREDENTIALS.password
+      ) {
+        // Sign in via Supabase to get a real session for dashboard access
+        const { error: authError } = await supabase.auth.signInWithPassword({
+          email: ADMIN_CREDENTIALS.username,
+          password: ADMIN_CREDENTIALS.password,
+        })
+        if (authError) {
+          setError(authError.message)
+          return
+        }
+        sessionStorage.setItem('illumin_admin', 'true')
+        router.push('/dashboard')
+      } else {
+        setError('Invalid username or password.')
       }
-      // Gate: only allow the designated admin email
-      if (ADMIN_EMAIL && data.user?.email !== ADMIN_EMAIL) {
-        await supabase.auth.signOut()
-        setError('Access denied. This portal is for administrators only.')
-        return
-      }
-      router.push('/dashboard')
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {
@@ -99,13 +108,13 @@ export default function AdminLoginPage() {
 
       <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <div>
-          <label style={fieldLabel}>Email</label>
+          <label style={fieldLabel}>Username</label>
           <input
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
+            type="text"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
             required
-            autoComplete="email"
+            autoComplete="username"
             style={inputStyle}
           />
         </div>

@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
 const row: React.CSSProperties = {
@@ -34,18 +33,17 @@ export default function AdminPage() {
   const [loading, setLoading]       = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        router.replace('/admin/login')
-        return
-      }
-      setAdminEmail(data.session.user.email ?? null)
-      setLoading(false)
-    })
+    const isAdmin = sessionStorage.getItem('illumin_admin') === 'true'
+    if (!isAdmin) {
+      router.replace('/admin/login')
+      return
+    }
+    setAdminEmail('jonathanlederman')
+    setLoading(false)
   }, [router])
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
+  const handleSignOut = () => {
+    sessionStorage.removeItem('illumin_admin')
     router.push('/admin/login')
   }
 

@@ -499,25 +499,7 @@ function AccountsContent() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
           <p style={labelStyle}>Connected Accounts</p>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button
-              onClick={handleReset}
-              disabled={resetting}
-              title="Dev only: delete all accounts and transactions to re-connect"
-              style={{
-                padding: '8px 12px', backgroundColor: 'transparent',
-                border: '1px solid rgba(224,92,110,0.25)', borderRadius: '2px',
-                color: '#E05C6E', fontSize: '13px', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em',
-                cursor: resetting ? 'not-allowed' : 'pointer', opacity: resetting ? 0.5 : 1,
-              }}
-              onMouseEnter={e => !resetting && (e.currentTarget.style.backgroundColor = 'rgba(224,92,110,0.08)')}
-              onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
-            >
-              {resetting ? 'Resetting...' : 'Reset [dev]'}
-            </button>
-
-            <ConnectButton onSuccess={handleConnectSuccess} />
-          </div>
+          <ConnectButton onSuccess={handleConnectSuccess} />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
