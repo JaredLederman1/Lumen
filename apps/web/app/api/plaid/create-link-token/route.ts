@@ -38,9 +38,11 @@ export async function GET(request: NextRequest) {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     const plaidError = (err as { response?: { data?: unknown } })?.response?.data
-    console.error('[create-link-token] Plaid error:', plaidError ?? message)
+    const detail = plaidError ?? message
+    console.error('[create-link-token] Plaid error:', detail)
+    console.error('[create-link-token] PLAID_ENV:', process.env.PLAID_ENV, 'PLAID_CLIENT_ID:', process.env.PLAID_CLIENT_ID?.slice(0, 6) + '...')
     return NextResponse.json(
-      { error: 'Failed to create link token', detail: plaidError ?? message },
+      { error: 'Failed to create link token', detail },
       { status: 500 }
     )
   }

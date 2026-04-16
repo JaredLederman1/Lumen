@@ -225,8 +225,13 @@ function ConnectButton({
     setError(null)
     const headers: Record<string, string> = { Authorization: `Bearer ${authToken}` }
     fetch('/api/plaid/create-link-token', { headers })
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+      .then(async r => {
+        if (!r.ok) {
+          const body = await r.json().catch(() => ({}))
+          const detail = body?.detail
+          const msg = typeof detail === 'object' ? JSON.stringify(detail) : detail
+          throw new Error(msg || `HTTP ${r.status}`)
+        }
         return r.json()
       })
       .then(data => {
@@ -310,8 +315,13 @@ function useMobilePlaidConnect(onSuccess: (accounts: Account[]) => void, onConne
     setError(null)
     const headers: Record<string, string> = { Authorization: `Bearer ${authToken}` }
     fetch('/api/plaid/create-link-token', { headers })
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+      .then(async r => {
+        if (!r.ok) {
+          const body = await r.json().catch(() => ({}))
+          const detail = body?.detail
+          const msg = typeof detail === 'object' ? JSON.stringify(detail) : detail
+          throw new Error(msg || `HTTP ${r.status}`)
+        }
         return r.json()
       })
       .then(data => {
