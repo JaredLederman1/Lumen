@@ -27,8 +27,8 @@ const LOADING_PHASES = [
 ]
 
 const card: React.CSSProperties = {
-  backgroundColor: '#FFFFFF',
-  border: '1px solid rgba(184,145,58,0.15)',
+  backgroundColor: 'var(--color-surface)',
+  border: '1px solid var(--color-gold-border)',
   borderRadius: '2px',
   padding: '28px',
 }
@@ -36,7 +36,7 @@ const card: React.CSSProperties = {
 const sectionLabel: React.CSSProperties = {
   fontFamily: 'var(--font-mono)',
   fontSize: '12px',
-  color: '#A89880',
+  color: 'var(--color-text-muted)',
   textTransform: 'uppercase',
   letterSpacing: '0.16em',
   marginBottom: '20px',
@@ -47,16 +47,16 @@ function fmt(n: number) {
 }
 
 function StatusBadge({ captured }: { captured: boolean | null }) {
-  if (captured === true)  return <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#3D7A54', backgroundColor: 'rgba(61,122,84,0.08)', padding: '3px 7px', borderRadius: '2px' }}>Captured</span>
-  if (captured === false) return <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8B3A3A', backgroundColor: 'rgba(139,58,58,0.08)', padding: '3px 7px', borderRadius: '2px' }}>Not captured</span>
-  return <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8A95A3', backgroundColor: 'rgba(0,0,0,0.04)', padding: '3px 7px', borderRadius: '2px' }}>Unverified</span>
+  if (captured === true)  return <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-positive)', backgroundColor: 'var(--color-positive-bg)', padding: '3px 7px', borderRadius: '2px' }}>Captured</span>
+  if (captured === false) return <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-negative)', backgroundColor: 'var(--color-negative-bg)', padding: '3px 7px', borderRadius: '2px' }}>Not captured</span>
+  return <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-muted)', backgroundColor: 'var(--color-gold-subtle)', padding: '3px 7px', borderRadius: '2px' }}>Unverified</span>
 }
 
 const urgencyDot: Record<BenefitStatus['urgency'], string> = {
-  critical: '#8B3A3A',
-  high:     '#B8913A',
-  medium:   '#5A7A9A',
-  info:     '#C4B8A8',
+  critical: 'var(--color-negative)',
+  high:     'var(--color-gold)',
+  medium:   'var(--color-info)',
+  info:     'var(--color-text-muted)',
 }
 
 function BenefitsDesktop() {
@@ -147,13 +147,13 @@ function BenefitsDesktop() {
 
       {/* Header */}
       <div>
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#B8913A', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: '8px' }}>
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-gold)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: '8px' }}>
           Benefits
         </p>
-        <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '31px', fontWeight: 400, color: '#1A1A1A', marginBottom: '6px' }}>
+        <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '31px', fontWeight: 400, color: 'var(--color-text)', marginBottom: '6px' }}>
           Employment Contract Analyzer
         </h1>
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: '#8A95A3', lineHeight: 1.6 }}>
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
           Upload your offer letter or benefits summary. Illumin extracts every element of your compensation, then cross-checks your transaction history to surface what you are likely leaving uncaptured.
         </p>
       </div>
@@ -165,13 +165,13 @@ function BenefitsDesktop() {
           <motion.div key="loading" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.3 }}>
             <div style={card}>
               <p style={sectionLabel}>Analyzing contract</p>
-              <p style={{ fontFamily: 'var(--font-serif)', fontSize: '26px', fontWeight: 300, color: '#1A1A1A', marginBottom: '28px' }}>
+              <p style={{ fontFamily: 'var(--font-serif)', fontSize: '26px', fontWeight: 300, color: 'var(--color-text)', marginBottom: '28px' }}>
                 {LOADING_PHASES[loadingPhase]}
               </p>
-              <div style={{ height: '2px', backgroundColor: 'rgba(184,145,58,0.12)', borderRadius: '1px', marginBottom: '10px', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${progress}%`, backgroundColor: '#B8913A', transition: 'width 360ms ease', borderRadius: '1px' }} />
+              <div style={{ height: '2px', backgroundColor: 'var(--color-gold-subtle)', borderRadius: '1px', marginBottom: '10px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${progress}%`, backgroundColor: 'var(--color-gold)', transition: 'width 360ms ease', borderRadius: '1px' }} />
               </div>
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#8A95A3', letterSpacing: '0.08em' }}>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-muted)', letterSpacing: '0.08em' }}>
                 {Math.round(progress)}%
               </p>
             </div>
@@ -190,44 +190,44 @@ function BenefitsDesktop() {
                 onDrop={onDrop}
                 onClick={() => inputRef.current?.click()}
                 style={{
-                  border: `1.5px dashed ${dragging ? '#B8913A' : 'rgba(184,145,58,0.25)'}`,
+                  border: `1.5px dashed ${dragging ? 'var(--color-gold)' : 'var(--color-border-strong)'}`,
                   borderRadius: '2px',
                   padding: '48px 40px',
                   textAlign: 'center',
                   cursor: 'pointer',
-                  backgroundColor: dragging ? 'rgba(184,145,58,0.03)' : 'transparent',
+                  backgroundColor: dragging ? 'var(--color-gold-subtle)' : 'transparent',
                   transition: 'all 200ms ease',
                   marginBottom: '20px',
                 }}
               >
                 <input ref={inputRef} type="file" accept="application/pdf" style={{ display: 'none' }} onChange={ev => { const f = ev.target.files?.[0]; if (f) handleFile(f) }} />
-                <div style={{ fontSize: '29px', marginBottom: '10px', opacity: 0.35 }}>⬆</div>
+                <div style={{ fontSize: '29px', marginBottom: '10px', opacity: 0.35, color: 'var(--color-text)' }}>⬆</div>
                 {file ? (
                   <>
-                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: '#1A1A1A', marginBottom: '3px' }}>{file.name}</p>
-                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: '#8A95A3' }}>{(file.size / 1024).toFixed(0)} KB · PDF</p>
+                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--color-text)', marginBottom: '3px' }}>{file.name}</p>
+                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-text-muted)' }}>{(file.size / 1024).toFixed(0)} KB · PDF</p>
                   </>
                 ) : (
                   <>
-                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: '#8A95A3', marginBottom: '3px' }}>Drop your PDF here or click to browse</p>
-                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: '#C4B8A8' }}>Offer letters, benefits summaries, employee handbooks &middot; max 20MB</p>
+                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--color-text-mid)', marginBottom: '3px' }}>Drop your PDF here or click to browse</p>
+                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-text-muted)' }}>Offer letters, benefits summaries, employee handbooks &middot; max 20MB</p>
                   </>
                 )}
               </div>
 
-              {error && <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: '#8B3A3A', marginBottom: '14px' }}>{error}</p>}
+              {error && <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-negative)', marginBottom: '14px' }}>{error}</p>}
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <button
                   onClick={analyze}
                   disabled={!file}
-                  style={{ padding: '11px 26px', backgroundColor: file ? '#B8913A' : 'rgba(184,145,58,0.15)', color: file ? '#FFFFFF' : '#A89880', border: 'none', borderRadius: '2px', fontFamily: 'var(--font-mono)', fontSize: '13px', letterSpacing: '0.06em', cursor: file ? 'pointer' : 'not-allowed', transition: 'all 150ms ease' }}
+                  style={{ padding: '11px 26px', backgroundColor: file ? 'var(--color-gold)' : 'var(--color-gold-subtle)', color: file ? 'var(--color-text)' : 'var(--color-text-muted)', border: 'none', borderRadius: '2px', fontFamily: 'var(--font-mono)', fontSize: '13px', letterSpacing: '0.06em', cursor: file ? 'pointer' : 'not-allowed', transition: 'all 150ms ease' }}
                 >
                   Analyze contract
                 </button>
               </div>
 
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#C4B8A8', marginTop: '16px' }}>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '16px' }}>
                 Your document is never stored. Only extracted benefit data is saved to your profile.
               </p>
             </div>
@@ -246,26 +246,26 @@ function BenefitsDesktop() {
                   label: 'Total contract value',
                   value: fmt(result.totalContractValue) + '/yr',
                   sub: e.baseSalary ? `${fmt(e.baseSalary)} salary + ${fmt(result.totalBenefitsValue)} benefits` : null,
-                  border: 'rgba(184,145,58,0.15)',
+                  border: 'var(--color-gold-border)',
                 },
                 {
                   label: 'Total benefits value',
                   value: fmt(result.totalBenefitsValue) + '/yr',
                   sub: 'Excludes salary, bonus, equity',
-                  border: 'rgba(184,145,58,0.15)',
+                  border: 'var(--color-gold-border)',
                 },
                 {
                   label: 'Leaving on table',
                   value: uncaptured.length > 0 ? fmt(uncaptured.reduce((s, i) => s + (i.annualValue ?? 0), 0)) + '/yr' : 'None',
                   sub: `${uncaptured.length} uncaptured item${uncaptured.length !== 1 ? 's' : ''}`,
-                  border: uncaptured.length > 0 ? 'rgba(139,58,58,0.2)' : 'rgba(61,122,84,0.2)',
+                  border: uncaptured.length > 0 ? 'var(--color-negative-border)' : 'var(--color-positive-border)',
                 },
               ].map((stat, i) => (
                 <motion.div key={stat.label} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07, duration: 0.3 }}
                   style={{ ...card, border: `1px solid ${stat.border}`, padding: '20px 24px' }}>
                   <p style={{ ...sectionLabel, marginBottom: '10px' }}>{stat.label}</p>
-                  <p style={{ fontFamily: 'var(--font-serif)', fontSize: '26px', fontWeight: 300, color: '#1A1A1A', marginBottom: '4px' }}>{stat.value}</p>
-                  {stat.sub && <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#8A95A3' }}>{stat.sub}</p>}
+                  <p style={{ fontFamily: 'var(--font-serif)', fontSize: '26px', fontWeight: 300, color: 'var(--color-text)', marginBottom: '4px' }}>{stat.value}</p>
+                  {stat.sub && <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-muted)' }}>{stat.sub}</p>}
                 </motion.div>
               ))}
             </div>
@@ -301,9 +301,9 @@ function BenefitsDesktop() {
                   e.hasSeverance && e.severanceMonths && { label: 'Severance', value: `${e.severanceMonths} months`, sub: 'qualifying separation' },
                 ].filter(Boolean).map((stat, i) => stat && (
                   <div key={stat.label}>
-                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#A89880', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '5px' }}>{stat.label}</p>
-                    <p style={{ fontFamily: 'var(--font-serif)', fontSize: '22px', fontWeight: 300, color: '#1A1A1A', marginBottom: '2px' }}>{stat.value}</p>
-                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#8A95A3' }}>{stat.sub}</p>
+                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '5px' }}>{stat.label}</p>
+                    <p style={{ fontFamily: 'var(--font-serif)', fontSize: '22px', fontWeight: 300, color: 'var(--color-text)', marginBottom: '2px' }}>{stat.value}</p>
+                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-muted)' }}>{stat.sub}</p>
                   </div>
                 ))}
               </div>
@@ -313,7 +313,7 @@ function BenefitsDesktop() {
             <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18, duration: 0.3 }} style={card}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
                 <p style={{ ...sectionLabel, marginBottom: 0 }}>Benefits utilization</p>
-                <Link href="/dashboard/profile" style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: '#B8913A', textDecoration: 'none' }}>
+                <Link href="/dashboard/profile" style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-gold)', textDecoration: 'none' }}>
                   View action checklist →
                 </Link>
               </div>
@@ -327,26 +327,26 @@ function BenefitsDesktop() {
                     transition={{ delay: 0.2 + i * 0.04, duration: 0.25 }}
                     style={{
                       padding: '14px 16px',
-                      backgroundColor: item.captured === false ? 'rgba(139,58,58,0.03)' : item.captured === true ? 'rgba(61,122,84,0.03)' : 'rgba(0,0,0,0.015)',
-                      border: `1px solid ${item.captured === false ? 'rgba(139,58,58,0.12)' : item.captured === true ? 'rgba(61,122,84,0.12)' : 'rgba(0,0,0,0.06)'}`,
+                      backgroundColor: item.captured === false ? 'var(--color-negative-bg)' : item.captured === true ? 'var(--color-positive-bg)' : 'var(--color-gold-subtle)',
+                      border: `1px solid ${item.captured === false ? 'var(--color-negative-border)' : item.captured === true ? 'var(--color-positive-border)' : 'var(--color-gold-border)'}`,
                       borderRadius: '2px',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: item.urgency !== 'info' ? '8px' : '0' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                         <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: urgencyDot[item.urgency], flexShrink: 0 }} />
-                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: '#1A1A1A', fontWeight: 500 }}>{item.label}</span>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--color-text)', fontWeight: 500 }}>{item.label}</span>
                         {item.annualValue && (
-                          <span style={{ fontFamily: 'var(--font-serif)', fontSize: '16px', color: '#4A5568', fontWeight: 300 }}>{fmt(item.annualValue)}/yr</span>
+                          <span style={{ fontFamily: 'var(--font-serif)', fontSize: '16px', color: 'var(--color-text-mid)', fontWeight: 300 }}>{fmt(item.annualValue)}/yr</span>
                         )}
                       </div>
                       <StatusBadge captured={item.captured} />
                     </div>
-                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: '#4A5568', lineHeight: 1.6, paddingLeft: '14px', marginBottom: item.urgency !== 'info' && item.captured !== true ? '6px' : '0' }}>
+                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-text-mid)', lineHeight: 1.6, paddingLeft: '14px', marginBottom: item.urgency !== 'info' && item.captured !== true ? '6px' : '0' }}>
                       {item.evidence}
                     </p>
                     {item.urgency !== 'info' && item.captured !== true && (
-                      <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: '#B8913A', lineHeight: 1.6, paddingLeft: '14px' }}>
+                      <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-gold)', lineHeight: 1.6, paddingLeft: '14px' }}>
                         {item.action}
                       </p>
                     )}
@@ -357,7 +357,7 @@ function BenefitsDesktop() {
 
             <button
               onClick={() => { setFile(null); setResult(null) }}
-              style={{ alignSelf: 'flex-start', padding: '10px 20px', border: '1px solid rgba(184,145,58,0.2)', borderRadius: '2px', backgroundColor: 'transparent', fontFamily: 'var(--font-mono)', fontSize: '13px', color: '#8A95A3', cursor: 'pointer' }}
+              style={{ alignSelf: 'flex-start', padding: '10px 20px', border: '1px solid var(--color-gold-border)', borderRadius: '2px', backgroundColor: 'transparent', fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-text-muted)', cursor: 'pointer' }}
             >
               Analyze another document
             </button>
@@ -662,8 +662,8 @@ function BenefitsMobile() {
                       transition={{ delay: 0.2 + i * 0.04, duration: 0.25 }}
                       style={{
                         padding: '14px 16px',
-                        backgroundColor: item.captured === false ? 'rgba(139,58,58,0.03)' : item.captured === true ? 'rgba(61,122,84,0.03)' : 'rgba(0,0,0,0.015)',
-                        border: `1px solid ${item.captured === false ? 'rgba(139,58,58,0.12)' : item.captured === true ? 'rgba(61,122,84,0.12)' : 'rgba(0,0,0,0.06)'}`,
+                        backgroundColor: item.captured === false ? 'var(--color-negative-bg)' : item.captured === true ? 'var(--color-positive-bg)' : 'var(--color-gold-subtle)',
+                        border: `1px solid ${item.captured === false ? 'var(--color-negative-border)' : item.captured === true ? 'var(--color-positive-border)' : 'var(--color-gold-border)'}`,
                         borderRadius: 2,
                         minHeight: spacing.tapTarget,
                       }}

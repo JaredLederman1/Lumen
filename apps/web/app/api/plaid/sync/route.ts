@@ -67,6 +67,12 @@ export async function POST(request: NextRequest) {
     let updatedAccounts = 0
     let updatedTransactions = 0
 
+    // Counters for [categorization:summary] log. Cover every transaction that
+    // flows through categorizeTransaction in this sync run, across all access
+    // token groups.
+    let categorizedTotal = 0
+    let categorizedOther = 0
+
     const now = new Date()
     const startDate = new Date(now)
     startDate.setFullYear(startDate.getFullYear() - 2)
@@ -110,7 +116,12 @@ export async function POST(request: NextRequest) {
                 accountType: accountRecord.accountType,
                 amount: -tx.amount,
                 overrideCategory,
+                userId: dbUser.id,
+                merchantName: resolvedMerchant,
+                plaidLegacyCategory: tx.category?.[0] ?? null,
               })
+              categorizedTotal++
+              if (category === 'Other') categorizedOther++
 
               await prisma.transaction.upsert({
                 where: { id: tx.transaction_id },
@@ -202,6 +213,16 @@ export async function POST(request: NextRequest) {
       } catch (err) {
         console.error('[Plaid sync] failed for access token group:', err)
       }
+    }
+
+    if (categorizedTotal > 0) {
+      const otherRate = Math.round((categorizedOther / categorizedTotal) * 1000) / 1000
+      console.log('[categorization:summary]', {
+        userId: dbUser.id,
+        total: categorizedTotal,
+        otherCount: categorizedOther,
+        otherRate,
+      })
     }
 
     return NextResponse.json({ success: true, updatedAccounts, updatedTransactions })

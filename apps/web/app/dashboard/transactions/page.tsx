@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import TransactionRow from '@/components/ui/TransactionRow'
 import MobileCard from '@/components/ui/MobileCard'
@@ -11,7 +11,7 @@ import { supabase } from '@/lib/supabase'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { colors, fonts, spacing, radius } from '@/lib/theme'
 
-import { CATEGORIES as CANONICAL_CATEGORIES } from '@/lib/categories'
+import { CATEGORIES as CANONICAL_CATEGORIES, isMaskedMerchant } from '@/lib/categories'
 
 const CATEGORIES = ['All', ...CANONICAL_CATEGORIES]
 const TX_CATEGORIES = [...CANONICAL_CATEGORIES]
@@ -287,6 +287,19 @@ function TransactionsDesktop() {
   // Optimistic tag overrides: txId -> tags array
   const [tagOverrides, setTagOverrides] = useState<Record<string, string[]>>({})
 
+  // Toast shown after a "Needs labeling" row is corrected.
+  const [toast, setToast] = useState<string | null>(null)
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 3000)
+    return () => clearTimeout(t)
+  }, [toast])
+
+  // Latest override snapshot, so handleInlineSave can read post-hoc edits
+  // without needing to be re-memoized on every keystroke.
+  const categoryOverridesRef = useRef(categoryOverrides)
+  useEffect(() => { categoryOverridesRef.current = categoryOverrides }, [categoryOverrides])
+
   // Recurring exclusions
   const [excludedMerchants, setExcludedMerchants] = useState<Set<string>>(new Set())
   useEffect(() => {
@@ -323,9 +336,11 @@ function TransactionsDesktop() {
     }
   }
 
-  const handleInlineSave = useCallback(async (txId: string, fields: { merchantName?: string; category?: string }) => {
+  const handleInlineSave = useCallback(async (txId: string, fields: { merchantName?: string; category?: string; applyToMerchant?: boolean }) => {
     const tx = transactions.find(t => t.id === txId)
     const originalMerchant = tx?.merchantName
+    const originalCategory = categoryOverridesRef.current[txId] ?? tx?.category
+    const wasNeedsLabeling = isMaskedMerchant(originalMerchant) || originalCategory === 'Other'
 
     const { data: { session } } = await supabase.auth.getSession()
     const res = await fetch(`/api/transactions/${txId}`, {
@@ -343,7 +358,21 @@ function TransactionsDesktop() {
       try { msg = JSON.parse(text).error ?? msg } catch {}
       throw new Error(msg)
     }
-    if (fields.category) setCategoryOverrides(prev => ({ ...prev, [txId]: fields.category! }))
+    let payload: { updatedCount?: number; renameCount?: number } = {}
+    try { payload = await res.json() } catch {}
+    if (fields.category) {
+      setCategoryOverrides(prev => {
+        const next = { ...prev }
+        if (fields.applyToMerchant && originalMerchant) {
+          transactions
+            .filter(t => (t.merchantName ?? '').toLowerCase() === originalMerchant.toLowerCase())
+            .forEach(t => { next[t.id] = fields.category! })
+        } else {
+          next[txId] = fields.category!
+        }
+        return next
+      })
+    }
     if (fields.merchantName && originalMerchant) {
       setMerchantOverrides(prev => {
         const next = { ...prev }
@@ -352,6 +381,10 @@ function TransactionsDesktop() {
           .forEach(t => { next[t.id] = fields.merchantName! })
         return next
       })
+    }
+    if (wasNeedsLabeling) {
+      const count = Math.max(payload.renameCount ?? 0, payload.updatedCount ?? 0)
+      setToast(`Labeled. ${count} past transactions updated.`)
     }
   }, [transactions])
 
@@ -536,19 +569,22 @@ function TransactionsDesktop() {
             >
               {paginated.map(tx => {
                 const acct = accountMap[tx.accountId]
+                const displayMerchant = merchantOverrides[tx.id] ?? tx.merchantName
+                const displayCategory = categoryOverrides[tx.id] ?? tx.category
                 return (
                   <TransactionRow
                     key={tx.id}
                     id={tx.id}
-                    merchantName={merchantOverrides[tx.id] ?? tx.merchantName}
+                    merchantName={displayMerchant}
                     amount={tx.amount}
-                    category={categoryOverrides[tx.id] ?? tx.category}
+                    category={displayCategory}
                     date={tx.date}
                     pending={tx.pending}
                     accountName={acct?.institutionName ?? null}
                     last4={acct?.last4 ?? null}
                     recurring={tx.merchantName ? recurringMerchants.has(tx.merchantName) : false}
                     tags={tagOverrides[tx.id] ?? (tx as { tags?: string[] }).tags ?? []}
+                    needsLabeling={isMaskedMerchant(displayMerchant) || displayCategory === 'Other'}
                     editingRowId={editingRowId}
                     onEditRow={setEditingRowId}
                     onSave={handleInlineSave}
@@ -583,6 +619,35 @@ function TransactionsDesktop() {
       handleSubmit={handleSubmit}
       accounts={accounts}
     />
+
+    <AnimatePresence>
+      {toast && (
+        <motion.div
+          key="labeling-toast"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
+          transition={{ duration: 0.2 }}
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            zIndex: 60,
+            backgroundColor: 'var(--color-surface)',
+            border: '1px solid var(--color-info-border)',
+            borderRadius: '2px',
+            padding: '12px 16px',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '13px',
+            color: 'var(--color-text)',
+            letterSpacing: '0.04em',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+          }}
+        >
+          {toast}
+        </motion.div>
+      )}
+    </AnimatePresence>
     </>
   )
 }
@@ -612,6 +677,20 @@ function TransactionsMobile() {
   const [merchantOverrides, setMerchantOverrides] = useState<Record<string, string>>({})
   const [tagOverrides, setTagOverrides] = useState<Record<string, string[]>>({})
 
+  // Inline edit: only one row at a time
+  const [editingRowId, setEditingRowId] = useState<string | null>(null)
+
+  // Toast shown after a "Needs labeling" row is corrected.
+  const [toast, setToast] = useState<string | null>(null)
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 3000)
+    return () => clearTimeout(t)
+  }, [toast])
+
+  const categoryOverridesRef = useRef(categoryOverrides)
+  useEffect(() => { categoryOverridesRef.current = categoryOverrides }, [categoryOverrides])
+
   // Recurring exclusions
   const [excludedMerchants, setExcludedMerchants] = useState<Set<string>>(new Set())
   useEffect(() => {
@@ -629,6 +708,76 @@ function TransactionsMobile() {
         .catch(() => {})
     })
   }, [])
+
+  const handleMobileCategoryChange = (txId: string, cat: string, merchantName?: string) => {
+    if (merchantName) {
+      setCategoryOverrides(prev => {
+        const next = { ...prev }
+        transactions
+          .filter(tx => tx.merchantName?.toLowerCase() === merchantName.toLowerCase())
+          .forEach(tx => { next[tx.id] = cat })
+        return next
+      })
+    } else {
+      setCategoryOverrides(prev => ({ ...prev, [txId]: cat }))
+    }
+  }
+
+  const handleMobileTagsChange = (txId: string, tags: string[]) => {
+    setTagOverrides(prev => ({ ...prev, [txId]: tags }))
+  }
+
+  const handleMobileInlineSave = useCallback(async (txId: string, fields: { merchantName?: string; category?: string; applyToMerchant?: boolean }) => {
+    const tx = transactions.find(t => t.id === txId)
+    const originalMerchant = tx?.merchantName
+    const originalCategory = categoryOverridesRef.current[txId] ?? tx?.category
+    const wasNeedsLabeling = isMaskedMerchant(originalMerchant) || originalCategory === 'Other'
+
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch(`/api/transactions/${txId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      },
+      body: JSON.stringify(fields),
+    })
+    if (!res.ok) {
+      const text = await res.text()
+      console.error('[handleMobileInlineSave] API error:', res.status, text)
+      let msg = 'Failed to save'
+      try { msg = JSON.parse(text).error ?? msg } catch {}
+      throw new Error(msg)
+    }
+    let payload: { updatedCount?: number; renameCount?: number } = {}
+    try { payload = await res.json() } catch {}
+    if (fields.category) {
+      setCategoryOverrides(prev => {
+        const next = { ...prev }
+        if (fields.applyToMerchant && originalMerchant) {
+          transactions
+            .filter(t => (t.merchantName ?? '').toLowerCase() === originalMerchant.toLowerCase())
+            .forEach(t => { next[t.id] = fields.category! })
+        } else {
+          next[txId] = fields.category!
+        }
+        return next
+      })
+    }
+    if (fields.merchantName && originalMerchant) {
+      setMerchantOverrides(prev => {
+        const next = { ...prev }
+        transactions
+          .filter(t => (t.merchantName ?? '').toLowerCase() === originalMerchant.toLowerCase())
+          .forEach(t => { next[t.id] = fields.merchantName! })
+        return next
+      })
+    }
+    if (wasNeedsLabeling) {
+      const count = Math.max(payload.renameCount ?? 0, payload.updatedCount ?? 0)
+      setToast(`Labeled. ${count} past transactions updated.`)
+    }
+  }, [transactions])
 
   const accountMap = useMemo(() =>
     Object.fromEntries(accounts.map(a => [a.id, a])),
@@ -823,19 +972,27 @@ function TransactionsMobile() {
           >
             {paginated.map(tx => {
               const acct = accountMap[tx.accountId]
+              const displayMerchant = merchantOverrides[tx.id] ?? tx.merchantName
+              const displayCategory = categoryOverrides[tx.id] ?? tx.category
               return (
                 <TransactionRow
                   key={tx.id}
                   id={tx.id}
-                  merchantName={merchantOverrides[tx.id] ?? tx.merchantName}
+                  merchantName={displayMerchant}
                   amount={tx.amount}
-                  category={categoryOverrides[tx.id] ?? tx.category}
+                  category={displayCategory}
                   date={tx.date}
                   pending={tx.pending}
                   accountName={acct?.institutionName ?? null}
                   last4={acct?.last4 ?? null}
                   recurring={tx.merchantName ? recurringMerchants.has(tx.merchantName) : false}
                   tags={tagOverrides[tx.id] ?? (tx as { tags?: string[] }).tags ?? []}
+                  needsLabeling={isMaskedMerchant(displayMerchant) || displayCategory === 'Other'}
+                  editingRowId={editingRowId}
+                  onEditRow={setEditingRowId}
+                  onSave={handleMobileInlineSave}
+                  onCategoryChange={handleMobileCategoryChange}
+                  onTagsChange={handleMobileTagsChange}
                 />
               )
             })}
@@ -902,6 +1059,37 @@ function TransactionsMobile() {
       handleSubmit={handleSubmit}
       accounts={accounts}
     />
+
+    <AnimatePresence>
+      {toast && (
+        <motion.div
+          key="labeling-toast-mobile"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
+          transition={{ duration: 0.2 }}
+          style={{
+            position: 'fixed',
+            bottom: '100px',
+            left: '16px',
+            right: '16px',
+            zIndex: 60,
+            backgroundColor: 'var(--color-surface)',
+            border: '1px solid var(--color-info-border)',
+            borderRadius: '2px',
+            padding: '12px 16px',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '13px',
+            color: 'var(--color-text)',
+            letterSpacing: '0.04em',
+            textAlign: 'center',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+          }}
+        >
+          {toast}
+        </motion.div>
+      )}
+    </AnimatePresence>
     </>
   )
 }

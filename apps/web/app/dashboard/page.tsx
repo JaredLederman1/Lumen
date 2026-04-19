@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import NetWorthCard from '@/components/ui/NetWorthCard'
 import NetWorthChart from '@/components/ui/NetWorthChart'
+import NetWorthChartPlaceholder from '@/components/ui/NetWorthChartPlaceholder'
 import DonutChart from '@/components/ui/DonutChart'
 import BarChart from '@/components/ui/BarChart'
 import TransactionRow from '@/components/ui/TransactionRow'
@@ -22,6 +23,8 @@ interface NWHistory {
   hasHistory: boolean
   change30d: number
   changeAllTime: number
+  hasAssetAccount: boolean
+  hasLiabilityAccount: boolean
 }
 
 const card = {
@@ -64,6 +67,21 @@ function DashboardDesktop() {
   const recurringMerchants = useMemo(() => detectRecurringMerchants(transactions), [transactions])
 
   const hasData = netWorth !== null && (netWorth.totalAssets > 0 || netWorth.totalLiabilities > 0)
+
+  const hasFullBalanceSheet =
+    !!nwHistory &&
+    nwHistory.history.length >= 2 &&
+    nwHistory.hasAssetAccount === true &&
+    nwHistory.hasLiabilityAccount === true
+
+  // Assets-only with enough history is still a coherent net worth view, so
+  // the chart renders there too. The placeholder is only for liability-only.
+  const showNetWorthChart =
+    hasFullBalanceSheet ||
+    (!!nwHistory && nwHistory.history.length >= 2 && nwHistory.hasAssetAccount && !nwHistory.hasLiabilityAccount)
+
+  const showLiabilityOnlyPlaceholder =
+    !!nwHistory && nwHistory.hasLiabilityAccount && !nwHistory.hasAssetAccount
 
   if (loading) {
     return (
@@ -139,7 +157,17 @@ function DashboardDesktop() {
         background: 'linear-gradient(90deg, transparent, rgba(184,145,58,0.35) 25%, rgba(184,145,58,0.35) 75%, transparent)',
       }} />
 
-      {nwHistory?.hasHistory && (
+      {showLiabilityOnlyPlaceholder && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: 'easeOut', delay: 0.1 }}
+        >
+          <NetWorthChartPlaceholder />
+        </motion.div>
+      )}
+
+      {showNetWorthChart && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -286,6 +314,19 @@ function DashboardMobile() {
 
   const hasData = netWorth !== null && (netWorth.totalAssets > 0 || netWorth.totalLiabilities > 0)
 
+  const hasFullBalanceSheet =
+    !!nwHistory &&
+    nwHistory.history.length >= 2 &&
+    nwHistory.hasAssetAccount === true &&
+    nwHistory.hasLiabilityAccount === true
+
+  const showNetWorthChart =
+    hasFullBalanceSheet ||
+    (!!nwHistory && nwHistory.history.length >= 2 && nwHistory.hasAssetAccount && !nwHistory.hasLiabilityAccount)
+
+  const showLiabilityOnlyPlaceholder =
+    !!nwHistory && nwHistory.hasLiabilityAccount && !nwHistory.hasAssetAccount
+
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '320px' }}>
@@ -393,8 +434,9 @@ function DashboardMobile() {
       </div>
     </motion.div>,
 
-    // 3. Net worth chart (conditional)
-    ...(nwHistory?.hasHistory ? [
+    // 3. Net worth chart (conditional). Liability-only renders the placeholder
+    //    instead, since credit-card-only data is not a full net worth view.
+    ...(showNetWorthChart ? [
       <motion.div
         key="nw-chart"
         initial={{ opacity: 0, y: 8 }}
@@ -403,8 +445,17 @@ function DashboardMobile() {
       >
         <MobileCard>
           <p style={{ ...mobileLabelText, marginBottom: spacing.tightGap }}>NET WORTH OVER TIME</p>
-          <NetWorthChart data={nwHistory.history} height={180} />
+          <NetWorthChart data={nwHistory!.history} height={180} />
         </MobileCard>
+      </motion.div>,
+    ] : showLiabilityOnlyPlaceholder ? [
+      <motion.div
+        key="nw-placeholder"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: 'easeOut', delay: 0.08 }}
+      >
+        <NetWorthChartPlaceholder />
       </motion.div>,
     ] : []),
 

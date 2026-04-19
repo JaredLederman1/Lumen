@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, type Variants } from 'framer-motion'
 
 import { CATEGORIES as ALL_CATEGORIES } from '@/lib/categories'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 type DisputeOption = 'unrecognized' | 'incorrect_amount' | 'duplicate'
 
@@ -36,9 +37,10 @@ interface TransactionRowProps {
   last4?: string | null
   recurring?: boolean
   tags?: string[]
+  needsLabeling?: boolean
   editingRowId?: string | null
   onEditRow?: (id: string | null) => void
-  onSave?: (id: string, fields: { merchantName?: string; category?: string }) => Promise<void>
+  onSave?: (id: string, fields: { merchantName?: string; category?: string; applyToMerchant?: boolean }) => Promise<void>
   onCategoryChange?: (id: string, category: string, merchantName?: string) => void
   onTagsChange?: (id: string, tags: string[]) => void
 }
@@ -66,17 +68,20 @@ export const rowVariants: Variants = {
 export default function TransactionRow({
   id, merchantName, amount, category, date, pending,
   accountName, last4, recurring, tags = [],
+  needsLabeling,
   editingRowId, onEditRow, onSave,
   onCategoryChange, onTagsChange,
 }: TransactionRowProps) {
   const isIncome = amount > 0
   const isEditing = editingRowId === id
+  const isMobile = useIsMobile()
   const [saving, setSaving] = useState(false)
   const [hovered, setHovered] = useState(false)
 
   // Inline edit fields
   const [editMerchant, setEditMerchant] = useState(merchantName ?? '')
   const [editCategory, setEditCategory] = useState(category ?? 'Other')
+  const [applyToMerchant, setApplyToMerchant] = useState<boolean>(!!needsLabeling)
 
   // Dispute state: null = edit mode, DisputeOption = showing a specific response
   const [disputeView, setDisputeView] = useState<'menu' | DisputeOption | null>(null)
@@ -102,17 +107,24 @@ export default function TransactionRow({
     if (isEditing) {
       setEditMerchant(merchantName ?? '')
       setEditCategory(category ?? 'Other')
+      setApplyToMerchant(!!needsLabeling)
       setDisputeView(null)
-      setTimeout(() => merchantInputRef.current?.focus(), 0)
+      setTimeout(() => {
+        merchantInputRef.current?.focus()
+        merchantInputRef.current?.select()
+        if (needsLabeling) {
+          rowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+        }
+      }, 0)
     }
-  }, [isEditing, merchantName, category])
+  }, [isEditing, merchantName, category, needsLabeling])
 
   const cancelEdit = useCallback(() => {
     onEditRow?.(null)
   }, [onEditRow])
 
   const commitEdit = useCallback(async () => {
-    const changes: { merchantName?: string; category?: string } = {}
+    const changes: { merchantName?: string; category?: string; applyToMerchant?: boolean } = {}
     if (editMerchant !== (merchantName ?? '')) changes.merchantName = editMerchant
     if (editCategory !== (category ?? 'Other')) changes.category = editCategory
 
@@ -121,6 +133,8 @@ export default function TransactionRow({
       return
     }
 
+    if (changes.category) changes.applyToMerchant = applyToMerchant
+
     setSaving(true)
     try {
       await onSave?.(id, changes)
@@ -128,7 +142,7 @@ export default function TransactionRow({
     } finally {
       setSaving(false)
     }
-  }, [id, editMerchant, editCategory, merchantName, category, onSave, onEditRow, cancelEdit])
+  }, [id, editMerchant, editCategory, merchantName, category, applyToMerchant, onSave, onEditRow, cancelEdit])
 
   // Click outside to cancel
   useEffect(() => {
@@ -458,6 +472,30 @@ export default function TransactionRow({
           </button>
         </div>
 
+        {/* Apply-to-all checkbox. Pre-checked for needs-labeling rows so a
+            single correction teaches the rule engine for every sibling row. */}
+        <label
+          onClick={e => e.stopPropagation()}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '12px',
+            color: 'var(--color-text-muted)',
+            cursor: 'pointer',
+            userSelect: 'none',
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={applyToMerchant}
+            onChange={e => setApplyToMerchant(e.target.checked)}
+            style={{ cursor: 'pointer', accentColor: 'var(--color-gold)' }}
+          />
+          Apply to all transactions from this merchant
+        </label>
+
         {/* "This doesn't look right" link */}
         <button
           onClick={() => setDisputeView('menu')}
@@ -495,7 +533,12 @@ export default function TransactionRow({
         borderRadius: '1px',
         marginLeft: '-10px',
         marginRight: '-10px',
-        backgroundColor: isEditing ? 'rgba(184,145,58,0.03)' : undefined,
+        backgroundColor: isEditing
+          ? 'rgba(184,145,58,0.03)'
+          : needsLabeling
+            ? 'var(--color-info-bg)'
+            : undefined,
+        boxShadow: needsLabeling && !isEditing ? 'inset 2px 0 0 0 var(--color-info)' : undefined,
         transition: 'padding 150ms ease',
       }}
     >
@@ -720,6 +763,44 @@ export default function TransactionRow({
             )}
           </div>
         </div>
+        {needsLabeling && !isEditing && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginRight: '12px', flexShrink: 0 }}>
+            <span style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '11px',
+              color: 'var(--color-info)',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              border: '1px solid var(--color-info-border)',
+              padding: '1px 6px',
+              borderRadius: '2px',
+              whiteSpace: 'nowrap',
+              userSelect: 'none',
+            }}>
+              Needs labeling
+            </span>
+            <button
+              onClick={e => { e.stopPropagation(); onEditRow?.(id) }}
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '11px',
+                color: 'var(--color-text)',
+                backgroundColor: 'transparent',
+                border: '1px solid var(--color-info-border)',
+                borderRadius: '2px',
+                padding: '2px 10px',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+                opacity: hovered || isMobile ? 1 : 0,
+                transition: 'opacity 120ms ease',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Label
+            </button>
+          </div>
+        )}
         <span style={{
           fontFamily: 'var(--font-sans)',
           fontSize: '20px',

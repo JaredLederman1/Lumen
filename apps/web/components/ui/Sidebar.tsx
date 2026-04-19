@@ -105,13 +105,15 @@ export default function Sidebar() {
       flexShrink: 0,
     }}>
       {/* Wordmark */}
-      <div style={{
+      <Link href="/dashboard" style={{
         padding: '40px 28px 32px',
         borderBottom: '1px solid rgba(184,145,58,0.12)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         textAlign: 'center',
+        textDecoration: 'none',
+        cursor: 'pointer',
       }}>
         <div style={{
           fontFamily: 'var(--font-serif)',
@@ -133,7 +135,7 @@ export default function Sidebar() {
         }}>
           Wealth Management
         </div>
-      </div>
+      </Link>
 
       {/* Nav */}
       <nav style={{ paddingTop: '16px', flex: 1 }}>

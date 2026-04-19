@@ -15,10 +15,19 @@ export async function GET(request: NextRequest) {
     const dbUser = await prisma.user.findUnique({ where: { email: user.email! } })
     if (!dbUser) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
-    const snapshots = await prisma.netWorthSnapshot.findMany({
-      where: { userId: dbUser.id },
-      orderBy: { recordedAt: 'asc' },
-    })
+    const [snapshots, accounts] = await Promise.all([
+      prisma.netWorthSnapshot.findMany({
+        where: { userId: dbUser.id },
+        orderBy: { recordedAt: 'asc' },
+      }),
+      prisma.account.findMany({
+        where: { userId: dbUser.id },
+        select: { classification: true },
+      }),
+    ])
+
+    const hasAssetAccount = accounts.some(a => a.classification === 'asset')
+    const hasLiabilityAccount = accounts.some(a => a.classification === 'liability')
 
     const history = snapshots.map(s => ({
       date: s.recordedAt.toISOString().split('T')[0],
@@ -48,7 +57,14 @@ export async function GET(request: NextRequest) {
       ? history[history.length - 1].netWorth - history[0].netWorth
       : 0
 
-    return NextResponse.json({ history, hasHistory, change30d, changeAllTime })
+    return NextResponse.json({
+      history,
+      hasHistory,
+      change30d,
+      changeAllTime,
+      hasAssetAccount,
+      hasLiabilityAccount,
+    })
   } catch (err) {
     console.error('[networth/history GET]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
