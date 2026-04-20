@@ -1,5 +1,6 @@
 'use client'
 
+import { CSSProperties, useState } from 'react'
 import { motion } from 'framer-motion'
 import DataTooltip from '@/components/ui/DataTooltip'
 import type { TooltipSource } from '@/lib/tooltipContext'
@@ -24,14 +25,27 @@ function formatCurrency(n: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
 }
 
+const label: CSSProperties = {
+  fontFamily: 'var(--font-sans)',
+  fontSize: '11px',
+  fontWeight: 500,
+  color: 'var(--color-text-muted)',
+  letterSpacing: '0.06em',
+  textTransform: 'uppercase',
+  margin: 0,
+}
+
 export default function NetWorthCard({ current, lastMonth, totalAssets, totalLiabilities, accounts }: NetWorthCardProps) {
   const animatedCurrent     = useCountUp(current)
   const animatedAssets      = useCountUp(totalAssets)
   const animatedLiabilities = useCountUp(totalLiabilities)
+  const [hovered, setHovered] = useState(false)
 
   const change = current - lastMonth
-  const changePct = ((change / lastMonth) * 100).toFixed(1)
+  const pctRaw = lastMonth === 0 ? 0 : (change / lastMonth) * 100
+  const changePct = pctRaw.toFixed(1)
   const isPositive = change >= 0
+  const showDelta = Math.abs(change) >= 1 && parseFloat(changePct) !== 0
 
   const netWorthSources: TooltipSource[] = accounts && accounts.length > 0
     ? accounts.map(a => ({
@@ -49,26 +63,22 @@ export default function NetWorthCard({ current, lastMonth, totalAssets, totalLia
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
-        backgroundColor: '#0F1318',
-        border: '1px solid rgba(184,145,58,0.18)',
-        borderRadius: '2px',
+        backgroundColor: hovered ? 'var(--color-surface-hover)' : 'var(--color-surface)',
+        border: `1px solid ${hovered ? 'var(--color-border-hover)' : 'var(--color-border)'}`,
+        borderRadius: 'var(--radius-lg)',
         padding: '36px 40px',
         display: 'flex',
         alignItems: 'center',
         gap: '56px',
+        transition: 'border-color 150ms ease, background-color 150ms ease',
       }}
     >
       {/* Primary figure */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: '12px',
-          color: '#6B7A8D',
-          letterSpacing: '0.18em',
-          textTransform: 'uppercase',
-          marginBottom: '12px',
-        }}>
+        <p style={{ ...label, marginBottom: '12px' }}>
           Net Worth
         </p>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '18px', flexWrap: 'wrap', marginBottom: '10px' }}>
@@ -77,87 +87,77 @@ export default function NetWorthCard({ current, lastMonth, totalAssets, totalLia
             title="Net Worth"
             computationNote="Total assets minus total liabilities across all connected accounts"
             sources={netWorthSources}
-            accentColor="#B8913A"
+            accentColor="var(--color-gold)"
             style={{
               fontFamily: 'var(--font-sans)',
               fontSize: '72px',
               fontWeight: 300,
-              color: '#F0F2F8',
+              color: 'var(--color-text)',
               lineHeight: 1,
               letterSpacing: '-0.01em',
             }}
           />
-          <span style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '5px',
-            fontFamily: 'var(--font-mono)',
-            fontSize: '14px',
-            color: isPositive ? '#4CAF7D' : '#E05C6E',
-            backgroundColor: isPositive ? 'rgba(76,175,125,0.10)' : 'rgba(224,92,110,0.10)',
-            padding: '4px 10px',
-            borderRadius: '2px',
-          }}>
-            {isPositive ? '↑' : '↓'}
-            {formatCurrency(Math.abs(change))}
-            <span style={{ opacity: 0.7 }}>({isPositive ? '+' : ''}{changePct}%)</span>
-          </span>
+          {showDelta && (
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '14px',
+              color: isPositive ? 'var(--color-positive)' : 'var(--color-negative)',
+              backgroundColor: isPositive ? 'var(--color-positive-bg)' : 'var(--color-negative-bg)',
+              padding: '4px 10px',
+              borderRadius: 'var(--radius-pill)',
+            }}>
+              {isPositive ? '↑' : '↓'}
+              {formatCurrency(Math.abs(change))}
+              <span style={{ opacity: 0.7 }}>({isPositive ? '+' : ''}{changePct}%)</span>
+            </span>
+          )}
         </div>
-        <p style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: '13px',
-          color: '#6B7A8D',
-          letterSpacing: '0.04em',
-        }}>
-          vs last month
-        </p>
+        {showDelta && (
+          <p style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '13px',
+            color: 'var(--color-text-muted)',
+            letterSpacing: '0.04em',
+          }}>
+            vs last month
+          </p>
+        )}
       </div>
 
       {/* Divider */}
-      <div style={{ width: '1px', height: '80px', backgroundColor: 'rgba(184,145,58,0.18)', flexShrink: 0 }} />
+      <div style={{ width: '1px', height: '80px', backgroundColor: 'var(--color-border)', flexShrink: 0 }} />
 
       {/* Assets + Liabilities */}
       <div style={{ display: 'flex', gap: '48px', alignItems: 'center' }}>
         <div>
-          <p style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: '12px',
-            color: '#6B7A8D',
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            marginBottom: '10px',
-          }}>
+          <p style={{ ...label, marginBottom: '10px' }}>
             Total Assets
           </p>
           <p style={{
-            fontFamily: 'var(--font-sans)',
-            fontSize: '36px',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '28px',
             fontWeight: 400,
-            color: '#F0F2F8',
+            color: 'var(--color-text)',
             lineHeight: 1,
           }}>
             {formatCurrency(animatedAssets)}
           </p>
         </div>
 
-        <div style={{ width: '1px', height: '52px', backgroundColor: 'rgba(184,145,58,0.18)' }} />
+        <div style={{ width: '1px', height: '52px', backgroundColor: 'var(--color-border)' }} />
 
         <div>
-          <p style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: '12px',
-            color: '#6B7A8D',
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            marginBottom: '10px',
-          }}>
+          <p style={{ ...label, marginBottom: '10px' }}>
             Total Liabilities
           </p>
           <p style={{
-            fontFamily: 'var(--font-sans)',
-            fontSize: '36px',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '28px',
             fontWeight: 400,
-            color: '#E05C6E',
+            color: 'var(--color-negative)',
             lineHeight: 1,
           }}>
             {formatCurrency(animatedLiabilities)}

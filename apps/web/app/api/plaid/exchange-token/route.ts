@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { exchangePublicToken, getAccounts, getTransactions, getHoldings, getLiabilitiesApr } from '@/lib/plaid'
 import { prisma } from '@/lib/prisma'
 import { categorizeTransaction } from '@/lib/categories'
+import { sanitizeMerchantName } from '@/lib/sanitizeMerchantName'
 
 interface PlaidAccountSelection {
   id: string
@@ -112,12 +113,13 @@ export async function POST(request: NextRequest) {
       const accountRecord = createdAccounts.find(a => a.plaidAccountId === tx.account_id)
       if (!accountRecord) continue
       try {
+        const cleanMerchant = sanitizeMerchantName(tx.merchant_name ?? tx.name ?? null)
         await prisma.transaction.upsert({
           where: { id: tx.transaction_id },
           create: {
             id: tx.transaction_id,
             accountId: accountRecord.id,
-            merchantName: tx.merchant_name ?? tx.name ?? null,
+            merchantName: cleanMerchant,
             amount: -tx.amount, // Plaid uses positive for debits, we store negative for spending
             category: categorizeTransaction({
               rawCategory: (tx.personal_finance_category?.primary ?? (tx.category?.[0] ?? null))?.replace(/_/g, ' ') ?? null,
@@ -125,7 +127,7 @@ export async function POST(request: NextRequest) {
               accountType: accountRecord.accountType,
               amount: -tx.amount,
               userId: dbUser.id,
-              merchantName: tx.merchant_name ?? tx.name ?? null,
+              merchantName: cleanMerchant,
               plaidLegacyCategory: tx.category?.[0] ?? null,
             }),
             date: new Date(tx.date),

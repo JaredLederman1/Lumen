@@ -1,8 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import { useDashboard } from '@/lib/dashboardData'
+import { usePortfolioQuery } from '@/lib/queries'
 import DonutChart from '@/components/ui/DonutChart'
 import WidgetCard from './WidgetCard'
 
@@ -18,23 +17,12 @@ interface PortfolioResponse {
   hasHoldings: boolean
 }
 
-const PALETTE = ['#B8913A', '#2D6A4F', '#8B4513', '#4A6785', '#9B7B4A', '#7A6A5A']
+// SVG fill does not resolve var() references, so the palette mirrors the
+// warm-dark tokens in globals.css. Keep in sync if the tokens change.
+const PALETTE = ['#C79A42', '#5AB48A', '#B55A3A', '#7A95AA', '#AC8858', '#8A7866']
 
 export default function PortfolioWidget() {
-  const { authToken } = useDashboard()
-  const [data, setData] = useState<PortfolioResponse | null>(null)
-
-  useEffect(() => {
-    const headers: Record<string, string> = authToken
-      ? { Authorization: `Bearer ${authToken}` }
-      : {}
-    fetch('/api/portfolio', { headers })
-      .then(r => (r.ok ? r.json() : null))
-      .then(d => {
-        if (d) setData(d)
-      })
-      .catch(() => {})
-  }, [authToken])
+  const { data } = usePortfolioQuery<PortfolioResponse>()
 
   return (
     <WidgetCard label="Portfolio" title="Asset allocation">

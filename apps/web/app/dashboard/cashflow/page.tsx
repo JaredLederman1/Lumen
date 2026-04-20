@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import type { Variants } from 'framer-motion'
 import Link from 'next/link'
@@ -8,6 +7,7 @@ import BarChart from '@/components/ui/BarChart'
 import MerchantBar from '@/components/ui/MerchantBar'
 import MobileCard from '@/components/ui/MobileCard'
 import { useDashboard } from '@/lib/dashboardData'
+import { useMerchantsQuery, useCashflowTrendsQuery } from '@/lib/queries'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { colors, fonts, spacing, mobileLabelText } from '@/lib/theme'
 
@@ -68,21 +68,9 @@ const merchantItemVariants: Variants = {
 }
 
 function CashFlowDesktop() {
-  const { loading, monthlyData, authToken } = useDashboard()
-  const [merchantData, setMerchantData] = useState<MerchantData | null>(null)
-  const [trendsData, setTrendsData] = useState<TrendsData | null>(null)
-
-  useEffect(() => {
-    const headers: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-    fetch('/api/merchants', { headers })
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.merchants) setMerchantData(d) })
-      .catch(() => {})
-    fetch('/api/cashflow/trends', { headers })
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.categoryTrends) setTrendsData(d) })
-      .catch(() => {})
-  }, [authToken])
+  const { loading, monthlyData } = useDashboard()
+  const { data: merchantData } = useMerchantsQuery<MerchantData>()
+  const { data: trendsData } = useCashflowTrendsQuery<TrendsData>()
 
   if (loading) {
     return (
@@ -377,21 +365,9 @@ function CashFlowDesktop() {
 }
 
 function CashFlowMobile() {
-  const { loading, monthlyData, authToken } = useDashboard()
-  const [merchantData, setMerchantData] = useState<MerchantData | null>(null)
-  const [trendsData, setTrendsData] = useState<TrendsData | null>(null)
-
-  useEffect(() => {
-    const headers: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-    fetch('/api/merchants', { headers })
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.merchants) setMerchantData(d) })
-      .catch(() => {})
-    fetch('/api/cashflow/trends', { headers })
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.categoryTrends) setTrendsData(d) })
-      .catch(() => {})
-  }, [authToken])
+  const { loading, monthlyData } = useDashboard()
+  const { data: merchantData } = useMerchantsQuery<MerchantData>()
+  const { data: trendsData } = useCashflowTrendsQuery<TrendsData>()
 
   if (loading) {
     return (

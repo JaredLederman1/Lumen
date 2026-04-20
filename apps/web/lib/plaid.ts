@@ -8,11 +8,22 @@ import {
   InvestmentsHoldingsGetResponse,
   InvestmentsTransactionsGetResponse,
 } from 'plaid'
-import { PLAID_CLIENT_ID, PLAID_SECRET, PLAID_ENV } from '@/lib/env'
+import { PLAID_CLIENT_ID, PLAID_SECRET, PLAID_ENV, PLAID_SANDBOX_SECRET } from '@/lib/env'
 
-const resolvedEnv = PLAID_ENV as keyof typeof PlaidEnvironments
+// Localhost (NODE_ENV=development) runs against Plaid sandbox so we can log in
+// with test credentials and avoid production rate limits. Production deploys
+// (Vercel) use the real PLAID_ENV + PLAID_SECRET.
+const useSandbox = process.env.NODE_ENV === 'development' && !!PLAID_SANDBOX_SECRET
+
+const resolvedEnv = (useSandbox ? 'sandbox' : PLAID_ENV) as keyof typeof PlaidEnvironments
+const resolvedSecret = useSandbox ? PLAID_SANDBOX_SECRET : PLAID_SECRET
+
 if (!PlaidEnvironments[resolvedEnv]) {
   console.warn(`[plaid] PLAID_ENV is "${PLAID_ENV}" which is not a valid Plaid environment. Falling back to sandbox.`)
+}
+
+if (useSandbox) {
+  console.log('[plaid] Using sandbox environment (localhost dev override).')
 }
 
 const configuration = new Configuration({
@@ -20,7 +31,7 @@ const configuration = new Configuration({
   baseOptions: {
     headers: {
       'PLAID-CLIENT-ID': PLAID_CLIENT_ID,
-      'PLAID-SECRET': PLAID_SECRET,
+      'PLAID-SECRET': resolvedSecret,
     },
   },
 })

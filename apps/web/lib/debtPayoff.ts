@@ -30,6 +30,17 @@ export interface DebtInput {
    * the simulation.
    */
   minimumPayment?: number
+  /** Plaid institution name ("Chase"), surfaced for display. */
+  institutionName?: string | null
+  /** Plaid account type ("credit card", "student"), surfaced for display. */
+  accountType?: string | null
+  /** Last four digits of the account number, surfaced for display. */
+  last4?: string | null
+  /** User-set nickname, overrides the derived label when present. */
+  customLabel?: string | null
+  /** ISO timestamp of when the APR was confirmed against loan documents,
+   *  null when unconfirmed (Plaid default). */
+  aprConfirmedAt?: string | null
 }
 
 export interface MonthlyStep {

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 const sections = [
@@ -25,8 +25,9 @@ const sections = [
   {
     label: 'FORECAST',
     items: [
-      { href: '/dashboard/forecast',     label: 'Projections'      },
-      { href: '/dashboard/goals',        label: 'Goals'            },
+      { href: '/dashboard/forecast',               label: 'Projections'    },
+      { href: '/dashboard/forecast/debt-paydown',  label: 'Debt Paydown'   },
+      { href: '/dashboard/goals',                  label: 'Goals'          },
     ],
   },
   {
@@ -39,14 +40,34 @@ const sections = [
   },
 ]
 
+function findActiveSectionLabel(pathname: string): string | null {
+  const match = sections.find(section =>
+    section.items.some(item => pathname === item.href || pathname.startsWith(`${item.href}/`)),
+  )
+  return match?.label ?? null
+}
+
 export default function Sidebar() {
   const pathname = usePathname()
-  const [open, setOpen] = useState<Record<string, boolean>>({
-    WEALTH: false,
-    ACTIVITY: false,
-    FORECAST: false,
-    INTELLIGENCE: false,
+  const [open, setOpen] = useState<Record<string, boolean>>(() => {
+    const base = Object.fromEntries(sections.map(s => [s.label, false]))
+    const active = findActiveSectionLabel(pathname)
+    if (active) base[active] = true
+    return base
   })
+
+  // Whenever the route changes, auto-open the section that owns the current
+  // page so the user can see where they are in the nav tree regardless of how
+  // they arrived.
+  useEffect(() => {
+    const active = findActiveSectionLabel(pathname)
+    if (!active) return
+    setOpen(prev => {
+      if (prev[active]) return prev
+      const allClosed = Object.fromEntries(Object.keys(prev).map(k => [k, false]))
+      return { ...allClosed, [active]: true }
+    })
+  }, [pathname])
 
   const toggle = (label: string) =>
     setOpen((prev) => {
@@ -55,10 +76,18 @@ export default function Sidebar() {
       return { ...allClosed, [label]: !isCurrentlyOpen }
     })
 
-  const isActive = (href: string) =>
-    href === '/dashboard'
-      ? pathname === '/dashboard'
-      : pathname.startsWith(href)
+  const isActive = (href: string) => {
+    if (href === '/dashboard') return pathname === '/dashboard'
+    if (pathname === href) return true
+    // A nav item owns its path plus any deeper sub-paths ("/dashboard/forecast/debt-paydown"
+    // below "/dashboard/forecast/debt-paydown"), but not a different sibling ("/dashboard/forecast"
+    // should not light up for "/dashboard/forecast/debt-paydown").
+    const deeperChild = pathname.startsWith(`${href}/`)
+    const sibling = sections.some(section =>
+      section.items.some(item => item.href !== href && item.href.startsWith(`${href}/`) && pathname.startsWith(item.href)),
+    )
+    return deeperChild && !sibling
+  }
 
   const linkStyle = (href: string): React.CSSProperties => ({
     display: 'flex',
@@ -72,9 +101,11 @@ export default function Sidebar() {
     color: isActive(href) ? 'var(--color-text)' : 'var(--color-text-muted)',
     backgroundColor: isActive(href) ? 'var(--color-gold-subtle)' : 'transparent',
     fontSize: '14px',
-    fontFamily: 'var(--font-mono)',
-    letterSpacing: '0.06em',
-    transition: 'color 120ms ease, background-color 120ms ease',
+    fontFamily: 'var(--font-sans)',
+    fontWeight: 400,
+    letterSpacing: '0.01em',
+    textTransform: 'none',
+    transition: 'color 150ms ease, background-color 150ms ease',
   })
 
   const standaloneStyle = (href: string): React.CSSProperties => ({
@@ -89,17 +120,19 @@ export default function Sidebar() {
     color: isActive(href) ? 'var(--color-text)' : 'var(--color-text-muted)',
     backgroundColor: isActive(href) ? 'var(--color-gold-subtle)' : 'transparent',
     fontSize: '14px',
-    fontFamily: 'var(--font-mono)',
+    fontFamily: 'var(--font-sans)',
+    fontWeight: 500,
     letterSpacing: '0.06em',
-    transition: 'color 120ms ease, background-color 120ms ease',
+    textTransform: 'uppercase',
+    transition: 'color 150ms ease, background-color 150ms ease',
   })
 
   return (
     <aside style={{
       width: '220px',
       minHeight: '100vh',
-      backgroundColor: '#0F1318',
-      borderRight: '1px solid rgba(184,145,58,0.18)',
+      backgroundColor: 'var(--color-surface)',
+      borderRight: '1px solid var(--color-border)',
       display: 'flex',
       flexDirection: 'column',
       flexShrink: 0,
@@ -107,7 +140,7 @@ export default function Sidebar() {
       {/* Wordmark */}
       <Link href="/dashboard" style={{
         padding: '40px 28px 32px',
-        borderBottom: '1px solid rgba(184,145,58,0.12)',
+        borderBottom: '1px solid var(--color-border)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -119,7 +152,7 @@ export default function Sidebar() {
           fontFamily: 'var(--font-serif)',
           fontSize: '22px',
           fontWeight: 500,
-          color: '#B8913A',
+          color: 'var(--color-gold)',
           letterSpacing: '0.22em',
           textTransform: 'uppercase',
           marginBottom: '5px',
@@ -127,10 +160,11 @@ export default function Sidebar() {
           Illumin
         </div>
         <div style={{
-          fontFamily: 'var(--font-mono)',
+          fontFamily: 'var(--font-sans)',
           fontSize: '11px',
-          color: '#6B7A8D',
-          letterSpacing: '0.18em',
+          fontWeight: 500,
+          color: 'var(--color-text-muted)',
+          letterSpacing: '0.06em',
           textTransform: 'uppercase',
         }}>
           Wealth Management
@@ -152,7 +186,7 @@ export default function Sidebar() {
           const isOpen = open[section.label]
           return (
             <div key={section.label} style={{ marginBottom: i < sections.length - 1 ? '4px' : '0' }}>
-              {/* Section heading — clickable toggle */}
+              {/* Section heading: clickable toggle */}
               <button
                 onClick={() => toggle(section.label)}
                 style={{
@@ -160,18 +194,20 @@ export default function Sidebar() {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   width: '100%',
-                  padding: '6px 28px',
+                  padding: '10px 28px',
                   background: 'none',
                   border: 'none',
+                  borderRadius: 0,
                   cursor: 'pointer',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '12px',
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: '14px',
+                  fontWeight: 500,
                   color: 'var(--color-text-muted)',
-                  letterSpacing: '0.12em',
+                  letterSpacing: '0.06em',
                   textTransform: 'uppercase',
                   userSelect: 'none',
-                  marginBottom: isOpen ? '2px' : '8px',
-                  transition: 'color 120ms ease',
+                  marginBottom: isOpen ? '2px' : '4px',
+                  transition: 'color 150ms ease',
                 }}
               >
                 {section.label}
@@ -227,7 +263,7 @@ export default function Sidebar() {
       {/* Footer */}
       <div style={{
         padding: '20px 28px',
-        borderTop: '1px solid rgba(184,145,58,0.12)',
+        borderTop: '1px solid var(--color-border)',
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
@@ -235,28 +271,28 @@ export default function Sidebar() {
         <div style={{
           width: '32px',
           height: '32px',
-          borderRadius: '50%',
-          backgroundColor: 'rgba(184,145,58,0.10)',
-          border: '1px solid rgba(184,145,58,0.3)',
+          borderRadius: 'var(--radius-pill)',
+          backgroundColor: 'var(--color-gold-subtle)',
+          border: '1px solid var(--color-border-strong)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           fontFamily: 'var(--font-mono)',
           fontSize: '12px',
-          color: '#B8913A',
+          color: 'var(--color-gold)',
           letterSpacing: '0.05em',
           flexShrink: 0,
         }}>
           JL
         </div>
         <div>
-          <div style={{ fontSize: '13px', color: '#A8B4C0', fontFamily: 'var(--font-mono)', marginBottom: '2px' }}>
+          <div style={{ fontSize: '13px', color: 'var(--color-text-mid)', fontFamily: 'var(--font-sans)', marginBottom: '2px' }}>
             Jared L.
           </div>
           <Link href="/auth/login" style={{
             fontSize: '12px',
-            color: '#6B7A8D',
-            fontFamily: 'var(--font-mono)',
+            color: 'var(--color-text-muted)',
+            fontFamily: 'var(--font-sans)',
             textDecoration: 'none',
           }}>
             Sign out

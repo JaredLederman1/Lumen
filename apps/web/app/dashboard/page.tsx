@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import NetWorthCard from '@/components/ui/NetWorthCard'
@@ -14,20 +14,11 @@ import MobileMetricCard from '@/components/ui/MobileMetricCard'
 import { colors, fonts, spacing, mobileLabelText } from '@/lib/theme'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { useDashboard } from '@/lib/dashboardData'
+import { useNetWorthHistoryQuery } from '@/lib/queries'
 import { detectRecurringMerchants } from '@/lib/data'
 import HeroRow from '@/components/dashboard/HeroRow'
 import DashboardGrid from '@/components/dashboard/DashboardGrid'
 import { useDashboardHeroState } from '@/components/dashboard/useDashboardHeroState'
-
-interface HistoryPoint { date: string; netWorth: number }
-interface NWHistory {
-  history: HistoryPoint[]
-  hasHistory: boolean
-  change30d: number
-  changeAllTime: number
-  hasAssetAccount: boolean
-  hasLiabilityAccount: boolean
-}
 
 function fmtChange(n: number): string {
   const abs = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Math.abs(n))
@@ -35,17 +26,9 @@ function fmtChange(n: number): string {
 }
 
 function DashboardDesktop() {
-  const { loading, netWorth, accounts, authToken } = useDashboard()
+  const { loading, netWorth, accounts } = useDashboard()
   const hero = useDashboardHeroState()
-  const [nwHistory, setNwHistory] = useState<NWHistory | null>(null)
-
-  useEffect(() => {
-    const headers: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-    fetch('/api/networth/history', { headers })
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d) setNwHistory(d) })
-      .catch(() => {})
-  }, [authToken])
+  const { data: nwHistory } = useNetWorthHistoryQuery()
 
   const hasData = netWorth !== null && (netWorth.totalAssets > 0 || netWorth.totalLiabilities > 0)
 
@@ -92,9 +75,9 @@ function DashboardDesktop() {
           }}
         >
           <div style={{
-            width: '48px', height: '48px', borderRadius: '50%',
-            border: '1px solid rgba(184,145,58,0.25)',
-            backgroundColor: 'rgba(184,145,58,0.08)',
+            width: '48px', height: '48px', borderRadius: 'var(--radius-pill)',
+            border: '1px solid var(--color-border-strong)',
+            backgroundColor: 'var(--color-gold-subtle)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '24px',
           }}>
@@ -167,17 +150,9 @@ const fmt = (n: number) =>
 
 // ── Mobile layout ─────────────────────────────────────────────────────────────
 function DashboardMobile() {
-  const { loading, netWorth, transactions, accounts, monthlyData, spendingByCategory, authToken } = useDashboard()
+  const { loading, netWorth, transactions, accounts, monthlyData, spendingByCategory } = useDashboard()
   const hero = useDashboardHeroState()
-  const [nwHistory, setNwHistory] = useState<NWHistory | null>(null)
-
-  useEffect(() => {
-    const headers: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-    fetch('/api/networth/history', { headers })
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d) setNwHistory(d) })
-      .catch(() => {})
-  }, [authToken])
+  const { data: nwHistory } = useNetWorthHistoryQuery()
 
   const accountMap = useMemo(() =>
     Object.fromEntries(accounts.map(a => [a.id, a])),

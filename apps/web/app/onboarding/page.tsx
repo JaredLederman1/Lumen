@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { useAuthToken, useSaveOnboardingMutation } from '@/lib/queries'
 
 import { DEFAULTS, secondaryBtn } from '@/components/onboarding/shared'
 import type { OnboardingData } from '@/components/onboarding/shared'
@@ -58,6 +58,8 @@ function payloadForStep(step: number, data: OnboardingData): Record<string, unkn
 export default function OnboardingPage() {
   const router = useRouter()
   const isMobile = useIsMobile()
+  const authToken = useAuthToken()
+  const saveOnboarding = useSaveOnboardingMutation()
 
   const [phase, setPhase] = useState<Phase>('welcome')
   const [step, setStep]   = useState<number>(0)
@@ -90,13 +92,12 @@ export default function OnboardingPage() {
   // has missing data. If all core fields are filled we still land on Step 1
   // so the user can review their info before seeing the reveal.
   useEffect(() => {
+    if (!authToken) return
     let cancelled = false
     ;(async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session?.access_token) return
         const res = await fetch('/api/user/onboarding', {
-          headers: { Authorization: `Bearer ${session.access_token}` },
+          headers: { Authorization: `Bearer ${authToken}` },
         })
         if (!res.ok) return
         const { profile } = await res.json()
@@ -135,7 +136,7 @@ export default function OnboardingPage() {
       }
     })()
     return () => { cancelled = true }
-  }, [])
+  }, [authToken])
 
   const handlePatch = useCallback((patch: Partial<OnboardingData>) => {
     setData(prev => ({ ...prev, ...patch }))
@@ -144,28 +145,15 @@ export default function OnboardingPage() {
   const persistStep = useCallback(async (stepIdx: number, extra: Record<string, unknown> = {}) => {
     setError(null)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-      }
       const body = { step: stepIdx, ...payloadForStep(stepIdx, data), ...extra }
-      const res = await fetch('/api/user/onboarding', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(body),
-      })
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}))
-        setError(j?.message ?? j?.error ?? 'Could not save progress.')
-        return false
-      }
+      await saveOnboarding.mutateAsync(body)
       return true
-    } catch {
-      setError('Network error. Please try again.')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Could not save progress.'
+      setError(msg)
       return false
     }
-  }, [data])
+  }, [data, saveOnboarding])
 
   const step1Complete = useMemo(
     () => typeof data.age === 'number' && data.age > 0 && data.annualIncome > 0,
@@ -203,11 +191,6 @@ export default function OnboardingPage() {
     setBusy(true)
     setError(null)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-      }
       const body = {
         finalize: true,
         skipped:  opts.skipped,
@@ -216,30 +199,17 @@ export default function OnboardingPage() {
         savingsRate:      data.savingsRate,
         retirementAge:    data.retirementAge,
       }
-      const res = await fetch('/api/user/onboarding', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(body),
-      })
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}))
-        if (j?.error === 'asset_account_required') {
-          setError(j.message ?? 'An asset account is required to continue.')
-        } else {
-          setError(j?.message ?? j?.error ?? 'Could not complete onboarding.')
-        }
-        return false
-      }
-      const j = await res.json()
+      const j = await saveOnboarding.mutateAsync(body)
       setSkippedPlaid(Boolean(j?.skippedAssetLink))
       return true
-    } catch {
-      setError('Network error. Please try again.')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Network error. Please try again.'
+      setError(msg)
       return false
     } finally {
       setBusy(false)
     }
-  }, [data])
+  }, [data, saveOnboarding])
 
   const showPreview = useCallback(() => {
     setPhase('preview')

@@ -6,8 +6,12 @@ import TransactionRow from '@/components/ui/TransactionRow'
 import MobileCard from '@/components/ui/MobileCard'
 import Link from 'next/link'
 import { useDashboard } from '@/lib/dashboardData'
+import {
+  useRecurringExclusionsQuery,
+  useUpdateTransactionMutation,
+  useAddManualTransactionMutation,
+} from '@/lib/queries'
 import { detectRecurringMerchants } from '@/lib/data'
-import { supabase } from '@/lib/supabase'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { colors, fonts, spacing, radius } from '@/lib/theme'
 
@@ -108,9 +112,9 @@ function AddTransactionModal({
             onClick={e => e.stopPropagation()}
             style={{
               width: '100%', maxWidth: '480px',
-              backgroundColor: '#0F1318',
-              border: '1px solid rgba(184,145,58,0.25)',
-              borderRadius: '4px',
+              backgroundColor: 'var(--color-surface-elevated)',
+              border: '1px solid var(--color-border-strong)',
+              borderRadius: 'var(--radius-lg)',
               padding: '32px',
               zIndex: 51,
               display: 'flex', flexDirection: 'column', gap: '20px',
@@ -256,7 +260,10 @@ function AddTransactionModal({
 }
 
 function TransactionsDesktop() {
-  const { loading, accounts, transactions, refresh } = useDashboard()
+  const { loading, accounts, transactions } = useDashboard()
+  const updateTx = useUpdateTransactionMutation()
+  const addManualTx = useAddManualTransactionMutation()
+  const { data: exclusionsRaw } = useRecurringExclusionsQuery()
 
   const [search,        setSearch]        = useState('')
   const [category,      setCategory]      = useState('All')
@@ -267,7 +274,6 @@ function TransactionsDesktop() {
 
   // Modal state
   const [modalOpen,   setModalOpen]   = useState(false)
-  const [submitting,  setSubmitting]  = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [form, setForm] = useState({
     merchantName: '',
@@ -300,23 +306,10 @@ function TransactionsDesktop() {
   const categoryOverridesRef = useRef(categoryOverrides)
   useEffect(() => { categoryOverridesRef.current = categoryOverrides }, [categoryOverrides])
 
-  // Recurring exclusions
-  const [excludedMerchants, setExcludedMerchants] = useState<Set<string>>(new Set())
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const headers: Record<string, string> = session?.access_token
-        ? { Authorization: `Bearer ${session.access_token}` }
-        : {}
-      fetch('/api/recurring/exclusions', { headers })
-        .then(r => r.json())
-        .then(data => {
-          if (data.excluded) {
-            setExcludedMerchants(new Set(data.excluded.map((m: string) => m.trim().toLowerCase())))
-          }
-        })
-        .catch(() => {})
-    })
-  }, [])
+  const excludedMerchants = useMemo(() => {
+    if (!exclusionsRaw) return new Set<string>()
+    return new Set(Array.from(exclusionsRaw).map(m => m.trim().toLowerCase()))
+  }, [exclusionsRaw])
 
   const handleTagsChange = (txId: string, tags: string[]) => {
     setTagOverrides(prev => ({ ...prev, [txId]: tags }))
@@ -342,24 +335,7 @@ function TransactionsDesktop() {
     const originalCategory = categoryOverridesRef.current[txId] ?? tx?.category
     const wasNeedsLabeling = isMaskedMerchant(originalMerchant) || originalCategory === 'Other'
 
-    const { data: { session } } = await supabase.auth.getSession()
-    const res = await fetch(`/api/transactions/${txId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-      },
-      body: JSON.stringify(fields),
-    })
-    if (!res.ok) {
-      const text = await res.text()
-      console.error('[handleInlineSave] API error:', res.status, text)
-      let msg = 'Failed to save'
-      try { msg = JSON.parse(text).error ?? msg } catch {}
-      throw new Error(msg)
-    }
-    let payload: { updatedCount?: number; renameCount?: number } = {}
-    try { payload = await res.json() } catch {}
+    const payload = await updateTx.mutateAsync({ id: txId, fields }) as { updatedCount?: number; renameCount?: number }
     if (fields.category) {
       setCategoryOverrides(prev => {
         const next = { ...prev }
@@ -386,7 +362,7 @@ function TransactionsDesktop() {
       const count = Math.max(payload.renameCount ?? 0, payload.updatedCount ?? 0)
       setToast(`Labeled. ${count} past transactions updated.`)
     }
-  }, [transactions])
+  }, [transactions, updateTx])
 
   const accountMap = useMemo(() =>
     Object.fromEntries(accounts.map(a => [a.id, a])),
@@ -417,35 +393,31 @@ function TransactionsDesktop() {
   const paginated  = filtered.slice((page - 1) * pageSize, page * pageSize)
   const totalPages = Math.ceil(filtered.length / pageSize)
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!form.amount || isNaN(Number(form.amount))) {
       setSubmitError('Please enter a valid amount.')
       return
     }
-    setSubmitting(true)
     setSubmitError(null)
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('/api/transactions/manual', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+    addManualTx.mutate(
+      {
+        merchantName: form.merchantName,
+        amount: Number(form.amount),
+        type: form.type,
+        category: form.category,
+        date: form.date,
+        accountId: form.accountId,
+      },
+      {
+        onSuccess: () => {
+          setModalOpen(false)
+          setForm({ merchantName: '', amount: '', type: 'expense', category: TX_CATEGORIES[1], date: new Date().toISOString().slice(0, 10), accountId: 'cash' })
         },
-        body: JSON.stringify(form),
-      })
-      if (!res.ok) {
-        const err = await res.json()
-        setSubmitError(err.error ?? 'Something went wrong.')
-        return
-      }
-      setModalOpen(false)
-      setForm({ merchantName: '', amount: '', type: 'expense', category: TX_CATEGORIES[1], date: new Date().toISOString().slice(0, 10), accountId: 'cash' })
-      refresh()
-    } finally {
-      setSubmitting(false)
-    }
+        onError: err => setSubmitError(err instanceof Error ? err.message : 'Something went wrong.'),
+      },
+    )
   }
+  const submitting = addManualTx.isPending
 
   if (loading) {
     return (
@@ -457,9 +429,9 @@ function TransactionsDesktop() {
 
   const pageBtn = (active: boolean) => ({
     padding: '6px 14px',
-    backgroundColor: active ? '#B8913A' : '#0F1318',
-    border: '1px solid rgba(184,145,58,0.35)',
-    borderRadius: '2px',
+    backgroundColor: active ? 'var(--color-gold)' : 'var(--color-surface)',
+    border: '1px solid var(--color-border-strong)',
+    borderRadius: 'var(--radius-sm)',
     color: active ? '#F0F2F8' : '#B8913A',
     fontSize: '13px',
     fontFamily: 'var(--font-mono)',
@@ -473,9 +445,9 @@ function TransactionsDesktop() {
 
       {/* Filters + Add button */}
       <div style={{
-        backgroundColor: '#0F1318',
-        border: '1px solid rgba(184,145,58,0.15)',
-        borderRadius: '2px',
+        backgroundColor: 'var(--color-surface)',
+        border: '1px solid var(--color-gold-border)',
+        borderRadius: 'var(--radius-lg)',
         padding: '20px 24px',
         display: 'flex',
         gap: '12px',
@@ -571,9 +543,9 @@ function TransactionsDesktop() {
 
       {/* List */}
       <div style={{
-        backgroundColor: '#0F1318',
-        border: '1px solid rgba(184,145,58,0.15)',
-        borderRadius: '2px',
+        backgroundColor: 'var(--color-surface)',
+        border: '1px solid var(--color-gold-border)',
+        borderRadius: 'var(--radius-lg)',
         padding: '28px',
       }}>
         {transactions.length === 0 ? (
@@ -682,7 +654,10 @@ function TransactionsDesktop() {
 }
 
 function TransactionsMobile() {
-  const { loading, accounts, transactions, refresh } = useDashboard()
+  const { loading, accounts, transactions } = useDashboard()
+  const updateTx = useUpdateTransactionMutation()
+  const addManualTx = useAddManualTransactionMutation()
+  const { data: exclusionsRaw } = useRecurringExclusionsQuery()
 
   const [search,   setSearch]   = useState('')
   const [category, setCategory] = useState('All')
@@ -692,7 +667,6 @@ function TransactionsMobile() {
 
   // Modal state
   const [modalOpen,   setModalOpen]   = useState(false)
-  const [submitting,  setSubmitting]  = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [form, setForm] = useState({
     merchantName: '',
@@ -722,23 +696,10 @@ function TransactionsMobile() {
   const categoryOverridesRef = useRef(categoryOverrides)
   useEffect(() => { categoryOverridesRef.current = categoryOverrides }, [categoryOverrides])
 
-  // Recurring exclusions
-  const [excludedMerchants, setExcludedMerchants] = useState<Set<string>>(new Set())
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const headers: Record<string, string> = session?.access_token
-        ? { Authorization: `Bearer ${session.access_token}` }
-        : {}
-      fetch('/api/recurring/exclusions', { headers })
-        .then(r => r.json())
-        .then(data => {
-          if (data.excluded) {
-            setExcludedMerchants(new Set(data.excluded.map((m: string) => m.trim().toLowerCase())))
-          }
-        })
-        .catch(() => {})
-    })
-  }, [])
+  const excludedMerchants = useMemo(() => {
+    if (!exclusionsRaw) return new Set<string>()
+    return new Set(Array.from(exclusionsRaw).map(m => m.trim().toLowerCase()))
+  }, [exclusionsRaw])
 
   const handleMobileCategoryChange = (txId: string, cat: string, merchantName?: string) => {
     if (merchantName) {
@@ -764,24 +725,7 @@ function TransactionsMobile() {
     const originalCategory = categoryOverridesRef.current[txId] ?? tx?.category
     const wasNeedsLabeling = isMaskedMerchant(originalMerchant) || originalCategory === 'Other'
 
-    const { data: { session } } = await supabase.auth.getSession()
-    const res = await fetch(`/api/transactions/${txId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-      },
-      body: JSON.stringify(fields),
-    })
-    if (!res.ok) {
-      const text = await res.text()
-      console.error('[handleMobileInlineSave] API error:', res.status, text)
-      let msg = 'Failed to save'
-      try { msg = JSON.parse(text).error ?? msg } catch {}
-      throw new Error(msg)
-    }
-    let payload: { updatedCount?: number; renameCount?: number } = {}
-    try { payload = await res.json() } catch {}
+    const payload = await updateTx.mutateAsync({ id: txId, fields }) as { updatedCount?: number; renameCount?: number }
     if (fields.category) {
       setCategoryOverrides(prev => {
         const next = { ...prev }
@@ -808,7 +752,7 @@ function TransactionsMobile() {
       const count = Math.max(payload.renameCount ?? 0, payload.updatedCount ?? 0)
       setToast(`Labeled. ${count} past transactions updated.`)
     }
-  }, [transactions])
+  }, [transactions, updateTx])
 
   const accountMap = useMemo(() =>
     Object.fromEntries(accounts.map(a => [a.id, a])),
@@ -840,35 +784,31 @@ function TransactionsMobile() {
   const paginated  = filtered.slice((page - 1) * pageSize, page * pageSize)
   const totalPages = Math.ceil(filtered.length / pageSize)
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!form.amount || isNaN(Number(form.amount))) {
       setSubmitError('Please enter a valid amount.')
       return
     }
-    setSubmitting(true)
     setSubmitError(null)
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('/api/transactions/manual', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+    addManualTx.mutate(
+      {
+        merchantName: form.merchantName,
+        amount: Number(form.amount),
+        type: form.type,
+        category: form.category,
+        date: form.date,
+        accountId: form.accountId,
+      },
+      {
+        onSuccess: () => {
+          setModalOpen(false)
+          setForm({ merchantName: '', amount: '', type: 'expense', category: TX_CATEGORIES[1], date: new Date().toISOString().slice(0, 10), accountId: 'cash' })
         },
-        body: JSON.stringify(form),
-      })
-      if (!res.ok) {
-        const err = await res.json()
-        setSubmitError(err.error ?? 'Something went wrong.')
-        return
-      }
-      setModalOpen(false)
-      setForm({ merchantName: '', amount: '', type: 'expense', category: TX_CATEGORIES[1], date: new Date().toISOString().slice(0, 10), accountId: 'cash' })
-      refresh()
-    } finally {
-      setSubmitting(false)
-    }
+        onError: err => setSubmitError(err instanceof Error ? err.message : 'Something went wrong.'),
+      },
+    )
   }
+  const submitting = addManualTx.isPending
 
   if (loading) {
     return (

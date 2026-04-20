@@ -76,6 +76,9 @@ export async function GET() {
       balance: a.balance,
       apr: typeof a.apr === 'number' ? a.apr : null,
       institutionName: a.institutionName ?? null,
+      last4: a.last4 ?? null,
+      customLabel: a.customLabel ?? null,
+      aprConfirmedAt: a.aprConfirmedAt ? a.aprConfirmedAt.toISOString() : null,
     }))
 
     // ── Holdings ──────────────────────────────────────────────────────────

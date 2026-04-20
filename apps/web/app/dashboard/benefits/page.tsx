@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { useUploadBenefitsMutation } from '@/lib/queries'
 import { calcTotals } from '@/lib/benefitsAnalysis'
 import type { ExtractedBenefits, BenefitStatus } from '@/lib/benefitsAnalysis'
 import { useIsMobile } from '@/hooks/useIsMobile'
@@ -60,6 +60,7 @@ const urgencyDot: Record<BenefitStatus['urgency'], string> = {
 }
 
 function BenefitsDesktop() {
+  const upload = useUploadBenefitsMutation()
   const [dragging, setDragging]       = useState(false)
   const [file, setFile]               = useState<File | null>(null)
   const [uploading, setUploading]     = useState(false)
@@ -106,20 +107,9 @@ function BenefitsDesktop() {
     if (!file) return
     setUploading(true); setError(null)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const token = session?.access_token
-      if (!token) { setError('You must be signed in to analyze a contract.'); return }
-
       const form = new FormData()
       form.append('contract', file)
-
-      const res  = await fetch('/api/user/benefits/extract', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form })
-      const data = await res.json()
-      if (!res.ok) {
-        const code = data.code ? ` [${data.code}]` : ''
-        setError((data.error ?? 'Analysis failed.') + code)
-        return
-      }
+      const data = await upload.mutateAsync(form)
       clearInterval(progressRef.current!)
       clearInterval(phaseRef.current!)
       setProgress(100)
@@ -131,8 +121,8 @@ function BenefitsDesktop() {
         totalBenefitsValue:  data.totalBenefitsValue,
         capturedAnnualValue: data.capturedAnnualValue,
       })
-    } catch {
-      setError('Unexpected error. Please try again.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unexpected error. Please try again.')
     } finally {
       setUploading(false)
     }
@@ -371,6 +361,7 @@ function BenefitsDesktop() {
 }
 
 function BenefitsMobile() {
+  const upload = useUploadBenefitsMutation()
   const [dragging, setDragging]         = useState(false)
   const [file, setFile]                 = useState<File | null>(null)
   const [uploading, setUploading]       = useState(false)
@@ -417,20 +408,9 @@ function BenefitsMobile() {
     if (!file) return
     setUploading(true); setError(null)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const token = session?.access_token
-      if (!token) { setError('You must be signed in to analyze a contract.'); return }
-
       const form = new FormData()
       form.append('contract', file)
-
-      const res  = await fetch('/api/user/benefits/extract', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form })
-      const data = await res.json()
-      if (!res.ok) {
-        const code = data.code ? ` [${data.code}]` : ''
-        setError((data.error ?? 'Analysis failed.') + code)
-        return
-      }
+      const data = await upload.mutateAsync(form)
       clearInterval(progressRef.current!)
       clearInterval(phaseRef.current!)
       setProgress(100)
@@ -442,8 +422,8 @@ function BenefitsMobile() {
         totalBenefitsValue:  data.totalBenefitsValue,
         capturedAnnualValue: data.capturedAnnualValue,
       })
-    } catch {
-      setError('Unexpected error. Please try again.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unexpected error. Please try again.')
     } finally {
       setUploading(false)
     }

@@ -26,5 +26,6 @@ export const SUPABASE_SERVICE_ROLE_KEY = requireEnv('SUPABASE_SERVICE_ROLE_KEY')
 export const PLAID_CLIENT_ID = requireEnv('PLAID_CLIENT_ID')
 export const PLAID_SECRET = requireEnv('PLAID_SECRET')
 export const PLAID_ENV = requireEnv('PLAID_ENV')
+export const PLAID_SANDBOX_SECRET = process.env.PLAID_SANDBOX_SECRET ?? ''
 export const ANTHROPIC_API_KEY = requireEnv('ANTHROPIC_API_KEY')
 export const RESEND_API_KEY = requireEnv('RESEND_API_KEY')

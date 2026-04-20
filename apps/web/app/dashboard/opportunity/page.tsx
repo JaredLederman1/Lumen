@@ -6,7 +6,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts'
 import type { OpportunityData } from '@/app/api/opportunity/route'
-import { useDashboard } from '@/lib/dashboardData'
+import { useOpportunityQuery } from '@/lib/queries'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import MobileCard from '@/components/ui/MobileCard'
 import { colors, fonts, spacing } from '@/lib/theme'
@@ -115,20 +115,9 @@ const statLabel: React.CSSProperties = {
 // Page
 
 function OpportunityDesktop() {
-  const { authToken } = useDashboard()
-  const [loading, setLoading] = useState(true)
-  const [data, setData] = useState<OpportunityData | null>(null)
+  const { data: data, isLoading: loading } = useOpportunityQuery<OpportunityData>()
   const [containerWidth, setContainerWidth] = useState(0)
   const chartContainerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const headers: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-    fetch('/api/opportunity', { headers })
-      .then(r => r.json())
-      .then(setData)
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [authToken])
 
   useEffect(() => {
     const el = chartContainerRef.current
@@ -258,7 +247,7 @@ function OpportunityDesktop() {
             width={chartWidth}
             height={260}
             data={projectionSeries}
-            margin={{ top: 4, right: 20, bottom: 0, left: 8 }}
+            margin={{ top: 8, right: 24, bottom: 8, left: 8 }}
           >
             <CartesianGrid
               horizontal
@@ -289,6 +278,7 @@ function OpportunityDesktop() {
               stroke="var(--color-positive)"
               strokeWidth={2}
               dot={false}
+              isAnimationActive={false}
             />
             <Line
               type="monotone"
@@ -297,6 +287,7 @@ function OpportunityDesktop() {
               strokeWidth={1.5}
               strokeDasharray="4 4"
               dot={false}
+              isAnimationActive={false}
             />
           </LineChart>
         </div>
@@ -332,20 +323,9 @@ function OpportunityDesktop() {
 }
 
 function OpportunityMobile() {
-  const { authToken } = useDashboard()
-  const [loading, setLoading] = useState(true)
-  const [data, setData] = useState<OpportunityData | null>(null)
+  const { data: data, isLoading: loading } = useOpportunityQuery<OpportunityData>()
   const [containerWidth, setContainerWidth] = useState(0)
   const chartContainerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const headers: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-    fetch('/api/opportunity', { headers })
-      .then(r => r.json())
-      .then(setData)
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [authToken])
 
   useEffect(() => {
     const el = chartContainerRef.current
@@ -510,7 +490,7 @@ function OpportunityMobile() {
               width={chartWidth}
               height={220}
               data={projectionSeries}
-              margin={{ top: 4, right: 8, bottom: 0, left: 4 }}
+              margin={{ top: 8, right: 24, bottom: 8, left: 8 }}
             >
               <CartesianGrid
                 horizontal
@@ -541,6 +521,7 @@ function OpportunityMobile() {
                 stroke={colors.positive}
                 strokeWidth={2}
                 dot={false}
+                isAnimationActive={false}
               />
               <Line
                 type="monotone"
@@ -549,6 +530,7 @@ function OpportunityMobile() {
                 strokeWidth={1.5}
                 strokeDasharray="4 4"
                 dot={false}
+                isAnimationActive={false}
               />
             </LineChart>
           </div>

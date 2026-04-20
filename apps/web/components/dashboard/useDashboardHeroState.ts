@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useDashboard } from '@/lib/dashboardData'
+import { useDashboardStateQuery } from '@/lib/queries'
 import type {
   DashboardState,
   HeroMetrics,
@@ -25,14 +26,6 @@ const FIXED_VARIABLE_EXCLUDE = new Set([
 const IRA_LIMIT = 7000
 const HSA_LIMIT = 4300
 
-interface StateApiResponse {
-  state: DashboardState
-  rationale?: unknown
-  heroMetrics?: Partial<HeroMetrics>
-  priorityMetrics?: Partial<PriorityMetrics>
-  computedAt?: string
-}
-
 export interface DashboardHeroStateValue {
   state: DashboardState | null
   loading: boolean
@@ -48,7 +41,6 @@ export interface DashboardHeroStateValue {
  */
 export function useDashboardHeroState(): DashboardHeroStateValue {
   const {
-    authToken,
     accounts,
     transactions,
     spendingByCategory,
@@ -58,42 +50,11 @@ export function useDashboardHeroState(): DashboardHeroStateValue {
     forecast,
   } = useDashboard()
 
-  const [state, setState] = useState<DashboardState | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [failed, setFailed] = useState(false)
-  const [serverHero, setServerHero] = useState<Partial<HeroMetrics>>({})
-  const [serverPriority, setServerPriority] = useState<Partial<PriorityMetrics>>({})
-
-  useEffect(() => {
-    let cancelled = false
-    const headers: Record<string, string> = authToken
-      ? { Authorization: `Bearer ${authToken}` }
-      : {}
-    fetch('/api/dashboard/state', { headers })
-      .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
-      .then((data: StateApiResponse) => {
-        if (cancelled) return
-        if (data?.state) {
-          setState(data.state)
-          setServerHero(data.heroMetrics ?? {})
-          setServerPriority(data.priorityMetrics ?? {})
-          setFailed(false)
-        } else {
-          setFailed(true)
-        }
-      })
-      .catch(err => {
-        if (cancelled) return
-        console.warn('[dashboard] failed to fetch state', err)
-        setFailed(true)
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [authToken])
+  const { data, isLoading, isError } = useDashboardStateQuery()
+  const state = (data?.state as DashboardState | undefined) ?? null
+  const serverHero = (data?.heroMetrics ?? {}) as Partial<HeroMetrics>
+  const serverPriority = (data?.priorityMetrics ?? {}) as Partial<PriorityMetrics>
+  const failed = isError || (!isLoading && !state)
 
   const currentNetWorth = netWorth?.current ?? 0
 
@@ -202,5 +163,5 @@ export function useDashboardHeroState(): DashboardHeroStateValue {
     ),
   } as PriorityMetrics), [clientFallback.priority, serverPriority])
 
-  return { state, loading, failed, heroMetrics, priorityMetrics }
+  return { state, loading: isLoading, failed, heroMetrics, priorityMetrics }
 }

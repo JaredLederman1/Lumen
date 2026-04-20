@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Cormorant_Garamond, DM_Mono, DM_Serif_Display, Geist } from "next/font/google"
 import "./globals.css"
+import { ReactQueryProvider } from "@/lib/queryClient"
 
 const geist = Geist({
   variable: "--font-sans",
@@ -43,9 +44,9 @@ export default function RootLayout({
       </head>
       <body
         className={`${geist.variable} ${cormorantGaramond.variable} ${dmSerifDisplay.variable} ${dmMono.variable} antialiased`}
-        style={{ backgroundColor: '#F5F0E8', color: '#1A1714', fontFamily: 'var(--font-sans), sans-serif' }}
+        style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)', fontFamily: 'var(--font-sans), sans-serif' }}
       >
-        {children}
+        <ReactQueryProvider>{children}</ReactQueryProvider>
       </body>
     </html>
   )

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useDeleteAccountMutation } from '@/lib/queries'
 
 interface AccountCardProps {
   id?: string
@@ -9,7 +10,6 @@ interface AccountCardProps {
   balance: number
   last4?: string | null
   onRemove?: (id: string) => void
-  authToken?: string | null
 }
 
 function formatCurrency(n: number) {
@@ -24,11 +24,12 @@ const accountTypeLabel: Record<string, string> = {
   investment: 'Investment',
 }
 
-export default function AccountCard({ id, accountType, classification, balance, last4, onRemove, authToken }: AccountCardProps) {
+export default function AccountCard({ id, accountType, classification, balance, last4, onRemove }: AccountCardProps) {
   const isNegative = balance < 0
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirming, setConfirming] = useState(false)
-  const [removing, setRemoving] = useState(false)
+  const deleteAccount = useDeleteAccountMutation()
+  const removing = deleteAccount.isPending
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -42,13 +43,12 @@ export default function AccountCard({ id, accountType, classification, balance, 
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  const handleRemove = async () => {
+  const handleRemove = () => {
     if (!id) return
-    setRemoving(true)
     setMenuOpen(false)
-    const headers: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-    await fetch(`/api/accounts/${id}`, { method: 'DELETE', headers })
-    onRemove?.(id)
+    deleteAccount.mutate(id, {
+      onSuccess: () => onRemove?.(id),
+    })
   }
 
   return (
@@ -57,34 +57,44 @@ export default function AccountCard({ id, accountType, classification, balance, 
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: '12px 20px 12px 52px',
-      borderTop: '1px solid rgba(184,145,58,0.08)',
+      borderTop: '1px solid var(--color-border)',
       opacity: removing ? 0.4 : 1,
       transition: 'opacity 200ms ease',
     }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-          <p style={{ fontSize: '16px', color: '#F0F2F8', fontFamily: 'var(--font-serif)', fontWeight: 400 }}>
+          <p style={{ fontSize: '16px', color: 'var(--color-text)', fontFamily: 'var(--font-serif)', fontWeight: 400 }}>
             {accountTypeLabel[accountType] ?? accountType}
           </p>
           {classification && (
             <span style={{
-              fontSize: '11px', fontFamily: 'var(--font-mono)', letterSpacing: '0.10em',
-              textTransform: 'uppercase', padding: '2px 6px', borderRadius: '2px',
-              backgroundColor: classification === 'liability' ? 'rgba(224,92,110,0.10)' : 'rgba(76,175,125,0.10)',
-              color: classification === 'liability' ? '#E05C6E' : '#4CAF7D',
-              border: `1px solid ${classification === 'liability' ? 'rgba(224,92,110,0.20)' : 'rgba(76,175,125,0.20)'}`,
+              fontSize: '10px',
+              fontFamily: 'var(--font-sans)',
+              fontWeight: 500,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              padding: '2px 10px',
+              borderRadius: 'var(--radius-pill)',
+              backgroundColor: classification === 'liability' ? 'var(--color-negative-bg)' : 'var(--color-positive-bg)',
+              color: classification === 'liability' ? 'var(--color-negative)' : 'var(--color-positive)',
+              border: `1px solid ${classification === 'liability' ? 'var(--color-negative-border)' : 'var(--color-positive-border)'}`,
             }}>
               {classification === 'liability' ? 'Liability' : 'Asset'}
             </span>
           )}
         </div>
-        <p style={{ fontSize: '13px', color: '#6B7A8D', fontFamily: 'var(--font-mono)', letterSpacing: '0.03em' }}>
+        <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.03em' }}>
           {last4 ? `···· ${last4}` : 'No account number'}
         </p>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        <p style={{ fontFamily: 'var(--font-sans)', fontSize: '19px', fontWeight: 400, color: isNegative ? '#E05C6E' : '#F0F2F8' }}>
+        <p style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: '19px',
+          fontWeight: 400,
+          color: isNegative ? 'var(--color-negative)' : 'var(--color-text)',
+        }}>
           {formatCurrency(balance)}
         </p>
 
@@ -95,12 +105,17 @@ export default function AccountCard({ id, accountType, classification, balance, 
               style={{
                 width: '26px', height: '26px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: 'none', border: '1px solid transparent', borderRadius: '2px',
-                color: '#6B7A8D', fontSize: '17px', cursor: 'pointer', lineHeight: 1,
-                transition: 'border-color 120ms ease, color 120ms ease',
+                background: 'none',
+                border: '1px solid transparent',
+                borderRadius: 'var(--radius-sm)',
+                color: 'var(--color-text-muted)',
+                fontSize: '17px',
+                cursor: 'pointer',
+                lineHeight: 1,
+                transition: 'border-color 150ms ease, color 150ms ease',
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(184,145,58,0.25)'; e.currentTarget.style.color = '#B8913A' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.color = '#6B7A8D' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-border-hover)'; e.currentTarget.style.color = 'var(--color-gold)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.color = 'var(--color-text-muted)' }}
               title="Account settings"
             >
               ···
@@ -109,25 +124,47 @@ export default function AccountCard({ id, accountType, classification, balance, 
             {menuOpen && (
               <div style={{
                 position: 'absolute', top: 'calc(100% + 4px)', right: 0,
-                backgroundColor: '#0F1318', border: '1px solid rgba(184,145,58,0.2)',
-                borderRadius: '2px', boxShadow: '0 6px 20px rgba(8,11,15,0.40)',
-                zIndex: 50, minWidth: '150px', overflow: 'hidden',
+                backgroundColor: 'var(--color-surface-elevated)',
+                border: '1px solid var(--color-border-strong)',
+                borderRadius: 'var(--radius-md)',
+                boxShadow: '0 6px 20px rgba(0,0,0,0.40)',
+                zIndex: 50, minWidth: '160px', overflow: 'hidden',
               }}>
                 {confirming ? (
                   <div style={{ padding: '12px 14px' }}>
-                    <p style={{ fontSize: '13px', color: '#E05C6E', fontFamily: 'var(--font-mono)', marginBottom: '10px' }}>
+                    <p style={{ fontSize: '13px', color: 'var(--color-negative)', fontFamily: 'var(--font-mono)', marginBottom: '10px' }}>
                       Remove this account?
                     </p>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button
                         onClick={handleRemove}
-                        style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', color: '#F0F2F8', background: '#E05C6E', border: 'none', borderRadius: '2px', padding: '5px 10px', cursor: 'pointer' }}
+                        style={{
+                          fontSize: '13px',
+                          fontFamily: 'var(--font-sans)',
+                          fontWeight: 500,
+                          color: 'var(--color-text)',
+                          background: 'var(--color-negative)',
+                          border: 'none',
+                          borderRadius: 'var(--radius-sm)',
+                          padding: '5px 12px',
+                          cursor: 'pointer',
+                        }}
                       >
                         Remove
                       </button>
                       <button
                         onClick={() => setConfirming(false)}
-                        style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', color: '#6B7A8D', background: 'none', border: '1px solid rgba(184,145,58,0.2)', borderRadius: '2px', padding: '5px 10px', cursor: 'pointer' }}
+                        style={{
+                          fontSize: '13px',
+                          fontFamily: 'var(--font-sans)',
+                          fontWeight: 500,
+                          color: 'var(--color-text-muted)',
+                          background: 'none',
+                          border: '1px solid var(--color-border-strong)',
+                          borderRadius: 'var(--radius-sm)',
+                          padding: '5px 12px',
+                          cursor: 'pointer',
+                        }}
                       >
                         Cancel
                       </button>
@@ -139,10 +176,10 @@ export default function AccountCard({ id, accountType, classification, balance, 
                     style={{
                       display: 'block', width: '100%', textAlign: 'left',
                       padding: '10px 14px', background: 'none', border: 'none',
-                      fontSize: '14px', fontFamily: 'var(--font-mono)', color: '#E05C6E',
-                      cursor: 'pointer', transition: 'background-color 100ms ease',
+                      fontSize: '14px', fontFamily: 'var(--font-mono)', color: 'var(--color-negative)',
+                      cursor: 'pointer', transition: 'background-color 120ms ease',
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(224,92,110,0.08)')}
+                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--color-negative-bg)')}
                     onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
                   >
                     Remove account

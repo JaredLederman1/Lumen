@@ -1,9 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { usePlaidLink } from 'react-plaid-link'
 import { heading, body, continueBtn } from './shared'
-import { supabase } from '@/lib/supabase'
+import { usePlaidLinkTokenQuery, usePlaidExchangeMutation } from '@/lib/queries'
 
 export interface LinkedAccount {
   id?: string
@@ -40,66 +40,24 @@ export function Step5Plaid({
   onSkipForNow,
   busy = false,
 }: Props) {
-  const [linkToken, setLinkToken]   = useState<string | null>(null)
-  const [linkError, setLinkError]   = useState<string | null>(null)
-  const [exchanging, setExchanging] = useState(false)
+  const { data: linkToken, error: linkTokenError } = usePlaidLinkTokenQuery()
+  const exchange = usePlaidExchangeMutation()
+  const [exchangeError, setExchangeError] = useState<string | null>(null)
   const [assetRequired, setAssetRequired] = useState(false)
-
-  useEffect(() => {
-    if (linkToken) return
-    let cancelled = false
-    ;(async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        const headers: Record<string, string> = session?.access_token
-          ? { Authorization: `Bearer ${session.access_token}` }
-          : {}
-        const res = await fetch('/api/plaid/create-link-token', { headers })
-        const data = await res.json().catch(() => ({}))
-        if (cancelled) return
-        if (!res.ok || !data.linkToken) {
-          setLinkError(
-            data?.detail
-              ? typeof data.detail === 'string'
-                ? data.detail
-                : 'Could not initialize connection.'
-              : 'Could not initialize connection.'
-          )
-          return
-        }
-        setLinkToken(data.linkToken)
-      } catch {
-        if (!cancelled) setLinkError('Could not initialize connection.')
-      }
-    })()
-    return () => { cancelled = true }
-  }, [linkToken])
+  const exchanging = exchange.isPending
+  const linkError = exchangeError ?? (linkTokenError ? 'Could not initialize connection.' : null)
+  const setLinkError = setExchangeError
 
   const handlePlaidSuccess = useCallback(
     async (publicToken: string, metadata: PlaidOnSuccessMetadata) => {
-      setExchanging(true)
       setLinkError(null)
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-        const headers: Record<string, string> = {
-          'Content-Type': 'application/json',
-          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-        }
-        const res = await fetch('/api/plaid/exchange-token', {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            publicToken,
-            institutionName: metadata.institution?.name ?? 'Connected Institution',
-            accounts: metadata.accounts,
-          }),
+        const data = await exchange.mutateAsync({
+          publicToken,
+          institutionName: metadata.institution?.name ?? 'Connected Institution',
+          accounts: metadata.accounts,
         })
-        const data = await res.json().catch(() => ({}))
-        if (!res.ok) {
-          setLinkError(data?.error ?? 'Could not link account.')
-          return
-        }
-        const newAccounts: LinkedAccount[] = Array.isArray(data.accounts) ? data.accounts : []
+        const newAccounts: LinkedAccount[] = Array.isArray(data?.accounts) ? data.accounts : []
         onLinked(newAccounts)
 
         const hasAsset = [...linkedAccounts, ...newAccounts].some(
@@ -111,13 +69,11 @@ export function Step5Plaid({
         } else {
           setAssetRequired(true)
         }
-      } catch {
-        setLinkError('Network error. Please try again.')
-      } finally {
-        setExchanging(false)
+      } catch (err) {
+        setLinkError(err instanceof Error ? err.message : 'Could not link account.')
       }
     },
-    [linkedAccounts, onLinked, onCompleteAssetLinked]
+    [linkedAccounts, onLinked, onCompleteAssetLinked, exchange]
   )
 
   const { open: openPlaid, ready: plaidReady } = usePlaidLink({

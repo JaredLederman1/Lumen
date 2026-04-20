@@ -15,18 +15,19 @@ function fmt(n: number) {
 }
 
 const card = {
-  backgroundColor: '#0F1318',
-  border: '1px solid rgba(184,145,58,0.15)',
-  borderRadius: '2px',
+  backgroundColor: 'var(--color-surface)',
+  border: '1px solid var(--color-gold-border)',
+  borderRadius: 'var(--radius-lg)',
   padding: '28px',
 } as const
 
 const sectionLabel = {
-  fontFamily: 'var(--font-mono)',
-  fontSize: '12px',
-  color: '#6B7A8D',
+  fontFamily: 'var(--font-sans)',
+  fontSize: '11px',
+  fontWeight: 500,
+  color: 'var(--color-text-muted)',
   textTransform: 'uppercase' as const,
-  letterSpacing: '0.16em',
+  letterSpacing: '0.06em',
   marginBottom: '22px',
 } as const
 
@@ -128,7 +129,7 @@ function ForecastDesktop() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: 'easeOut', delay: i * 0.06 }}
-            style={{ backgroundColor: '#0F1318', border: '1px solid rgba(184,145,58,0.15)', borderRadius: '2px', padding: '24px' }}
+            style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-gold-border)', borderRadius: 'var(--radius-lg)', padding: '24px' }}
           >
             <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#6B7A8D', textTransform: 'uppercase', letterSpacing: '0.16em', marginBottom: '10px' }}>{label}</p>
             <p style={{ fontFamily: 'var(--font-sans)', fontSize: '41px', fontWeight: 400, color }}>

@@ -11,7 +11,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <DashboardProvider>
       <TooltipProvider>
-        <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#080B0F' }}>
+        <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--color-bg)' }}>
 
           {/* Desktop sidebar, hidden on mobile via CSS */}
           <div className="desktop-sidebar">

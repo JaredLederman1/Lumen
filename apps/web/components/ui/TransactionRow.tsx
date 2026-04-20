@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, type Variants } from 'framer-motion'
 
 import { CATEGORIES as ALL_CATEGORIES } from '@/lib/categories'
-import { useIsMobile } from '@/hooks/useIsMobile'
+import { useUpdateTransactionTagsMutation } from '@/lib/queries'
 
 type DisputeOption = 'unrecognized' | 'incorrect_amount' | 'duplicate'
 
@@ -60,6 +60,17 @@ function formatDate(d: Date | string) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
+// Plaid often returns merchant names in all caps. Convert those to title case
+// so rows do not shout. Leave names that already contain lowercase letters
+// alone so properly cased brands (e.g. "iRobot") keep their styling.
+function formatMerchant(name: string | null | undefined): string {
+  if (!name) return 'Unknown merchant'
+  if (/[a-z]/.test(name)) return name
+  return name
+    .toLowerCase()
+    .replace(/\b([a-z])/g, (_, c: string) => c.toUpperCase())
+}
+
 export const rowVariants: Variants = {
   hidden: { opacity: 0, y: 5 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.22 } },
@@ -74,9 +85,9 @@ export default function TransactionRow({
 }: TransactionRowProps) {
   const isIncome = amount > 0
   const isEditing = editingRowId === id
-  const isMobile = useIsMobile()
   const [saving, setSaving] = useState(false)
   const [hovered, setHovered] = useState(false)
+  const updateTags = useUpdateTransactionTagsMutation()
 
   // Inline edit fields
   const [editMerchant, setEditMerchant] = useState(merchantName ?? '')
@@ -199,16 +210,7 @@ export default function TransactionRow({
 
   async function saveTags(newTags: string[]) {
     try {
-      const { supabase } = await import('@/lib/supabase')
-      const { data: { session } } = await supabase.auth.getSession()
-      await fetch(`/api/transactions/${id}/tags`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-        },
-        body: JSON.stringify({ tags: newTags }),
-      })
+      await updateTags.mutateAsync({ id, tags: newTags })
     } catch (err) {
       console.error('[TransactionRow] tag save failed:', err)
     }
@@ -547,99 +549,111 @@ export default function TransactionRow({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        gap: '16px',
       }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '16px', color: 'var(--color-text)', fontFamily: 'var(--font-mono)', fontWeight: 500 }}>
-              {merchantName ?? 'Unknown Merchant'}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: 0 }}>
+          {/* Line 1: merchant name */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+            <span style={{
+              fontSize: '16px',
+              color: 'var(--color-text)',
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 500,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}>
+              {formatMerchant(merchantName)}
             </span>
+          </div>
+
+          {/* Line 2: metadata, middot-separated muted text */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '6px',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '12px',
+            color: 'var(--color-text-muted)',
+            lineHeight: 1.4,
+          }}>
+            <span>{formatDate(date)}</span>
+
+            {accountLabel && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span>{accountLabel}</span>
+              </>
+            )}
+
+            {!isEditing && displayCategory && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span style={saving ? { color: 'var(--color-gold)' } : undefined}>
+                  {saving ? 'saving...' : formatCategory(displayCategory)}
+                </span>
+              </>
+            )}
+
             {pending && (
-              <span style={{
-                fontSize: '11px', color: 'var(--color-gold)', fontFamily: 'var(--font-mono)',
-                letterSpacing: '0.1em', textTransform: 'uppercase',
-                border: '1px solid rgba(184,145,58,0.4)', padding: '1px 5px', borderRadius: '2px',
-              }}>
-                Pending
-              </span>
+              <>
+                <span aria-hidden="true">·</span>
+                <span>Pending</span>
+              </>
             )}
+
             {recurring && (
-              <span style={{
-                fontSize: '11px', color: '#4A6785', fontFamily: 'var(--font-mono)',
-                letterSpacing: '0.1em', textTransform: 'uppercase',
-                border: '1px solid rgba(74,103,133,0.35)', padding: '1px 5px', borderRadius: '2px',
-              }}>
-                Recurring
-              </span>
+              <>
+                <span aria-hidden="true">·</span>
+                <span>Recurring</span>
+              </>
             )}
 
-            {/* Category badge (non-editing display) */}
-            {!isEditing && (
-              <span
-                style={{
-                  fontSize: '11px',
-                  color: saving ? 'var(--color-gold)' : 'var(--color-text-muted)',
-                  fontFamily: 'var(--font-mono)',
-                  letterSpacing: '0.1em', textTransform: 'uppercase',
-                  border: `1px solid ${saving ? 'rgba(184,145,58,0.4)' : 'var(--color-border)'}`,
-                  padding: '1px 5px', borderRadius: '2px',
-                  userSelect: 'none',
-                }}
-              >
-                {saving ? 'saving...' : (displayCategory ? formatCategory(displayCategory) : 'uncategorized')}
-              </span>
-            )}
-
-            {/* Tag pills */}
             {tags.length > 0 && tags.map(tag => (
-              <span
-                key={tag}
-                onClick={e => { e.stopPropagation(); openTagEditor(e) }}
-                style={{
-                  fontSize: '11px',
-                  color: 'var(--color-text-muted)',
-                  fontFamily: 'var(--font-mono)',
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  border: '1px solid var(--color-border)',
-                  padding: '1px 5px',
-                  borderRadius: '2px',
-                  whiteSpace: 'nowrap',
-                  cursor: 'pointer',
-                  userSelect: 'none',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-              >
-                {tag}
-                <button
-                  onClick={e => {
-                    e.stopPropagation()
-                    const next = tags.filter(t => t !== tag)
-                    onTagsChange?.(id, next)
-                    saveTags(next)
-                  }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--color-text-muted)',
-                    cursor: 'pointer',
-                    fontSize: '11px',
-                    lineHeight: 1,
-                    padding: 0,
-                    display: 'inline-flex',
-                    opacity: 0.6,
-                  }}
-                  title="Remove tag"
+              <span key={tag} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <span aria-hidden="true">·</span>
+                <span
+                  onClick={e => { e.stopPropagation(); openTagEditor(e) }}
+                  style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                  title="Edit tag"
                 >
-                  &#x2715;
-                </button>
+                  {tag}
+                  <button
+                    onClick={e => {
+                      e.stopPropagation()
+                      const next = tags.filter(t => t !== tag)
+                      onTagsChange?.(id, next)
+                      saveTags(next)
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--color-text-muted)',
+                      cursor: 'pointer',
+                      fontSize: '11px',
+                      lineHeight: 1,
+                      padding: 0,
+                      display: 'inline-flex',
+                      opacity: 0.6,
+                    }}
+                    title="Remove tag"
+                  >
+                    &#x2715;
+                  </button>
+                </span>
               </span>
             ))}
 
-            {/* Tag add button + popover */}
+            {needsLabeling && !isEditing && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span style={{ color: 'var(--color-info)' }}>Needs labeling</span>
+              </>
+            )}
+
             {!isEditing && (
-              <span style={{ position: 'relative', display: 'inline-flex' }}>
+              <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
                 <button
                   ref={tagBtnRef}
                   onClick={openTagEditor}
@@ -751,62 +765,15 @@ export default function TransactionRow({
               </span>
             )}
           </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '13px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
-              {formatDate(date)}
-            </span>
-            {accountLabel && (
-              <span style={{ fontSize: '13px', color: 'var(--color-gold)', fontFamily: 'var(--font-mono)', opacity: 0.7 }}>
-                {accountLabel}
-              </span>
-            )}
-          </div>
         </div>
-        {needsLabeling && !isEditing && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginRight: '12px', flexShrink: 0 }}>
-            <span style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: '11px',
-              color: 'var(--color-info)',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              border: '1px solid var(--color-info-border)',
-              padding: '1px 6px',
-              borderRadius: '2px',
-              whiteSpace: 'nowrap',
-              userSelect: 'none',
-            }}>
-              Needs labeling
-            </span>
-            <button
-              onClick={e => { e.stopPropagation(); onEditRow?.(id) }}
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: '11px',
-                color: 'var(--color-text)',
-                backgroundColor: 'transparent',
-                border: '1px solid var(--color-info-border)',
-                borderRadius: '2px',
-                padding: '2px 10px',
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                cursor: 'pointer',
-                opacity: hovered || isMobile ? 1 : 0,
-                transition: 'opacity 120ms ease',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Label
-            </button>
-          </div>
-        )}
+
         <span style={{
-          fontFamily: 'var(--font-sans)',
-          fontSize: '20px',
+          fontFamily: 'var(--font-mono)',
+          fontSize: '18px',
           fontWeight: 400,
-          color: isIncome ? 'var(--color-positive)' : 'var(--color-negative)',
+          color: isIncome ? 'var(--color-text)' : 'var(--color-negative)',
           flexShrink: 0,
+          alignSelf: 'center',
         }}>
           {formatCurrency(amount)}
         </span>

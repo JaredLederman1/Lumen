@@ -11,7 +11,10 @@ function formatCurrency(n: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
 }
 
-const PALETTE = ['#B8913A', '#4CAF7D', '#8B4513', '#4A6785', '#9B7B4A', '#7A6A5A']
+// SVG fill does not resolve var() references, so the palette hex mirrors the
+// warm-dark tokens in globals.css. Keep in sync if the tokens change.
+// Retuned for saturation without fluorescence against the new warm background.
+const PALETTE = ['#C79A42', '#5AB48A', '#B55A3A', '#7A95AA', '#AC8858', '#8A7866']
 
 export default function DonutChart({ data }: DonutChartProps) {
   const total = data.reduce((sum, d) => sum + d.amount, 0)
@@ -34,7 +37,8 @@ export default function DonutChart({ data }: DonutChartProps) {
               outerRadius={80}
               dataKey="amount"
               strokeWidth={2}
-              stroke="#FFFFFF"
+              stroke="#1C1B18"
+              isAnimationActive={false}
             >
               {data.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={PALETTE[index % PALETTE.length]} />
@@ -43,10 +47,10 @@ export default function DonutChart({ data }: DonutChartProps) {
             <Tooltip
               formatter={(value) => formatCurrency(Number(value))}
               contentStyle={{
-                backgroundColor: '#0F1318',
-                border: '1px solid rgba(184,145,58,0.25)',
-                borderRadius: '2px',
-                color: '#F0F2F8',
+                backgroundColor: 'var(--color-surface-elevated)',
+                border: '1px solid var(--color-border-strong)',
+                borderRadius: 'var(--radius-md)',
+                color: 'var(--color-text)',
                 fontFamily: 'var(--font-mono)',
                 fontSize: '13px',
                 boxShadow: '0 4px 16px rgba(0,0,0,0.40)',
@@ -65,19 +69,20 @@ export default function DonutChart({ data }: DonutChartProps) {
               justifyContent: 'space-between',
               marginBottom: '10px',
               paddingBottom: '10px',
-              borderBottom: '1px solid rgba(184,145,58,0.08)',
+              borderBottom: '1px solid var(--color-border)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
               <div style={{
-                width: '6px',
-                height: '6px',
+                width: '8px',
+                height: '8px',
                 backgroundColor: PALETTE[index % PALETTE.length],
+                borderRadius: 'var(--radius-pill)',
                 flexShrink: 0,
               }} />
               <span style={{
                 fontSize: '13px',
-                color: '#A8B4C0',
+                color: 'var(--color-text-mid)',
                 fontFamily: 'var(--font-mono)',
                 letterSpacing: '0.03em',
               }}>
@@ -86,7 +91,7 @@ export default function DonutChart({ data }: DonutChartProps) {
             </div>
             <span style={{
               fontSize: '13px',
-              color: '#F0F2F8',
+              color: 'var(--color-text)',
               fontFamily: 'var(--font-mono)',
               fontWeight: 500,
             }}>

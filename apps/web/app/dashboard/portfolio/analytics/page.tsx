@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useState } from 'react'
 import { motion, type Transition } from 'framer-motion'
 import Link from 'next/link'
 import {
@@ -20,7 +20,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts'
-import { supabase } from '@/lib/supabase'
+import { usePortfolioHistoryQuery } from '@/lib/queries'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -252,7 +252,7 @@ function PerformanceAttribution({ holdings }: { holdings: HoldingMetric[] }) {
         <BarChart
           data={data}
           layout="vertical"
-          margin={{ top: 0, right: 20, left: 0, bottom: 28 }}
+          margin={{ top: 8, right: 24, left: 8, bottom: 32 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-grid-line)" horizontal={false} />
           <XAxis
@@ -293,7 +293,7 @@ function PerformanceAttribution({ holdings }: { holdings: HoldingMetric[] }) {
             }}
           />
           <ReferenceLine x={0} stroke="var(--color-border-strong)" />
-          <Bar dataKey="contribution" radius={[0, 2, 2, 0]}>
+          <Bar dataKey="contribution" radius={[0, 2, 2, 0]} isAnimationActive={false}>
             {data.map((d) => (
               <Cell
                 key={d.ticker}
@@ -340,7 +340,7 @@ function RiskReturnScatter({
         <SectionHelp text="Each bubble is a holding. Right means more volatile, up means higher return. You want holdings in the upper-left (high return, low risk). The dashed lines show where the S&P 500 sits for comparison." />
       </div>
       <ResponsiveContainer width="100%" height={360}>
-        <ScatterChart margin={{ top: 10, right: 20, bottom: 30, left: 10 }}>
+        <ScatterChart margin={{ top: 8, right: 24, bottom: 40, left: 16 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-grid-line)" />
           <XAxis
             type="number"
@@ -404,8 +404,8 @@ function RiskReturnScatter({
             strokeDasharray="4 4"
             strokeOpacity={0.5}
           />
-          <Scatter data={benchData} fill="var(--color-gold)" opacity={0.7} name="Benchmark" />
-          <Scatter data={data} fill="var(--color-positive)" opacity={0.75} name="Holdings" />
+          <Scatter data={benchData} fill="var(--color-gold)" opacity={0.7} name="Benchmark" isAnimationActive={false} />
+          <Scatter data={data} fill="var(--color-positive)" opacity={0.75} name="Holdings" isAnimationActive={false} />
           <Legend
             wrapperStyle={{ fontFamily: 'var(--font-mono)', fontSize: '10px', paddingTop: '24px', textAlign: 'center' }}
             align="center"
@@ -446,7 +446,7 @@ function SectorVsBenchmark({
         <SectionHelp text="Compares your sector allocation to the S&P 500. If your bar is taller, you are overweight that sector. Large overweights mean your portfolio is making a concentrated bet on that sector outperforming." />
       </div>
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data} margin={{ top: 0, right: 10, bottom: 30, left: 0 }}>
+        <BarChart data={data} margin={{ top: 8, right: 24, bottom: 40, left: 8 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-grid-line)" />
           <XAxis
             dataKey="sector"
@@ -489,8 +489,8 @@ function SectorVsBenchmark({
             wrapperStyle={{ fontFamily: 'var(--font-mono)', fontSize: '10px', paddingTop: '24px', textAlign: 'center' }}
             align="center"
           />
-          <Bar dataKey="portfolio" name="Your portfolio" fill="var(--color-gold)" opacity={0.8} radius={[2, 2, 0, 0]} />
-          <Bar dataKey="benchmark" name="S&P 500 (benchmark)" fill="var(--color-info)" opacity={0.6} radius={[2, 2, 0, 0]} />
+          <Bar dataKey="portfolio" name="Your portfolio" fill="var(--color-gold)" opacity={0.8} radius={[2, 2, 0, 0]} isAnimationActive={false} />
+          <Bar dataKey="benchmark" name="S&P 500 (benchmark)" fill="var(--color-info)" opacity={0.6} radius={[2, 2, 0, 0]} isAnimationActive={false} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -618,13 +618,14 @@ function DrawdownChart({ series }: { series: DrawdownPoint[] }) {
         <SectionHelp text="Shows how far your portfolio dropped from its highest point at any given time. Deeper dips mean larger losses before recovery. The worst dip is your max drawdown. This helps you understand the real downside you have experienced." />
       </div>
       <ResponsiveContainer width="100%" height={260}>
-        <AreaChart data={data} margin={{ top: 10, right: 10, bottom: 30, left: 10 }}>
+        <AreaChart data={data} margin={{ top: 8, right: 24, bottom: 30, left: 16 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-grid-line)" />
           <XAxis
             dataKey="date"
             tick={{ fontFamily: 'var(--font-mono)', fontSize: 9, fill: 'var(--color-text-muted)' }}
             tickFormatter={(d) => d.slice(0, 7)}
             interval="preserveStartEnd"
+            padding={{ left: 16, right: 16 }}
           />
           <YAxis
             tickFormatter={(v) => `${v}%`}
@@ -665,6 +666,7 @@ function DrawdownChart({ series }: { series: DrawdownPoint[] }) {
             fill="var(--color-negative-bg)"
             strokeWidth={1.5}
             dot={false}
+            isAnimationActive={false}
           />
         </AreaChart>
       </ResponsiveContainer>
@@ -866,33 +868,7 @@ function StressTestTable({ beta }: { beta: number }) {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function PortfolioAnalyticsPage() {
-  const [data, setData] = useState<AnalyticsData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
-  const fetchedRef = useRef(false)
-
-  const loadData = useCallback(async () => {
-    if (fetchedRef.current) return
-    fetchedRef.current = true
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const headers: Record<string, string> = {}
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`
-      }
-      const res = await fetch('/api/portfolio/history', { headers })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const json = await res.json()
-      setData(json)
-    } catch (err) {
-      console.error('[PortfolioAnalyticsPage]', err)
-      setError(true)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => { loadData() }, [loadData])
+  const { data, isLoading: loading, isError: error } = usePortfolioHistoryQuery<AnalyticsData>()
 
   if (loading) {
     return (

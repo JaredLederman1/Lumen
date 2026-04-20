@@ -15,20 +15,21 @@ interface Props {
 const card: CSSProperties = {
   backgroundColor: 'var(--color-surface)',
   border: '1px solid var(--color-gold-border)',
-  borderRadius: '2px',
+  borderRadius: 'var(--radius-lg)',
   padding: '24px',
   display: 'flex',
   flexDirection: 'column',
-  gap: '14px',
-  minHeight: '180px',
+  gap: 'var(--space-card-label-to-body)',
+  height: '100%',
 }
 
 const labelStyle: CSSProperties = {
-  fontFamily: 'var(--font-mono)',
+  fontFamily: 'var(--font-sans)',
   fontSize: '11px',
+  fontWeight: 500,
   color: 'var(--color-text-muted)',
   textTransform: 'uppercase',
-  letterSpacing: '0.16em',
+  letterSpacing: '0.06em',
   margin: 0,
 }
 
@@ -51,14 +52,15 @@ const subStyle: CSSProperties = {
 
 const comingSoonPill: CSSProperties = {
   alignSelf: 'flex-start',
-  fontFamily: 'var(--font-mono)',
+  fontFamily: 'var(--font-sans)',
   fontSize: '10px',
-  letterSpacing: '0.14em',
+  fontWeight: 500,
+  letterSpacing: '0.06em',
   textTransform: 'uppercase',
   color: 'var(--color-text-muted)',
   border: '1px solid var(--color-border)',
-  padding: '3px 8px',
-  borderRadius: '2px',
+  padding: '3px 10px',
+  borderRadius: 'var(--radius-pill)',
 }
 
 const accentBorder: Record<NonNullable<Props['accent']>, CSSProperties> = {
@@ -77,7 +79,10 @@ export default function WidgetCard({
   style,
 }: Props) {
   return (
-    <div style={{ ...card, ...accentBorder[accent], ...style }}>
+    <div
+      className="card-hoverable"
+      style={{ ...card, ...accentBorder[accent], ...style }}
+    >
       {label && <p style={labelStyle}>{label}</p>}
       {title && <p style={titleStyle}>{title}</p>}
       {subtitle && <p style={subStyle}>{subtitle}</p>}

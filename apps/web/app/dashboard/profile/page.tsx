@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useDashboard } from '@/lib/dashboardData'
+import { useSaveOnboardingMutation } from '@/lib/queries'
 import { calcTotals } from '@/lib/benefitsAnalysis'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import MobileCard from '@/components/ui/MobileCard'
@@ -57,11 +58,11 @@ interface EditValues {
 }
 
 function ProfileDesktop() {
-  const { loading, email, authToken, profile, setProfile, benefits } = useDashboard()
+  const { loading, email, profile, setProfile, benefits } = useDashboard()
+  const saveOnboarding = useSaveOnboardingMutation()
 
   const [editing,    setEditing]   = useState(false)
   const [editValues, setEditValues] = useState<EditValues | null>(null)
-  const [saving,     setSaving]    = useState(false)
   const [saveError,  setSaveError] = useState<string | null>(null)
 
   const startEdit = () => {
@@ -70,38 +71,26 @@ function ProfileDesktop() {
     setEditing(true)
   }
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!editValues) return
-    setSaving(true)
     setSaveError(null)
-    try {
-      const res = await fetch('/api/user/onboarding', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+    saveOnboarding.mutate(
+      {
+        age:           Number(editValues.age),
+        annualIncome:  Number(editValues.annualIncome),
+        savingsRate:   Number(editValues.savingsRate),
+        retirementAge: Number(editValues.retirementAge),
+      },
+      {
+        onSuccess: (data: { profile?: EditValues }) => {
+          if (data?.profile) setProfile(data.profile)
+          setEditing(false)
         },
-        body: JSON.stringify({
-          age:           Number(editValues.age),
-          annualIncome:  Number(editValues.annualIncome),
-          savingsRate:   Number(editValues.savingsRate),
-          retirementAge: Number(editValues.retirementAge),
-        }),
-      })
-      if (!res.ok) {
-        const data = await res.json()
-        setSaveError(data.error ?? 'Save failed')
-      } else {
-        const { profile: saved } = await res.json()
-        setProfile(saved)
-        setEditing(false)
-      }
-    } catch {
-      setSaveError('Something went wrong. Please try again.')
-    } finally {
-      setSaving(false)
-    }
+        onError: err => setSaveError(err instanceof Error ? err.message : 'Save failed'),
+      },
+    )
   }
+  const saving = saveOnboarding.isPending
 
   const initials = email ? email.slice(0, 2).toUpperCase() : ''
   const totals   = benefits?.extracted ? calcTotals(benefits.extracted) : null
@@ -295,11 +284,11 @@ function ProfileDesktop() {
 }
 
 function ProfileMobile() {
-  const { loading, email, authToken, profile, setProfile, benefits } = useDashboard()
+  const { loading, email, profile, setProfile, benefits } = useDashboard()
+  const saveOnboarding = useSaveOnboardingMutation()
 
   const [editing,    setEditing]   = useState(false)
   const [editValues, setEditValues] = useState<EditValues | null>(null)
-  const [saving,     setSaving]    = useState(false)
   const [saveError,  setSaveError] = useState<string | null>(null)
 
   const startEdit = () => {
@@ -308,38 +297,26 @@ function ProfileMobile() {
     setEditing(true)
   }
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!editValues) return
-    setSaving(true)
     setSaveError(null)
-    try {
-      const res = await fetch('/api/user/onboarding', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+    saveOnboarding.mutate(
+      {
+        age:           Number(editValues.age),
+        annualIncome:  Number(editValues.annualIncome),
+        savingsRate:   Number(editValues.savingsRate),
+        retirementAge: Number(editValues.retirementAge),
+      },
+      {
+        onSuccess: (data: { profile?: EditValues }) => {
+          if (data?.profile) setProfile(data.profile)
+          setEditing(false)
         },
-        body: JSON.stringify({
-          age:           Number(editValues.age),
-          annualIncome:  Number(editValues.annualIncome),
-          savingsRate:   Number(editValues.savingsRate),
-          retirementAge: Number(editValues.retirementAge),
-        }),
-      })
-      if (!res.ok) {
-        const data = await res.json()
-        setSaveError(data.error ?? 'Save failed')
-      } else {
-        const { profile: saved } = await res.json()
-        setProfile(saved)
-        setEditing(false)
-      }
-    } catch {
-      setSaveError('Something went wrong. Please try again.')
-    } finally {
-      setSaving(false)
-    }
+        onError: err => setSaveError(err instanceof Error ? err.message : 'Save failed'),
+      },
+    )
   }
+  const saving = saveOnboarding.isPending
 
   const initials = email ? email.slice(0, 2).toUpperCase() : ''
   const totals   = benefits?.extracted ? calcTotals(benefits.extracted) : null

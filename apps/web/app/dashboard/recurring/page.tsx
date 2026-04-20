@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { RecurringMerchant } from '@/app/api/recurring/route'
-import { useDashboard } from '@/lib/dashboardData'
+import { useRecurringQuery, useExcludeRecurringMutation } from '@/lib/queries'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import MobileCard from '@/components/ui/MobileCard'
 import MobileMetricCard from '@/components/ui/MobileMetricCard'
@@ -38,56 +38,26 @@ const FILTERS: { label: string; value: FrequencyFilter }[] = [
 
 // Shared data hook logic extracted to avoid duplication between desktop and mobile
 function useRecurringData() {
-  const { authToken, transactions: dashTx } = useDashboard()
-  const [loading, setLoading] = useState(true)
-  const [recurring, setRecurring] = useState<RecurringMerchant[]>([])
-  const [totalMonthlyEstimate, setTotalMonthlyEstimate] = useState(0)
-  const [totalCount, setTotalCount] = useState(0)
+  const { data, isLoading } = useRecurringQuery<RecurringMerchant>()
+  const exclude = useExcludeRecurringMutation()
   const [filter, setFilter] = useState<FrequencyFilter>('all')
-  const [excluding, setExcluding] = useState<string | null>(null)
   const [expanded, setExpanded] = useState<string | null>(null)
 
-  useEffect(() => {
-    const h: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-    fetch('/api/recurring', { headers: h })
-      .then(r => r.json())
-      .then(data => {
-        setRecurring(data.recurring ?? [])
-        setTotalMonthlyEstimate(data.totalMonthlyEstimate ?? 0)
-        setTotalCount(data.totalCount ?? 0)
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [authToken, dashTx.length])
+  const recurring = data?.recurring ?? []
+  const totalMonthlyEstimate = data?.totalMonthlyEstimate ?? 0
+  const totalCount = data?.totalCount ?? 0
 
-  async function markNonRecurring(merchantName: string) {
-    setExcluding(merchantName)
-    try {
-      const h: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-      await fetch('/api/recurring/exclusions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...h },
-        body: JSON.stringify({ merchantName }),
-      })
-      setRecurring(prev => {
-        const next = prev.filter(r => r.name !== merchantName)
-        setTotalCount(next.length)
-        setTotalMonthlyEstimate(
-          next.filter(r => r.frequency === 'monthly').reduce((s, r) => s + r.lastAmount, 0)
-        )
-        return next
-      })
-    } catch (err) {
-      console.error('[recurring] exclude failed:', err)
-    } finally {
-      setExcluding(null)
-    }
+  function markNonRecurring(merchantName: string) {
+    exclude.mutate(merchantName, {
+      onError: err => console.error('[recurring] exclude failed:', err),
+    })
   }
 
   const filtered = filter === 'all' ? recurring : recurring.filter(r => r.frequency === filter)
+  const excluding = exclude.isPending ? (exclude.variables ?? null) : null
 
   return {
-    loading,
+    loading: isLoading,
     recurring,
     totalMonthlyEstimate,
     totalCount,
@@ -177,14 +147,14 @@ function RecurringDesktop() {
               style={{
                 fontFamily: 'var(--font-mono)',
                 fontSize: '13px',
-                letterSpacing: '0.10em',
+                letterSpacing: '0.06em',
                 padding: '6px 14px',
-                borderRadius: '2px',
+                borderRadius: 'var(--radius-sm)',
                 cursor: 'pointer',
                 border: active ? '1px solid var(--color-gold)' : '1px solid var(--color-border)',
                 backgroundColor: active ? 'var(--color-gold)' : 'transparent',
-                color: active ? '#0F1318' : 'var(--color-text-muted)',
-                transition: 'border-color 120ms ease-out, background-color 120ms ease-out, color 120ms ease-out',
+                color: active ? 'var(--color-bg)' : 'var(--color-text-muted)',
+                transition: 'border-color 150ms ease, background-color 150ms ease, color 150ms ease',
               }}
               onMouseEnter={e => {
                 if (!active) (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--color-border-strong)'

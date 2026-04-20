@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useDashboard } from '@/lib/dashboardData'
+import { usePlaidSyncMutation } from '@/lib/queries'
 
 const pageTitles: Record<string, string> = {
   '/dashboard':              'Overview',
@@ -17,11 +17,11 @@ const pageTitles: Record<string, string> = {
 export default function Header() {
   const pathname = usePathname()
   const router = useRouter()
-  const { refresh } = useDashboard()
   const title = pageTitles[pathname] ?? 'Illumin'
   const [isAdmin, setIsAdmin] = useState(false)
-  const [syncing, setSyncing] = useState(false)
   const [syncResult, setSyncResult] = useState<string | null>(null)
+  const sync = usePlaidSyncMutation()
+  const syncing = sync.isPending
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -31,38 +31,19 @@ export default function Header() {
     })
   }, [])
 
-  const handleSync = async () => {
-    setSyncing(true)
+  const handleSync = () => {
     setSyncResult(null)
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-      }
-      const res = await fetch('/api/plaid/sync', { method: 'POST', headers, redirect: 'error' })
-      const contentType = res.headers.get('content-type') ?? ''
-      if (!contentType.includes('application/json')) {
-        const text = await res.text()
-        console.error('[Sync] non-JSON response:', res.status, text.slice(0, 200))
-        setSyncResult('Auth error, try refreshing')
-        return
-      }
-      const data = await res.json()
-      if (res.ok) {
+    sync.mutate(undefined, {
+      onSuccess: data => {
         setSyncResult(`${data.updatedAccounts ?? 0} accts, ${data.updatedTransactions ?? 0} txns`)
-        await refresh()
-      } else {
-        console.error('[Sync] API error:', res.status, data)
-        setSyncResult(data.error ?? data.message ?? 'Sync failed')
-      }
-    } catch (err) {
-      console.error('[Sync] error:', err)
-      setSyncResult('Sync failed, check console')
-    } finally {
-      setSyncing(false)
-      setTimeout(() => setSyncResult(null), 6000)
-    }
+        setTimeout(() => setSyncResult(null), 6000)
+      },
+      onError: err => {
+        console.error('[Sync] error:', err)
+        setSyncResult(err instanceof Error ? err.message : 'Sync failed')
+        setTimeout(() => setSyncResult(null), 6000)
+      },
+    })
   }
 
   const handleSignOut = async () => {
@@ -77,15 +58,15 @@ export default function Header() {
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: '0 36px',
-      borderBottom: '1px solid rgba(184,145,58,0.18)',
-      backgroundColor: '#0F1318',
+      borderBottom: '1px solid var(--color-border)',
+      backgroundColor: 'var(--color-surface)',
       flexShrink: 0,
     }}>
       <h1 style={{
         fontFamily: 'var(--font-serif)',
         fontSize: '24px',
         fontWeight: 400,
-        color: '#F0F2F8',
+        color: 'var(--color-text)',
         margin: 0,
         letterSpacing: '0.01em',
       }}>
@@ -94,7 +75,7 @@ export default function Header() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <span style={{
           fontSize: '13px',
-          color: '#6B7A8D',
+          color: 'var(--color-text-muted)',
           fontFamily: 'var(--font-mono)',
           letterSpacing: '0.04em',
         }}>
@@ -105,14 +86,15 @@ export default function Header() {
             onClick={handleSync}
             disabled={syncing}
             style={{
-              fontFamily: 'var(--font-mono)',
+              fontFamily: 'var(--font-sans)',
               fontSize: '11px',
-              color: syncing ? '#B8913A' : '#6B7A8D',
+              fontWeight: 500,
+              color: syncing ? 'var(--color-gold)' : 'var(--color-text-muted)',
               background: 'none',
-              border: '1px solid rgba(184,145,58,0.25)',
-              borderRadius: '2px',
-              padding: '3px 10px',
-              letterSpacing: '0.12em',
+              border: '1px solid var(--color-border-strong)',
+              borderRadius: 'var(--radius-sm)',
+              padding: '4px 12px',
+              letterSpacing: '0.06em',
               textTransform: 'uppercase',
               cursor: syncing ? 'not-allowed' : 'pointer',
               opacity: syncing ? 0.7 : 1,
@@ -121,14 +103,14 @@ export default function Header() {
             }}
             onMouseEnter={e => {
               if (!syncing) {
-                e.currentTarget.style.color = '#B8913A'
-                e.currentTarget.style.borderColor = 'rgba(184,145,58,0.5)'
+                e.currentTarget.style.color = 'var(--color-gold)'
+                e.currentTarget.style.borderColor = 'var(--color-border-hover)'
               }
             }}
             onMouseLeave={e => {
               if (!syncing) {
-                e.currentTarget.style.color = '#6B7A8D'
-                e.currentTarget.style.borderColor = 'rgba(184,145,58,0.25)'
+                e.currentTarget.style.color = 'var(--color-text-muted)'
+                e.currentTarget.style.borderColor = 'var(--color-border-strong)'
               }
             }}
           >
@@ -142,11 +124,11 @@ export default function Header() {
               marginTop: '6px',
               fontFamily: 'var(--font-mono)',
               fontSize: '11px',
-              color: '#6B7A8D',
-              backgroundColor: '#0F1318',
-              border: '1px solid rgba(184,145,58,0.25)',
-              borderRadius: '2px',
-              padding: '4px 8px',
+              color: 'var(--color-text-muted)',
+              backgroundColor: 'var(--color-surface-elevated)',
+              border: '1px solid var(--color-border-strong)',
+              borderRadius: 'var(--radius-sm)',
+              padding: '4px 10px',
               whiteSpace: 'nowrap',
               zIndex: 20,
             }}>
@@ -157,13 +139,14 @@ export default function Header() {
         {isAdmin && (
           <>
             <span style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: '11px',
-              color: '#B8913A',
-              border: '1px solid rgba(184,145,58,0.4)',
-              borderRadius: '2px',
-              padding: '3px 8px',
-              letterSpacing: '0.14em',
+              fontFamily: 'var(--font-sans)',
+              fontSize: '10px',
+              fontWeight: 500,
+              color: 'var(--color-gold)',
+              border: '1px solid var(--color-border-strong)',
+              borderRadius: 'var(--radius-pill)',
+              padding: '3px 10px',
+              letterSpacing: '0.06em',
               textTransform: 'uppercase',
             }}>
               Admin
@@ -171,13 +154,14 @@ export default function Header() {
             <button
               onClick={handleSignOut}
               style={{
-                fontFamily: 'var(--font-mono)',
+                fontFamily: 'var(--font-sans)',
                 fontSize: '11px',
-                color: '#6B7A8D',
+                fontWeight: 500,
+                color: 'var(--color-text-muted)',
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                letterSpacing: '0.12em',
+                letterSpacing: '0.06em',
                 textTransform: 'uppercase',
                 padding: '3px 0',
               }}
@@ -189,15 +173,15 @@ export default function Header() {
         <Link href="/dashboard/profile" style={{
           width: '30px',
           height: '30px',
-          borderRadius: '50%',
-          backgroundColor: 'rgba(184,145,58,0.10)',
-          border: '1px solid rgba(184,145,58,0.3)',
+          borderRadius: 'var(--radius-pill)',
+          backgroundColor: 'var(--color-gold-subtle)',
+          border: '1px solid var(--color-border-strong)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           fontFamily: 'var(--font-mono)',
           fontSize: '12px',
-          color: '#B8913A',
+          color: 'var(--color-gold)',
           textDecoration: 'none',
           cursor: 'pointer',
         }}>

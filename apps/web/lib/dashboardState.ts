@@ -57,6 +57,16 @@ export interface StateAccount {
   /** Institution name from Plaid. Used for provider inference on retirement
    *  accounts (e.g. "Fidelity" / "Vanguard"). Null when unknown. */
   institutionName?: string | null
+  /** Last four digits of the account number. Surfaced for display in the
+   *  debt payoff module so users can tell two cards from the same issuer
+   *  apart. Null when unknown. */
+  last4?: string | null
+  /** User-set nickname for this account ("My student loan"). Overrides the
+   *  derived institution + type label in the debt payoff module. */
+  customLabel?: string | null
+  /** ISO timestamp of when the user confirmed the APR against their loan
+   *  documents. Null when the APR is Plaid-provided and not user-verified. */
+  aprConfirmedAt?: string | null
 }
 
 export type HoldingAccountKind = '401k' | 'ira' | 'roth_ira' | 'hsa' | 'brokerage' | 'other'
@@ -799,6 +809,11 @@ export function computeDebtPayoffScenarios(
       accountId: a.id,
       balance: Math.abs(a.balance),
       apr: a.apr ?? DEFAULT_LIABILITY_APR,
+      institutionName: a.institutionName ?? null,
+      accountType: a.accountType,
+      last4: a.last4 ?? null,
+      customLabel: a.customLabel ?? null,
+      aprConfirmedAt: a.aprConfirmedAt ?? null,
     }))
   if (debts.length === 0) return null
   const extra = Math.max(0, extraMonthly)

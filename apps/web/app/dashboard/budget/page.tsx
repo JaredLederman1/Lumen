@@ -3,7 +3,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import DataTooltip from '@/components/ui/DataTooltip'
-import { useDashboard } from '@/lib/dashboardData'
+import {
+  useAuthToken,
+  useBudgetQuery,
+  useBudgetActualsQuery,
+  useUpdateBudgetMutation,
+  useRecommendBudgetMutation,
+} from '@/lib/queries'
 import { BUDGET_CATEGORIES } from '@/lib/categories'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import MobileCard from '@/components/ui/MobileCard'
@@ -309,21 +315,22 @@ function BudgetEditor({
   initialIncome,
   initialRows,
   onReanalyze,
-  authToken,
 }: {
   strategy: string
   initialIncome: number
   initialRows: EditRow[]
   onReanalyze: () => void
-  authToken: string | null
 }) {
   const [rows, setRows] = useState<EditRow[]>(initialRows)
   const [monthlyIncome, setMonthlyIncome] = useState(initialIncome)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
-  const [actuals, setActuals] = useState<ActualEntry[]>([])
-  const [rolloverMap, setRolloverMap] = useState<Record<string, number>>({})
   const [view, setView] = useState<'edit' | 'actuals'>('actuals')
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const { data: actualsResp } = useBudgetActualsQuery<{ actuals?: ActualEntry[]; rolloverMap?: Record<string, number> }>()
+  const actuals = actualsResp?.actuals ?? []
+  const rolloverMap = actualsResp?.rolloverMap ?? {}
+  const updateBudget = useUpdateBudgetMutation()
 
   const budgetAlerts = computeAlerts(rows, monthlyIncome)
   const overspendAlerts = computeOverspendAlerts(rows, actuals, rolloverMap)
@@ -332,18 +339,6 @@ function BudgetEditor({
   const total = rows.reduce((s, r) => s + (r.amount || 0), 0)
   const remaining = monthlyIncome - total
   const isBalanced = Math.abs(remaining) < 1
-
-  // Load actuals + rollovers on mount
-  useEffect(() => {
-    const headers: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-    fetch('/api/budget/actuals', { headers })
-      .then(r => r.json())
-      .then(d => {
-        if (d.actuals) setActuals(d.actuals)
-        if (d.rolloverMap) setRolloverMap(d.rolloverMap)
-      })
-      .catch(() => {})
-  }, [authToken])
 
   function updateRow(id: string, field: keyof EditRow, value: string | number | CategoryType) {
     setRows(prev => prev.map(r => r._id === id ? { ...r, [field]: value } : r))
@@ -364,29 +359,23 @@ function BudgetEditor({
     setSaveStatus('idle')
   }
 
-  async function saveChanges() {
+  function saveChanges() {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     setSaveStatus('saving')
-    try {
-      const authHeaders: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-      const res = await fetch('/api/budget', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
-        body: JSON.stringify({
-          strategy,
-          monthlyIncome,
-          categories: rows.map(({ name, amount, type }) => ({ name, amount, type })),
-        }),
-      })
-      if (res.ok) {
-        setSaveStatus('saved')
-        saveTimerRef.current = setTimeout(() => setSaveStatus('idle'), 3000)
-      } else {
-        setSaveStatus('idle')
-      }
-    } catch {
-      setSaveStatus('idle')
-    }
+    updateBudget.mutate(
+      {
+        strategy,
+        monthlyIncome,
+        categories: rows.map(({ name, amount, type }) => ({ name, amount, type })),
+      },
+      {
+        onSuccess: () => {
+          setSaveStatus('saved')
+          saveTimerRef.current = setTimeout(() => setSaveStatus('idle'), 3000)
+        },
+        onError: () => setSaveStatus('idle'),
+      },
+    )
   }
 
   const actualMap: Record<string, number> = {}
@@ -807,21 +796,22 @@ function BudgetEditorMobile({
   initialIncome,
   initialRows,
   onReanalyze,
-  authToken,
 }: {
   strategy: string
   initialIncome: number
   initialRows: EditRow[]
   onReanalyze: () => void
-  authToken: string | null
 }) {
   const [rows, setRows] = useState<EditRow[]>(initialRows)
   const [monthlyIncome, setMonthlyIncome] = useState(initialIncome)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
-  const [actuals, setActuals] = useState<ActualEntry[]>([])
-  const [rolloverMap, setRolloverMap] = useState<Record<string, number>>({})
   const [view, setView] = useState<'edit' | 'actuals'>('actuals')
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const { data: actualsResp } = useBudgetActualsQuery<{ actuals?: ActualEntry[]; rolloverMap?: Record<string, number> }>()
+  const actuals = actualsResp?.actuals ?? []
+  const rolloverMap = actualsResp?.rolloverMap ?? {}
+  const updateBudget = useUpdateBudgetMutation()
 
   const budgetAlerts = computeAlerts(rows, monthlyIncome)
   const overspendAlerts = computeOverspendAlerts(rows, actuals, rolloverMap)
@@ -830,17 +820,6 @@ function BudgetEditorMobile({
   const total = rows.reduce((s, r) => s + (r.amount || 0), 0)
   const remaining = monthlyIncome - total
   const isBalanced = Math.abs(remaining) < 1
-
-  useEffect(() => {
-    const headers: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-    fetch('/api/budget/actuals', { headers })
-      .then(r => r.json())
-      .then(d => {
-        if (d.actuals) setActuals(d.actuals)
-        if (d.rolloverMap) setRolloverMap(d.rolloverMap)
-      })
-      .catch(() => {})
-  }, [authToken])
 
   function updateRow(id: string, field: keyof EditRow, value: string | number | CategoryType) {
     setRows(prev => prev.map(r => r._id === id ? { ...r, [field]: value } : r))
@@ -861,29 +840,23 @@ function BudgetEditorMobile({
     setSaveStatus('idle')
   }
 
-  async function saveChanges() {
+  function saveChanges() {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     setSaveStatus('saving')
-    try {
-      const authHeaders: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-      const res = await fetch('/api/budget', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
-        body: JSON.stringify({
-          strategy,
-          monthlyIncome,
-          categories: rows.map(({ name, amount, type }) => ({ name, amount, type })),
-        }),
-      })
-      if (res.ok) {
-        setSaveStatus('saved')
-        saveTimerRef.current = setTimeout(() => setSaveStatus('idle'), 3000)
-      } else {
-        setSaveStatus('idle')
-      }
-    } catch {
-      setSaveStatus('idle')
-    }
+    updateBudget.mutate(
+      {
+        strategy,
+        monthlyIncome,
+        categories: rows.map(({ name, amount, type }) => ({ name, amount, type })),
+      },
+      {
+        onSuccess: () => {
+          setSaveStatus('saved')
+          saveTimerRef.current = setTimeout(() => setSaveStatus('idle'), 3000)
+        },
+        onError: () => setSaveStatus('idle'),
+      },
+    )
   }
 
   const actualMap: Record<string, number> = {}
@@ -1217,30 +1190,27 @@ function BudgetEditorMobile({
 // Page (desktop)
 
 function BudgetDesktop() {
-  const { authToken } = useDashboard()
+  const authToken = useAuthToken()
   const [phase, setPhase] = useState<Phase>('idle')
   const [streamText, setStreamText] = useState('')
   const [budgetData, setBudgetData] = useState<BudgetData | null>(null)
-  const [loadingExisting, setLoadingExisting] = useState(true)
   const streamRef = useRef<HTMLDivElement>(null)
+  const updateBudget = useUpdateBudgetMutation()
+
+  const { data: existingBudget, isLoading: loadingExisting } =
+    useBudgetQuery<{ budget?: BudgetData }>()
 
   useEffect(() => {
-    const headers: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-    fetch('/api/budget', { headers })
-      .then(r => r.json())
-      .then(d => {
-        if (d.budget) {
-          setBudgetData({
-            strategy: d.budget.strategy,
-            monthlyIncome: d.budget.monthlyIncome,
-            categories: d.budget.categories,
-          })
-          setPhase('editing')
-        }
+    if (existingBudget?.budget && phase === 'idle' && !budgetData) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot hydration from server data
+      setBudgetData({
+        strategy: existingBudget.budget.strategy,
+        monthlyIncome: existingBudget.budget.monthlyIncome,
+        categories: existingBudget.budget.categories,
       })
-      .catch(() => {})
-      .finally(() => setLoadingExisting(false))
-  }, [authToken])
+      setPhase('editing')
+    }
+  }, [existingBudget, phase, budgetData])
 
   useEffect(() => {
     if (streamRef.current) {
@@ -1292,12 +1262,7 @@ function BudgetDesktop() {
 
   async function commitBudget() {
     if (!budgetData) return
-    const authHeaders: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-    await fetch('/api/budget', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders },
-      body: JSON.stringify(budgetData),
-    })
+    await updateBudget.mutateAsync(budgetData)
     setStreamText('')
     setPhase('editing')
   }
@@ -1483,7 +1448,6 @@ function BudgetDesktop() {
           initialIncome={budgetData.monthlyIncome}
           initialRows={toRows(budgetData.categories)}
           onReanalyze={reanalyze}
-          authToken={authToken}
         />
       </div>
     )
@@ -1495,29 +1459,26 @@ function BudgetDesktop() {
 // Mobile page
 
 function BudgetMobile() {
-  const { authToken } = useDashboard()
+  const authToken = useAuthToken()
   const [phase, setPhase] = useState<Phase>('idle')
   const [streamText, setStreamText] = useState('')
   const [budgetData, setBudgetData] = useState<BudgetData | null>(null)
-  const [loadingExisting, setLoadingExisting] = useState(true)
+  const updateBudget = useUpdateBudgetMutation()
+
+  const { data: existingBudget, isLoading: loadingExisting } =
+    useBudgetQuery<{ budget?: BudgetData }>()
 
   useEffect(() => {
-    const headers: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-    fetch('/api/budget', { headers })
-      .then(r => r.json())
-      .then(d => {
-        if (d.budget) {
-          setBudgetData({
-            strategy: d.budget.strategy,
-            monthlyIncome: d.budget.monthlyIncome,
-            categories: d.budget.categories,
-          })
-          setPhase('editing')
-        }
+    if (existingBudget?.budget && phase === 'idle' && !budgetData) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot hydration from server data
+      setBudgetData({
+        strategy: existingBudget.budget.strategy,
+        monthlyIncome: existingBudget.budget.monthlyIncome,
+        categories: existingBudget.budget.categories,
       })
-      .catch(() => {})
-      .finally(() => setLoadingExisting(false))
-  }, [authToken])
+      setPhase('editing')
+    }
+  }, [existingBudget, phase, budgetData])
 
   async function runAnalysis() {
     setPhase('streaming')
@@ -1563,12 +1524,7 @@ function BudgetMobile() {
 
   async function commitBudget() {
     if (!budgetData) return
-    const authHeaders: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-    await fetch('/api/budget', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders },
-      body: JSON.stringify(budgetData),
-    })
+    await updateBudget.mutateAsync(budgetData)
     setStreamText('')
     setPhase('editing')
   }
@@ -1824,7 +1780,6 @@ function BudgetMobile() {
         initialIncome={budgetData.monthlyIncome}
         initialRows={toRows(budgetData.categories)}
         onReanalyze={reanalyze}
-        authToken={authToken}
       />
     )
   }

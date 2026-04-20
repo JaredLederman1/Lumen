@@ -12,15 +12,16 @@ interface Props {
 const wrap: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '4px',
+  gap: 'var(--space-label-to-value)',
 }
 
 const labelStyle: CSSProperties = {
-  fontFamily: 'var(--font-mono)',
-  fontSize: '10px',
+  fontFamily: 'var(--font-sans)',
+  fontSize: '11px',
+  fontWeight: 500,
   color: 'var(--color-text-muted)',
   textTransform: 'uppercase',
-  letterSpacing: '0.14em',
+  letterSpacing: '0.06em',
   margin: 0,
 }
 

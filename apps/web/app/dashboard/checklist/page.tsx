@@ -4,6 +4,12 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { useDashboard } from '@/lib/dashboardData'
+import {
+  useChecklistQuery,
+  useToggleChecklistItemMutation,
+  useClearCompletedChecklistMutation,
+  useMarkBenefitActionMutation,
+} from '@/lib/queries'
 import { crossCheckBenefits } from '@/lib/benefitsAnalysis'
 import type { BenefitStatus } from '@/lib/benefitsAnalysis'
 import ChecklistItem from '@/components/ui/ChecklistItem'
@@ -74,73 +80,45 @@ function Checkbox({ checked, color, onClick }: { checked: boolean; color: string
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ChecklistPage() {
-  const { loading, authToken, benefits, setBenefits } = useDashboard()
+  const { loading, benefits, setBenefits } = useDashboard()
 
-  const [coachItems, setCoachItems]           = useState<CoachItem[]>([])
-  const [coachLoading, setCoachLoading]       = useState(true)
+  const { data: checklistData, isLoading: coachLoading } =
+    useChecklistQuery<{ items?: CoachItem[] }>()
+  const coachItems = checklistData?.items ?? []
+  const toggleItem = useToggleChecklistItemMutation()
+  const clearCompleted = useClearCompletedChecklistMutation()
+  const markBenefit = useMarkBenefitActionMutation()
+
   const [clearConfirm, setClearConfirm]       = useState(false)
   const [benefitsDone, setBenefitsDone]       = useState<string[]>(benefits?.actionItemsDone ?? [])
   const clearConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // Fetch coach recommendations
-  useEffect(() => {
-    if (!authToken) return
-    fetch('/api/checklist', {
-      headers: { Authorization: `Bearer ${authToken}` },
-    })
-      .then(r => r.json())
-      .then(d => setCoachItems(d.items ?? []))
-      .catch(() => {})
-      .finally(() => setCoachLoading(false))
-  }, [authToken])
 
   // Sync benefitsDone when benefits loads
   useEffect(() => {
     if (benefits?.actionItemsDone) setBenefitsDone(benefits.actionItemsDone)
   }, [benefits])
 
-  const toggleCoachItem = useCallback(async (id: string, completed: boolean) => {
-    // Optimistic update
-    setCoachItems(prev => prev.map(i => i.id === id ? { ...i, completed } : i))
-    if (!authToken) return
-    await fetch(`/api/checklist/${id}`, {
-      method: 'PATCH',
-      headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ completed }),
-    })
-  }, [authToken])
+  const toggleCoachItem = useCallback((id: string, completed: boolean) => {
+    toggleItem.mutate({ id, completed })
+  }, [toggleItem])
 
-  const handleClearCompleted = useCallback(async () => {
+  const handleClearCompleted = useCallback(() => {
     if (!clearConfirm) {
       setClearConfirm(true)
       clearConfirmTimer.current = setTimeout(() => setClearConfirm(false), 3000)
       return
     }
-    // Second click: execute
     setClearConfirm(false)
     if (clearConfirmTimer.current) clearTimeout(clearConfirmTimer.current)
+    clearCompleted.mutate()
+  }, [clearConfirm, clearCompleted])
 
-    // Optimistic removal
-    setCoachItems(prev => prev.filter(i => !i.completed))
-    if (!authToken) return
-    await fetch('/api/checklist', {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ completed: true }),
-    })
-  }, [clearConfirm, authToken])
-
-  const toggleBenefitItem = useCallback(async (label: string, checked: boolean) => {
+  const toggleBenefitItem = useCallback((label: string, checked: boolean) => {
     const next = checked ? [...benefitsDone, label] : benefitsDone.filter(l => l !== label)
     setBenefitsDone(next)
     if (benefits) setBenefits({ ...benefits, actionItemsDone: next })
-    if (!authToken) return
-    await fetch('/api/user/benefits/actions', {
-      method: 'PATCH',
-      headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ label, done: checked }),
-    })
-  }, [benefitsDone, benefits, setBenefits, authToken])
+    markBenefit.mutate({ label, done: checked })
+  }, [benefitsDone, benefits, setBenefits, markBenefit])
 
   // Benefits checklist items
   const crossCheck = benefits?.extracted

@@ -19,20 +19,21 @@ interface HeroShellProps {
 const shellBase: CSSProperties = {
   backgroundColor: 'var(--color-surface)',
   border: '1px solid var(--color-gold-border)',
-  borderRadius: '2px',
+  borderRadius: 'var(--radius-lg)',
   padding: '32px',
   display: 'flex',
   flexDirection: 'column',
-  gap: '16px',
+  gap: 'var(--space-card-label-to-body)',
   position: 'relative',
 }
 
 const eyebrowStyle: CSSProperties = {
-  fontFamily: 'var(--font-mono)',
+  fontFamily: 'var(--font-sans)',
   fontSize: '11px',
+  fontWeight: 500,
   color: 'var(--color-text-muted)',
   textTransform: 'uppercase',
-  letterSpacing: '0.18em',
+  letterSpacing: '0.06em',
   margin: 0,
 }
 
@@ -65,13 +66,14 @@ const bigNumberStyle: CSSProperties = {
 }
 
 const bigNumberLabelStyle: CSSProperties = {
-  fontFamily: 'var(--font-mono)',
-  fontSize: '10px',
+  fontFamily: 'var(--font-sans)',
+  fontSize: '11px',
+  fontWeight: 500,
   color: 'var(--color-text-muted)',
   textTransform: 'uppercase',
-  letterSpacing: '0.16em',
+  letterSpacing: '0.06em',
   margin: 0,
-  marginBottom: '6px',
+  marginBottom: 'var(--space-label-to-value)',
 }
 
 const ctaStyle: CSSProperties = {
@@ -80,11 +82,13 @@ const ctaStyle: CSSProperties = {
   padding: '11px 26px',
   backgroundColor: 'var(--color-gold)',
   border: 'none',
-  borderRadius: '2px',
+  borderRadius: 'var(--radius-sm)',
   color: 'var(--color-text)',
-  fontFamily: 'var(--font-mono)',
+  fontFamily: 'var(--font-sans)',
   fontSize: '13px',
-  letterSpacing: '0.08em',
+  fontWeight: 500,
+  letterSpacing: '0.06em',
+  textTransform: 'uppercase',
   textDecoration: 'none',
   display: 'inline-block',
 }
@@ -115,6 +119,7 @@ export default function HeroShell({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
+      className="card-hoverable"
       style={{ ...shellBase, ...toneAccent[tone] }}
     >
       {eyebrow && <p style={eyebrowStyle}>{eyebrow}</p>}

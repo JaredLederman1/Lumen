@@ -60,6 +60,8 @@ model Account {
   last4           String?
   classification  String        @default("asset")
   apr             Float?
+  customLabel     String?       @map("custom_label")
+  aprConfirmedAt  DateTime?     @map("apr_confirmed_at")
   plaidAccountId  String?       @unique @map("plaid_account_id")
   plaidAccessToken String?       @map("plaid_access_token")
   plaidItemId     String?       @map("plaid_item_id")

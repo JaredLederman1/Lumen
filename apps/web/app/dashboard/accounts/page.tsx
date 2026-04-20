@@ -6,6 +6,13 @@ import { usePlaidLink } from 'react-plaid-link'
 import AccountCard from '@/components/ui/AccountCard'
 import DataTooltip from '@/components/ui/DataTooltip'
 import { useDashboard } from '@/lib/dashboardData'
+import {
+  useDeleteInstitutionMutation,
+  usePlaidLinkTokenQuery,
+  usePlaidExchangeMutation,
+  usePlaidSyncMutation,
+  usePlaidResetMutation,
+} from '@/lib/queries'
 import { useCountUp } from '@/lib/useCountUp'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import MobileCard from '@/components/ui/MobileCard'
@@ -45,49 +52,35 @@ function InstitutionGroup({
   accounts,
   onRemove,
   onRemoveInstitution,
-  authToken,
 }: {
   name: string
   accounts: Account[]
   onRemove: (id: string) => void
   onRemoveInstitution: (institutionName: string) => void
-  authToken: string | null
 }) {
   const [open, setOpen] = useState(true)
   const [confirmRemoveAll, setConfirmRemoveAll] = useState(false)
-  const [removingAll, setRemovingAll] = useState(false)
+  const deleteInstitution = useDeleteInstitutionMutation()
+  const removingAll = deleteInstitution.isPending
   const total = accounts.reduce((s, a) => s + a.balance, 0)
   const initials = getInitials(name)
 
-  const handleRemoveInstitution = async () => {
-    setRemovingAll(true)
-    try {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-      }
-      const res = await fetch('/api/accounts/institution', {
-        method: 'DELETE',
-        headers,
-        body: JSON.stringify({ institutionName: name }),
-      })
-      if (res.ok) {
+  const handleRemoveInstitution = () => {
+    deleteInstitution.mutate(name, {
+      onSuccess: () => {
         onRemoveInstitution(name)
-      }
-    } catch {
-      // silent
-    } finally {
-      setRemovingAll(false)
-      setConfirmRemoveAll(false)
-    }
+        setConfirmRemoveAll(false)
+      },
+      onError: () => setConfirmRemoveAll(false),
+    })
   }
 
   return (
-    <div style={{ border: '1px solid rgba(184,145,58,0.15)', borderRadius: '2px', overflow: 'hidden', opacity: removingAll ? 0.4 : 1, transition: 'opacity 200ms ease' }}>
+    <div style={{ border: '1px solid var(--color-gold-border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', opacity: removingAll ? 0.4 : 1, transition: 'opacity 200ms ease' }}>
       <div
         style={{
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '16px 20px', backgroundColor: '#0F1318',
+          padding: '16px 20px', backgroundColor: 'var(--color-surface)',
         }}
       >
         <button
@@ -194,7 +187,6 @@ function InstitutionGroup({
                 balance={account.balance}
                 last4={account.last4}
                 onRemove={onRemove}
-                authToken={authToken}
               />
             ))}
           </motion.div>
@@ -211,9 +203,8 @@ function ConnectButton({
   onSuccess: (accounts: Account[]) => void
   onConnecting?: () => void
 }) {
-  const { authToken } = useDashboard()
-  const [linkToken, setLinkToken] = useState<string | null>(null)
-  const [connecting, setConnecting] = useState(false)
+  const { data: linkToken, error: linkTokenError } = usePlaidLinkTokenQuery()
+  const exchange = usePlaidExchangeMutation()
   const [error, setError] = useState<string | null>(null)
   const onConnectingRef = useRef(onConnecting)
   onConnectingRef.current = onConnecting
@@ -221,52 +212,27 @@ function ConnectButton({
   onSuccessRef.current = onSuccess
 
   useEffect(() => {
-    if (!authToken) return
-    setError(null)
-    const headers: Record<string, string> = { Authorization: `Bearer ${authToken}` }
-    fetch('/api/plaid/create-link-token', { headers })
-      .then(async r => {
-        if (!r.ok) {
-          const body = await r.json().catch(() => ({}))
-          const detail = body?.detail
-          const msg = typeof detail === 'object' ? JSON.stringify(detail) : detail
-          throw new Error(msg || `HTTP ${r.status}`)
-        }
-        return r.json()
-      })
-      .then(data => {
-        if (data.linkToken) setLinkToken(data.linkToken)
-        else setError('Could not initialize connection. Check Plaid credentials.')
-      })
-      .catch((err) => setError(`Could not initialize connection: ${err.message}`))
-  }, [authToken])
+    if (linkTokenError) setError(`Could not initialize connection: ${linkTokenError.message}`)
+    else setError(null)
+  }, [linkTokenError])
 
   const handlePlaidSuccess = useCallback(
-    async (publicToken: string, metadata: PlaidOnSuccessMetadata) => {
-      setConnecting(true)
+    (publicToken: string, metadata: PlaidOnSuccessMetadata) => {
       setError(null)
       onConnectingRef.current?.()
-      try {
-        const authHeaders: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-        const res = await fetch('/api/plaid/exchange-token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...authHeaders },
-          body: JSON.stringify({
-            publicToken,
-            institutionName: metadata.institution?.name ?? 'Connected Institution',
-            accounts: metadata.accounts,
-          }),
-        })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error ?? 'Exchange failed')
-        onSuccessRef.current(data.accounts ?? [])
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Connection failed')
-      } finally {
-        setConnecting(false)
-      }
+      exchange.mutate(
+        {
+          publicToken,
+          institutionName: metadata.institution?.name ?? 'Connected Institution',
+          accounts: metadata.accounts,
+        },
+        {
+          onSuccess: data => onSuccessRef.current((data?.accounts as Account[]) ?? []),
+          onError: err => setError(err instanceof Error ? err.message : 'Connection failed'),
+        },
+      )
     },
-    [authToken]
+    [exchange],
   )
 
   const { open, ready } = usePlaidLink({
@@ -276,6 +242,8 @@ function ConnectButton({
       if (err) console.error('[Plaid Link exit error]', JSON.stringify(err, null, 2))
     },
   })
+
+  const connecting = exchange.isPending
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
@@ -301,9 +269,8 @@ function ConnectButton({
 
 // Shared Plaid connect logic extracted for mobile use
 function useMobilePlaidConnect(onSuccess: (accounts: Account[]) => void, onConnecting?: () => void) {
-  const { authToken } = useDashboard()
-  const [linkToken, setLinkToken] = useState<string | null>(null)
-  const [connecting, setConnecting] = useState(false)
+  const { data: linkToken, error: linkTokenError } = usePlaidLinkTokenQuery()
+  const exchange = usePlaidExchangeMutation()
   const [error, setError] = useState<string | null>(null)
   const onConnectingRef = useRef(onConnecting)
   onConnectingRef.current = onConnecting
@@ -311,52 +278,27 @@ function useMobilePlaidConnect(onSuccess: (accounts: Account[]) => void, onConne
   onSuccessRef.current = onSuccess
 
   useEffect(() => {
-    if (!authToken) return
-    setError(null)
-    const headers: Record<string, string> = { Authorization: `Bearer ${authToken}` }
-    fetch('/api/plaid/create-link-token', { headers })
-      .then(async r => {
-        if (!r.ok) {
-          const body = await r.json().catch(() => ({}))
-          const detail = body?.detail
-          const msg = typeof detail === 'object' ? JSON.stringify(detail) : detail
-          throw new Error(msg || `HTTP ${r.status}`)
-        }
-        return r.json()
-      })
-      .then(data => {
-        if (data.linkToken) setLinkToken(data.linkToken)
-        else setError('Could not initialize connection.')
-      })
-      .catch((err) => setError(`Could not initialize connection: ${err.message}`))
-  }, [authToken])
+    if (linkTokenError) setError(`Could not initialize connection: ${linkTokenError.message}`)
+    else setError(null)
+  }, [linkTokenError])
 
   const handlePlaidSuccess = useCallback(
-    async (publicToken: string, metadata: PlaidOnSuccessMetadata) => {
-      setConnecting(true)
+    (publicToken: string, metadata: PlaidOnSuccessMetadata) => {
       setError(null)
       onConnectingRef.current?.()
-      try {
-        const authHeaders: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-        const res = await fetch('/api/plaid/exchange-token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...authHeaders },
-          body: JSON.stringify({
-            publicToken,
-            institutionName: metadata.institution?.name ?? 'Connected Institution',
-            accounts: metadata.accounts,
-          }),
-        })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error ?? 'Exchange failed')
-        onSuccessRef.current(data.accounts ?? [])
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Connection failed')
-      } finally {
-        setConnecting(false)
-      }
+      exchange.mutate(
+        {
+          publicToken,
+          institutionName: metadata.institution?.name ?? 'Connected Institution',
+          accounts: metadata.accounts,
+        },
+        {
+          onSuccess: data => onSuccessRef.current((data?.accounts as Account[]) ?? []),
+          onError: err => setError(err instanceof Error ? err.message : 'Connection failed'),
+        },
+      )
     },
-    [authToken]
+    [exchange],
   )
 
   const { open, ready } = usePlaidLink({
@@ -367,7 +309,7 @@ function useMobilePlaidConnect(onSuccess: (accounts: Account[]) => void, onConne
     },
   })
 
-  return { open, ready, connecting, error }
+  return { open, ready, connecting: exchange.isPending, error }
 }
 
 const SYNC_STEPS = [
@@ -470,54 +412,27 @@ function SyncingOverlay({ done }: { done: boolean }) {
 }
 
 function AccountsContent() {
-  const { loading, accounts, setAccounts, refresh, authToken } = useDashboard()
-  const [resetting, setResetting] = useState(false)
+  const { loading, accounts } = useDashboard()
+  const sync = usePlaidSyncMutation()
   const [syncing, setSyncing] = useState(false)
   const [syncDone, setSyncDone] = useState(false)
   const [banner, setBanner] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
-  const handleRemove = (id: string) => {
-    setAccounts(prev => prev.filter(a => a.id !== id))
-    refresh()
-  }
+  // Mutation invalidates the accounts query; the UI updates via the cache.
+  const handleRemove = () => {}
+  const handleRemoveInstitution = () => {}
 
-  const handleRemoveInstitution = (institutionName: string) => {
-    setAccounts(prev => prev.filter(a => a.institutionName !== institutionName))
-    refresh()
-  }
-
-  const handleConnectSuccess = async (newAccounts: Account[]) => {
-    const authHeaders: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-    try {
-      await fetch('/api/plaid/sync', { method: 'POST', headers: authHeaders })
-    } catch {}
-    await refresh()
-    setSyncDone(true)
-    setTimeout(() => {
-      setSyncing(false)
-      setSyncDone(false)
-      setBanner({ type: 'success', message: `${newAccounts.length} account${newAccounts.length !== 1 ? 's' : ''} connected successfully.` })
-    }, 800)
-  }
-
-  const handleReset = async () => {
-    if (!confirm('Delete all accounts and transactions so you can re-connect?')) return
-    setResetting(true)
-    try {
-      const authHeaders: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-      const res = await fetch('/api/plaid/reset', { method: 'POST', headers: authHeaders })
-      const data = await res.json()
-      if (data.success) {
-        await refresh()
-        setBanner({ type: 'success', message: `Reset complete: removed ${data.deletedAccounts} account(s) and ${data.deletedTransactions} transaction(s).` })
-      } else {
-        setBanner({ type: 'error', message: 'Reset failed: ' + (data.error ?? 'unknown error') })
-      }
-    } catch {
-      setBanner({ type: 'error', message: 'Reset request failed' })
-    } finally {
-      setResetting(false)
-    }
+  const handleConnectSuccess = (newAccounts: Account[]) => {
+    sync.mutate(undefined, {
+      onSettled: () => {
+        setSyncDone(true)
+        setTimeout(() => {
+          setSyncing(false)
+          setSyncDone(false)
+          setBanner({ type: 'success', message: `${newAccounts.length} account${newAccounts.length !== 1 ? 's' : ''} connected successfully.` })
+        }, 800)
+      },
+    })
   }
 
   const grouped = accounts.reduce<Record<string, Account[]>>((acc, a) => {
@@ -544,8 +459,8 @@ function AccountsContent() {
   const animatedLiabilities = useCountUp(totalLiabilities, 900, hasPlayed)
   const animatedNetWorth    = useCountUp(totalAssets - totalLiabilities, 900, hasPlayed)
 
-  const card = { backgroundColor: '#0F1318', border: '1px solid rgba(184,145,58,0.15)', borderRadius: '2px', padding: '28px' } as const
-  const labelStyle = { fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#6B7A8D', textTransform: 'uppercase' as const, letterSpacing: '0.16em' } as const
+  const card = { backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-gold-border)', borderRadius: 'var(--radius-lg)', padding: '28px' } as const
+  const labelStyle = { fontFamily: 'var(--font-sans)', fontSize: '11px', fontWeight: 500, color: 'var(--color-text-muted)', textTransform: 'uppercase' as const, letterSpacing: '0.06em' } as const
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -555,10 +470,10 @@ function AccountsContent() {
       {banner && (
         <div style={{
           padding: '13px 18px',
-          backgroundColor: banner.type === 'success' ? 'rgba(76,175,125,0.10)' : 'rgba(224,92,110,0.08)',
-          border: `1px solid ${banner.type === 'success' ? 'rgba(76,175,125,0.20)' : 'rgba(224,92,110,0.20)'}`,
-          borderRadius: '2px',
-          color: banner.type === 'success' ? '#4CAF7D' : '#E05C6E',
+          backgroundColor: banner.type === 'success' ? 'var(--color-positive-bg)' : 'var(--color-negative-bg)',
+          border: `1px solid ${banner.type === 'success' ? 'var(--color-positive-border)' : 'var(--color-negative-border)'}`,
+          borderRadius: 'var(--radius-md)',
+          color: banner.type === 'success' ? 'var(--color-positive)' : 'var(--color-negative)',
           fontFamily: 'var(--font-mono)', fontSize: '14px',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         }}>
@@ -600,39 +515,39 @@ function AccountsContent() {
         ]
         return (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-            <div style={{ backgroundColor: '#0F1318', border: '1px solid rgba(184,145,58,0.15)', borderRadius: '2px', padding: '24px' }}>
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#6B7A8D', textTransform: 'uppercase', letterSpacing: '0.16em', marginBottom: '10px' }}>Total Assets</p>
-              <p style={{ fontFamily: 'var(--font-sans)', fontSize: '41px', fontWeight: 400, color: '#4CAF7D' }}>
+            <div style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-gold-border)', borderRadius: 'var(--radius-lg)', padding: '24px' }}>
+              <p style={{ ...labelStyle, marginBottom: '10px' }}>Total Assets</p>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '41px', fontWeight: 400, color: 'var(--color-positive)' }}>
                 <DataTooltip
                   value={animatedAssets}
                   title="Total Assets"
                   computationNote="Sum of all asset-classified accounts"
                   sources={assetSources}
-                  accentColor="#4CAF7D"
+                  accentColor="var(--color-positive)"
                 />
               </p>
             </div>
-            <div style={{ backgroundColor: '#0F1318', border: '1px solid rgba(184,145,58,0.15)', borderRadius: '2px', padding: '24px' }}>
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#6B7A8D', textTransform: 'uppercase', letterSpacing: '0.16em', marginBottom: '10px' }}>Total Liabilities</p>
-              <p style={{ fontFamily: 'var(--font-sans)', fontSize: '41px', fontWeight: 400, color: '#E05C6E' }}>
+            <div style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-gold-border)', borderRadius: 'var(--radius-lg)', padding: '24px' }}>
+              <p style={{ ...labelStyle, marginBottom: '10px' }}>Total Liabilities</p>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '41px', fontWeight: 400, color: 'var(--color-negative)' }}>
                 <DataTooltip
                   value={animatedLiabilities}
                   title="Total Liabilities"
                   computationNote="Sum of all liability-classified accounts (shown as positive values)"
                   sources={liabilitySources}
-                  accentColor="#E05C6E"
+                  accentColor="var(--color-negative)"
                 />
               </p>
             </div>
-            <div style={{ backgroundColor: '#0F1318', border: '1px solid rgba(184,145,58,0.15)', borderRadius: '2px', padding: '24px' }}>
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#6B7A8D', textTransform: 'uppercase', letterSpacing: '0.16em', marginBottom: '10px' }}>Net Worth</p>
-              <p style={{ fontFamily: 'var(--font-sans)', fontSize: '41px', fontWeight: 400, color: '#B8913A' }}>
+            <div style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-gold-border)', borderRadius: 'var(--radius-lg)', padding: '24px' }}>
+              <p style={{ ...labelStyle, marginBottom: '10px' }}>Net Worth</p>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '41px', fontWeight: 400, color: 'var(--color-gold)' }}>
                 <DataTooltip
                   value={animatedNetWorth}
                   title="Net Worth"
                   computationNote="Total assets minus total liabilities across all connected accounts"
                   sources={netWorthSources}
-                  accentColor="#B8913A"
+                  accentColor="var(--color-gold)"
                 />
               </p>
             </div>
@@ -661,7 +576,6 @@ function AccountsContent() {
                 accounts={accts}
                 onRemove={handleRemove}
                 onRemoveInstitution={handleRemoveInstitution}
-                authToken={authToken}
               />
             ))
           )}
@@ -672,33 +586,26 @@ function AccountsContent() {
 }
 
 function AccountsMobileContent() {
-  const { loading, accounts, setAccounts, refresh, authToken } = useDashboard()
+  const { loading, accounts } = useDashboard()
+  const sync = usePlaidSyncMutation()
   const [syncing, setSyncing] = useState(false)
   const [syncDone, setSyncDone] = useState(false)
   const [banner, setBanner] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
-  const handleRemove = (id: string) => {
-    setAccounts(prev => prev.filter(a => a.id !== id))
-    refresh()
-  }
+  const handleRemove = () => {}
+  const handleRemoveInstitution = () => {}
 
-  const handleRemoveInstitution = (institutionName: string) => {
-    setAccounts(prev => prev.filter(a => a.institutionName !== institutionName))
-    refresh()
-  }
-
-  const handleConnectSuccess = async (newAccounts: Account[]) => {
-    const authHeaders: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-    try {
-      await fetch('/api/plaid/sync', { method: 'POST', headers: authHeaders })
-    } catch {}
-    await refresh()
-    setSyncDone(true)
-    setTimeout(() => {
-      setSyncing(false)
-      setSyncDone(false)
-      setBanner({ type: 'success', message: `${newAccounts.length} account${newAccounts.length !== 1 ? 's' : ''} connected successfully.` })
-    }, 800)
+  const handleConnectSuccess = (newAccounts: Account[]) => {
+    sync.mutate(undefined, {
+      onSettled: () => {
+        setSyncDone(true)
+        setTimeout(() => {
+          setSyncing(false)
+          setSyncDone(false)
+          setBanner({ type: 'success', message: `${newAccounts.length} account${newAccounts.length !== 1 ? 's' : ''} connected successfully.` })
+        }, 800)
+      },
+    })
   }
 
   const { open, ready, connecting, error: connectError } = useMobilePlaidConnect(handleConnectSuccess, () => setSyncing(true))
@@ -799,7 +706,6 @@ function AccountsMobileContent() {
                 accounts={accts}
                 onRemove={handleRemove}
                 onRemoveInstitution={handleRemoveInstitution}
-                authToken={authToken}
               />
             ))
           )}

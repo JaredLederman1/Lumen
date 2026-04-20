@@ -1,8 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useDashboard } from '@/lib/dashboardData'
+import { useGoalsQuery } from '@/lib/queries'
 import WidgetCard from './WidgetCard'
 
 interface Goal {
@@ -12,20 +11,8 @@ interface Goal {
 }
 
 export default function GoalsProgressWidget() {
-  const { authToken } = useDashboard()
-  const [goals, setGoals] = useState<Goal[] | null>(null)
-
-  useEffect(() => {
-    const headers: Record<string, string> = authToken
-      ? { Authorization: `Bearer ${authToken}` }
-      : {}
-    fetch('/api/goals', { headers })
-      .then(r => (r.ok ? r.json() : null))
-      .then(d => {
-        if (d?.goals) setGoals(d.goals)
-      })
-      .catch(() => {})
-  }, [authToken])
+  const { data } = useGoalsQuery<Goal>()
+  const goals = data?.goals ?? null
 
   return (
     <WidgetCard label="Goals progress" title="Your milestones">
@@ -76,9 +63,9 @@ export default function GoalsProgressWidget() {
               </div>
               <div
                 style={{
-                  height: '3px',
+                  height: '4px',
                   backgroundColor: 'var(--color-gold-subtle)',
-                  borderRadius: '2px',
+                  borderRadius: 'var(--radius-pill)',
                   overflow: 'hidden',
                 }}
               >

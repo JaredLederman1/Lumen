@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { syncAccountBalances, getTransactions, getHoldings, getLiabilitiesApr } from '@/lib/plaid'
 import { prisma } from '@/lib/prisma'
 import { categorizeTransaction } from '@/lib/categories'
+import { sanitizeMerchantName } from '@/lib/sanitizeMerchantName'
 
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
@@ -104,7 +105,7 @@ export async function POST(request: NextRequest) {
             const accountRecord = accountGroup.find(a => a.plaidAccountId === tx.account_id)
             if (!accountRecord) continue
             try {
-              const rawMerchant = tx.merchant_name ?? tx.name ?? null
+              const rawMerchant = sanitizeMerchantName(tx.merchant_name ?? tx.name ?? null)
               const merchantKey = (rawMerchant ?? '').toLowerCase()
               const resolvedMerchant = renameMap.get(merchantKey) ?? rawMerchant
               const overrideCategory = ruleMap.get(merchantKey) ?? null
@@ -156,6 +157,9 @@ export async function POST(request: NextRequest) {
           for (const info of aprInfo) {
             const match = accountGroup.find(a => a.plaidAccountId === info.plaidAccountId)
             if (!match) continue
+            // Respect user-confirmed APRs: once they've verified the rate
+            // against their loan documents, don't let Plaid overwrite it.
+            if (match.aprConfirmedAt) continue
             await prisma.account.update({
               where: { id: match.id },
               data: { apr: info.apr },

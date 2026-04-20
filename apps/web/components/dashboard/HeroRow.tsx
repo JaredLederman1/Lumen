@@ -20,7 +20,7 @@ interface HeroRowProps {
 const placeholderStyle: React.CSSProperties = {
   backgroundColor: 'var(--color-surface)',
   border: '1px solid var(--color-gold-border)',
-  borderRadius: '2px',
+  borderRadius: 'var(--radius-lg)',
   padding: '32px',
   display: 'flex',
   alignItems: 'center',

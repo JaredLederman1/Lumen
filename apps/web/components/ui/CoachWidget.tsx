@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { supabase } from '@/lib/supabase'
+import { useAuthToken, useSaveChecklistMutation } from '@/lib/queries'
 import ChecklistItem from '@/components/ui/ChecklistItem'
 
 type Message = {
@@ -66,7 +66,10 @@ function StreamingDots() {
 }
 
 export default function CoachWidget() {
+  const authToken = useAuthToken()
+  const saveChecklistMutation = useSaveChecklistMutation()
   const [isOpen, setIsOpen]         = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
   const [messages, setMessages]     = useState<Message[]>([])
   const [input, setInput]           = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
@@ -74,22 +77,35 @@ export default function CoachWidget() {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set())
   const [checklistState, setChecklistState] = useState<ChecklistState | null>(null)
 
-  const containerRef    = useRef<HTMLDivElement>(null)
-  const textareaRef     = useRef<HTMLTextAreaElement>(null)
-  const userHasScrolled = useRef(false)
+  const containerRef         = useRef<HTMLDivElement>(null)
+  const textareaRef          = useRef<HTMLTextAreaElement>(null)
+  const userHasScrolled      = useRef(false)
+  const pinnedUserIdRef      = useRef<string | null>(null)
+  const isProgrammaticScroll = useRef(false)
 
   const handleScroll = useCallback(() => {
-    const el = containerRef.current
-    if (!el) return
-    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40
-    userHasScrolled.current = !atBottom
+    if (isProgrammaticScroll.current) {
+      isProgrammaticScroll.current = false
+      return
+    }
+    userHasScrolled.current = true
   }, [])
 
-  // Auto-scroll on new messages only when already at bottom
+  // Keep the most recent user message pinned at the top as the assistant
+  // response streams in, so new text grows downward without pushing the
+  // reader past content they haven't read yet.
   useEffect(() => {
     if (userHasScrolled.current) return
-    const el = containerRef.current
-    if (el) el.scrollTop = el.scrollHeight
+    const pinnedId = pinnedUserIdRef.current
+    const container = containerRef.current
+    if (!container) return
+    if (!pinnedId) return
+    const el = document.getElementById(`coach-msg-${pinnedId}`)
+    if (!el) return
+    const targetTop = el.offsetTop - container.offsetTop
+    if (Math.abs(container.scrollTop - targetTop) < 2) return
+    isProgrammaticScroll.current = true
+    container.scrollTop = targetTop
   }, [messages])
 
   useEffect(() => {
@@ -114,18 +130,24 @@ export default function CoachWidget() {
     setMessages(prev => [...prev, userMsg, assistantMsg])
     setChecklistState(null)
     setIsStreaming(true)
+    setIsExpanded(true)
 
-    // Scroll to bottom when user sends
+    // Pin the just-sent user message at the top of the scroll container so
+    // the streaming response stays anchored instead of chasing the bottom.
+    pinnedUserIdRef.current = userMsg.id
     userHasScrolled.current = false
     requestAnimationFrame(() => {
-      const el = containerRef.current
-      if (el) el.scrollTop = el.scrollHeight
+      const container = containerRef.current
+      const el = document.getElementById(`coach-msg-${userMsg.id}`)
+      if (container && el) {
+        isProgrammaticScroll.current = true
+        container.scrollTop = el.offsetTop - container.offsetTop
+      }
     })
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
       const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-      if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`
+      if (authToken) headers['Authorization'] = `Bearer ${authToken}`
 
       const firstUserIdx = messages.findIndex(m => m.role === 'user')
       const apiHistory   = firstUserIdx >= 0 ? messages.slice(firstUserIdx) : []
@@ -182,25 +204,14 @@ export default function CoachWidget() {
       })
       setIsStreaming(false)
     }
-  }, [input, isStreaming, messages])
+  }, [input, isStreaming, messages, authToken])
 
   const saveChecklist = useCallback(async () => {
     if (!checklistState || checklistState.promptStatus !== 'idle') return
     setChecklistState(s => s ? { ...s, promptStatus: 'saving' } : null)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-      if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`
-
-      const res = await fetch('/api/checklist', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ items: checklistState.items }),
-      })
-      if (!res.ok) throw new Error('Save failed')
-      const data = await res.json()
+      const data = await saveChecklistMutation.mutateAsync(checklistState.items)
       const saved = data.created ?? checklistState.items.length
-
       setChecklistState(s => s ? { ...s, promptStatus: 'saved', savedCount: saved } : null)
       setTimeout(() => {
         setChecklistState(s => s ? { ...s, fadingOut: true } : null)
@@ -208,7 +219,7 @@ export default function CoachWidget() {
     } catch {
       setChecklistState(s => s ? { ...s, promptStatus: 'error' } : null)
     }
-  }, [checklistState])
+  }, [checklistState, saveChecklistMutation])
 
   const dismissChecklist = useCallback(() => {
     setChecklistState(null)
@@ -224,9 +235,8 @@ export default function CoachWidget() {
   }, [])
 
   const explainItem = useCallback(async (itemText: string): Promise<string> => {
-    const { data: { session } } = await supabase.auth.getSession()
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-    if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`
+    if (authToken) headers['Authorization'] = `Bearer ${authToken}`
 
     const response = await fetch('/api/coach', {
       method: 'POST',
@@ -248,7 +258,7 @@ export default function CoachWidget() {
       result += decoder.decode(value, { stream: true })
     }
     return result.trim()
-  }, [])
+  }, [authToken])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -261,7 +271,11 @@ export default function CoachWidget() {
     <>
       {/* Floating button */}
       <button
-        onClick={() => setIsOpen(o => !o)}
+        onClick={() => setIsOpen(o => {
+          const next = !o
+          if (!next) setIsExpanded(false)
+          return next
+        })}
         style={{
           position: 'fixed', bottom: 28, right: 28, zIndex: 1000,
           width: 52, height: 52, borderRadius: '50%',
@@ -303,13 +317,20 @@ export default function CoachWidget() {
             exit={{    opacity: 0, y: 12, scale: 0.97 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
             style={{
-              position: 'fixed', bottom: 92, right: 28, zIndex: 999,
-              width: 360, maxHeight: 520,
+              position: 'fixed',
+              bottom: isExpanded ? 24 : 92,
+              right:  isExpanded ? 24 : 28,
+              top:    isExpanded ? 24 : 'auto',
+              left:   isExpanded ? 24 : 'auto',
+              zIndex: 999,
+              width:     isExpanded ? 'auto' : 360,
+              maxHeight: isExpanded ? 'none' : 520,
               background: 'var(--color-surface)',
               border: '1px solid var(--color-gold-border)',
-              borderRadius: 4,
+              borderRadius: 18,
               boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
               display: 'flex', flexDirection: 'column',
+              transition: 'top 280ms ease, left 280ms ease, right 280ms ease, bottom 280ms ease, width 280ms ease, max-height 280ms ease',
             }}
           >
             {/* Header */}
@@ -317,6 +338,7 @@ export default function CoachWidget() {
               padding: '16px 18px',
               borderBottom: '1px solid var(--color-border)',
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              gap: 12,
               flexShrink: 0,
             }}>
               <div>
@@ -327,7 +349,35 @@ export default function CoachWidget() {
                   Financial analysis engine
                 </div>
               </div>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-positive)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {isExpanded && (
+                  <button
+                    onClick={() => setIsExpanded(false)}
+                    aria-label="Minimize"
+                    title="Minimize"
+                    style={{
+                      width: 24, height: 24, padding: 0,
+                      background: 'transparent',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 8,
+                      cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'border-color 150ms ease, background 150ms ease',
+                    }}
+                    onMouseEnter={e => {
+                      ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--color-gold)'
+                    }}
+                    onMouseLeave={e => {
+                      ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--color-border)'
+                    }}
+                  >
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path d="M1 8.5h8" stroke="var(--color-text-mid)" strokeWidth="1.4" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                )}
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-positive)' }} />
+              </div>
             </div>
 
             {/* Disclaimer */}
@@ -361,6 +411,7 @@ export default function CoachWidget() {
                   return (
                     <div
                       key={msg.id}
+                      id={`coach-msg-${msg.id}`}
                       style={{
                         alignSelf: 'flex-end',
                         maxWidth: '80%',
@@ -385,10 +436,10 @@ export default function CoachWidget() {
                 const showPrompt  = checklistState?.msgId === msg.id && !isStreaming && !checklistState.hidden
 
                 return (
-                  <div key={msg.id}>
+                  <div key={msg.id} id={`coach-msg-${msg.id}`}>
                     <div style={{
                       alignSelf: 'flex-start',
-                      maxWidth: '85%',
+                      maxWidth: isExpanded ? '720px' : '85%',
                       marginRight: 'auto',
                       background: 'transparent',
                       border: '1px solid var(--color-border)',
@@ -449,12 +500,14 @@ export default function CoachWidget() {
                             <button
                               onClick={saveChecklist}
                               style={{
-                                padding: '4px 12px',
+                                padding: '5px 14px',
                                 background: 'var(--color-gold)',
-                                border: 'none', borderRadius: 3,
-                                fontFamily: 'var(--font-mono)', fontSize: 11,
+                                border: 'none', borderRadius: 10,
+                                fontFamily: 'var(--font-sans)', fontSize: 11, fontWeight: 500,
                                 color: 'var(--color-surface)',
-                                letterSpacing: '0.04em', cursor: 'pointer',
+                                letterSpacing: '0.06em',
+                                textTransform: 'uppercase',
+                                cursor: 'pointer',
                               }}
                             >
                               Save to checklist
@@ -462,11 +515,14 @@ export default function CoachWidget() {
                             <button
                               onClick={dismissChecklist}
                               style={{
-                                padding: '4px 8px',
+                                padding: '5px 10px',
                                 background: 'none',
-                                border: '1px solid var(--color-border)', borderRadius: 3,
-                                fontFamily: 'var(--font-mono)', fontSize: 11,
-                                color: 'var(--color-text-muted)', cursor: 'pointer',
+                                border: '1px solid var(--color-border)', borderRadius: 10,
+                                fontFamily: 'var(--font-sans)', fontSize: 11, fontWeight: 500,
+                                color: 'var(--color-text-muted)',
+                                letterSpacing: '0.06em',
+                                textTransform: 'uppercase',
+                                cursor: 'pointer',
                               }}
                             >
                               Dismiss
@@ -513,7 +569,7 @@ export default function CoachWidget() {
                   flex: 1, minHeight: 36, maxHeight: 100, resize: 'none',
                   background: 'transparent',
                   border: '1px solid var(--color-border)',
-                  borderRadius: 6, padding: '8px 12px',
+                  borderRadius: 10, padding: '8px 12px',
                   fontFamily: 'var(--font-mono)', fontSize: 13,
                   color: 'var(--color-text)', lineHeight: 1.5, outline: 'none',
                 }}
@@ -525,7 +581,7 @@ export default function CoachWidget() {
                 disabled={isStreaming || input.trim() === ''}
                 style={{
                   width: 34, height: 34, flexShrink: 0,
-                  background: 'var(--color-gold)', border: 'none', borderRadius: 6,
+                  background: 'var(--color-gold)', border: 'none', borderRadius: 10,
                   cursor: isStreaming || input.trim() === '' ? 'not-allowed' : 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   opacity: isStreaming || input.trim() === '' ? 0.5 : 1,

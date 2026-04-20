@@ -27,7 +27,7 @@ export default function EmergencyFundGaugeCard({ months, target }: Props) {
           height: '4px',
           width: '100%',
           backgroundColor: 'var(--color-gold-subtle)',
-          borderRadius: '2px',
+          borderRadius: 'var(--radius-pill)',
           overflow: 'hidden',
         }}
       >

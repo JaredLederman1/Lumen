@@ -3,6 +3,10 @@
 import { motion } from 'framer-motion'
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 
+// SVG fill and stroke attributes do not resolve var() references, so the
+// hex values below mirror the warm-dark palette in globals.css. Keep in sync
+// if those tokens change.
+
 interface BarChartProps {
   data: { month: string; income: number; expenses: number; savings: number }[]
 }
@@ -19,17 +23,17 @@ export default function BarChart({ data }: BarChartProps) {
       transition={{ duration: 0.4, ease: 'easeOut', delay: 0.15 }}
     >
       <ResponsiveContainer width="100%" height={200}>
-        <RechartsBarChart data={data} barGap={4} barCategoryGap="30%">
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(184,145,58,0.12)" vertical={false} />
+        <RechartsBarChart data={data} barGap={4} barCategoryGap="30%" margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(247,230,193,0.08)" vertical={false} />
           <XAxis
             dataKey="month"
-            tick={{ fill: '#6B7A8D', fontSize: 10, fontFamily: 'var(--font-mono)' }}
+            tick={{ fill: '#847B68', fontSize: 10, fontFamily: 'var(--font-mono)' }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
             tickFormatter={formatK}
-            tick={{ fill: '#6B7A8D', fontSize: 10, fontFamily: 'var(--font-mono)' }}
+            tick={{ fill: '#847B68', fontSize: 10, fontFamily: 'var(--font-mono)' }}
             axisLine={false}
             tickLine={false}
             width={36}
@@ -37,19 +41,19 @@ export default function BarChart({ data }: BarChartProps) {
           <Tooltip
             formatter={(value, name) => [`$${Number(value).toLocaleString()}`, String(name).charAt(0).toUpperCase() + String(name).slice(1)]}
             contentStyle={{
-              backgroundColor: '#0F1318',
-              border: '1px solid rgba(184,145,58,0.25)',
-              borderRadius: '2px',
-              color: '#F0F2F8',
+              backgroundColor: 'var(--color-surface-elevated)',
+              border: '1px solid var(--color-border-strong)',
+              borderRadius: 'var(--radius-md)',
+              color: 'var(--color-text)',
               fontFamily: 'var(--font-mono)',
               fontSize: '13px',
               boxShadow: '0 4px 16px rgba(0,0,0,0.40)',
             }}
-            cursor={{ fill: 'rgba(184,145,58,0.06)' }}
+            cursor={{ fill: 'rgba(199,154,66,0.08)' }}
           />
-          <Legend wrapperStyle={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: '#6B7A8D' }} />
-          <Bar dataKey="income"   fill="#4CAF7D" radius={[2, 2, 0, 0]} />
-          <Bar dataKey="expenses" fill="#8B4513" radius={[2, 2, 0, 0]} />
+          <Legend wrapperStyle={{ fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)' }} />
+          <Bar dataKey="income"   fill="#5AB48A" radius={[6, 6, 0, 0]} isAnimationActive={false} />
+          <Bar dataKey="expenses" fill="#E8705F" radius={[6, 6, 0, 0]} isAnimationActive={false} />
         </RechartsBarChart>
       </ResponsiveContainer>
     </motion.div>

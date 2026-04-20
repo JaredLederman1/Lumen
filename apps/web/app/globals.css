@@ -1,88 +1,171 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #080B0F;
-  --color-surface: #0F1318;
-  --color-surface-2: #151B22;
-  --color-border: rgba(184, 145, 58, 0.20);
-  --color-border-strong: rgba(184, 145, 58, 0.35);
-  --color-gold: #B8913A;
-  --color-gold-dark: #9A7A2A;
-  --color-gold-subtle: rgba(184, 145, 58, 0.07);
-  --color-text: #F0F2F8;
-  --color-text-mid: #A8B4C0;
-  --color-text-muted: #6B7A8D;
-  --color-positive: #4CAF7D;
-  --color-positive-bg: rgba(76, 175, 125, 0.10);
-  --color-negative: #E05C6E;
-  --color-negative-bg: rgba(224, 92, 110, 0.10);
-  --color-negative-border: rgba(224, 92, 110, 0.20);
-  --color-positive-border: rgba(76, 175, 125, 0.20);
-  --color-gold-border: rgba(184, 145, 58, 0.15);
-  --color-info: #5A7A9A;
-  --color-info-bg: rgba(90, 122, 154, 0.06);
-  --color-info-border: rgba(90, 122, 154, 0.15);
+  /* Warm off-black palette. Premium fintech surface, not pure black. */
+  --color-bg: #141412;
+  --color-surface: #1C1B18;
+  --color-surface-2: #242320;
+  --color-surface-hover: #222120;
+  --color-surface-elevated: #2A2925;
+
+  --color-border: rgba(184, 145, 58, 0.18);
+  --color-border-strong: rgba(184, 145, 58, 0.32);
+  --color-border-hover: rgba(184, 145, 58, 0.40);
+
+  /* Gold, warmed a touch to harmonize with the new background temperature. */
+  --color-gold: #C79A42;
+  --color-gold-dark: #A67F32;
+  --color-gold-subtle: rgba(199, 154, 66, 0.08);
+  --color-gold-border: rgba(199, 154, 66, 0.18);
+
+  --color-text: #F2ECDE;
+  --color-text-mid: #B7AE9B;
+  --color-text-muted: #847B68;
+
+  /* Warmer terracotta-red, legible against the off-black background. */
+  --color-negative: #E8705F;
+  --color-negative-bg: rgba(232, 112, 95, 0.10);
+  --color-negative-border: rgba(232, 112, 95, 0.22);
+
+  /* Success green, slightly desaturated so it does not scream against warm bg. */
+  --color-positive: #5AB48A;
+  --color-positive-bg: rgba(90, 180, 138, 0.10);
+  --color-positive-border: rgba(90, 180, 138, 0.22);
+
+  --color-info: #7A95AA;
+  --color-info-bg: rgba(122, 149, 170, 0.08);
+  --color-info-border: rgba(122, 149, 170, 0.18);
+
+  /* Border radius scale. Curved fintech, not terminal rectangles. */
+  --radius-sm: 10px;   /* buttons, inputs, small pills */
+  --radius-md: 14px;   /* secondary cards, inline elements */
+  --radius-lg: 18px;   /* primary dashboard cards */
+  --radius-pill: 999px; /* badges, tags, chips */
+
+  /* Vertical rhythm inside dashboard cards. These are the only approved gaps
+   * between an uppercase eyebrow label, its value, and any supporting copy.
+   * If two cards share the same label -> value -> subtext structure they must
+   * render pixel-identical, so every card reaches for these tokens. */
+  --space-label-to-value: 10px;
+  --space-value-to-subtext: 12px;
+  --space-section-above: 20px;
+  --space-section-below: 16px;
+  /* Gap between the top card-level label (e.g. "DEBT TRAJECTORY") and the
+   * first inner element. Larger than label-to-value on purpose, so the card
+   * eyebrow reads as a header rather than a caption. */
+  --space-card-label-to-body: 14px;
 }
 
 :root {
   --font-sans: 'Geist', sans-serif;
   --font-mono: 'DM Mono', monospace;
   --font-display: 'DM Serif Display', serif;
-  --color-accent: #B8913A;
-  --color-data-positive: hsl(142, 40%, 45%);
-  --color-data-negative: hsl(0, 40%, 50%);
-  --color-grid-line: rgba(255, 255, 255, 0.07);
-  --color-surface-texture: rgba(255, 255, 255, 0.03);
+  --color-accent: #C79A42;
+  --color-data-positive: hsl(146, 35%, 52%);
+  --color-data-negative: hsl(12, 73%, 63%);
+  --color-grid-line: rgba(247, 230, 193, 0.06);
+  --color-surface-texture: rgba(247, 230, 193, 0.03);
+  /* Keyboard focus ring. Warm gold at reduced opacity, never browser blue. */
+  --color-focus-ring: color-mix(in srgb, var(--color-gold) 60%, transparent);
+}
+
+/* Uppercase UI label. Sans, subtle tracking, muted. Replaces the previous
+   all-caps mono treatment that read too terminal. */
+.ui-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin: 0;
 }
 
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
+/* Suppress the default browser focus ring for mouse interactions, but keep a
+ * visible warm-gold ring for keyboard users via :focus-visible. Never fall
+ * back to the browser blue. */
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Recharts wraps charts in a focusable container and surface. Click should
+ * not draw a focus ring, but keyboard focus still does. */
+.recharts-wrapper:focus,
+.recharts-surface:focus {
+  outline: none;
+}
+
+.recharts-wrapper:focus-visible,
+.recharts-surface:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
 html, body {
-  background-color: #080B0F;
-  color: #F0F2F8;
+  background-color: var(--color-bg);
+  color: var(--color-text);
   font-family: var(--font-sans);
   min-height: 100vh;
 }
 
 .card {
   border: 1px solid var(--color-grid-line);
-  border-radius: 4px;
+  border-radius: var(--radius-lg);
   box-shadow: none;
+}
+
+/* Dashboard card hover. Uses CSS :hover (not React state) so the hover
+ * outline cannot get stuck when a mouseLeave is missed during motion
+ * transitions or re-renders. */
+.card-hoverable {
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.card-hoverable:hover {
+  border-color: var(--color-border-hover);
+  background-color: var(--color-surface-hover);
 }
 
 button {
   font-family: var(--font-sans);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  border-radius: 3px;
-  transition: border-color 120ms ease-out, background-color 120ms ease-out, color 120ms ease-out, box-shadow 120ms ease-out;
+  letter-spacing: 0.06em;
+  border-radius: var(--radius-sm);
+  transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
 }
 
 a {
-  transition: color 120ms ease-out;
+  transition: color 150ms ease;
 }
 
 input, select {
-  background-color: rgba(255,255,255,0.04);
-  border: 1px solid rgba(184, 145, 58, 0.25);
-  border-radius: 2px;
-  color: #F0F2F8;
+  background-color: rgba(247, 230, 193, 0.04);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
   font-family: var(--font-sans);
   font-size: 12px;
   padding: 8px 12px;
   outline: none;
-  transition: border-color 120ms ease-out, background-color 120ms ease-out;
+  transition: border-color 150ms ease, background-color 150ms ease;
 }
 
 input:focus, select:focus {
-  border-color: #B8913A;
+  border-color: var(--color-gold);
   background-color: color-mix(in srgb, var(--color-accent) 5%, transparent);
 }
 
 input::placeholder {
-  color: #6B7A8D;
+  color: var(--color-text-muted);
 }
 
 /* Range inputs */
@@ -121,6 +204,13 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
 }
 
+/* Keyboard focus on range inputs. Specificity has to beat the
+ * input[type="range"] base rule above, so the pseudo-class is explicit. */
+input[type="range"]:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
 /* Remove number input spinners */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
@@ -144,6 +234,45 @@ input[type="number"] {
   padding: 36px;
 }
 
+/* Unified 6-column bento grid shared by Priority / Context / Reference rows.
+ * Each cell publishes its desktop and tablet span as CSS custom properties
+ * so the media query below can swap spans without any JS.
+ */
+.dashboard-grid-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-auto-rows: minmax(260px, auto);
+  gap: 20px;
+}
+
+.dashboard-grid-cell {
+  grid-column: span var(--col-span-desktop, 2);
+  grid-row: span var(--row-span-desktop, 1);
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-grid-cell > * {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Tablet: collapse to 4 columns. Cells use their tablet spans (span 3 -> 2,
+ * span 6 -> 4, etc., computed at the call site in gridCell.ts).
+ */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .dashboard-grid-row {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+
+  .dashboard-grid-cell {
+    grid-column: span var(--col-span-tablet, 2);
+    grid-row: span var(--row-span-tablet, 1);
+  }
+}
+
 @media (max-width: 768px) {
   .desktop-sidebar {
     display: none;
@@ -163,10 +292,16 @@ input[type="number"] {
     padding: 16px 16px 130px 16px;
   }
 
+  .dashboard-grid-row,
   .dashboard-priority-row,
   .dashboard-context-row,
   .dashboard-reference-row {
     grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-grid-cell {
+    grid-column: span 1 !important;
+    grid-row: span 1 !important;
   }
 }
 
@@ -175,11 +310,11 @@ input[type="number"] {
   height: 4px;
 }
 ::-webkit-scrollbar-track {
-  background: #080B0F;
+  background: var(--color-bg);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(184, 145, 58, 0.25);
-  border-radius: 2px;
+  background: var(--color-border-strong);
+  border-radius: var(--radius-pill);
 }
 
 /* Auth card responsive padding */

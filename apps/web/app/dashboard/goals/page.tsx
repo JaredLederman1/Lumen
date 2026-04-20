@@ -1,9 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { useDashboard } from '@/lib/dashboardData'
+import { useGoalsQuery } from '@/lib/queries'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { spacing } from '@/lib/theme'
 import DataTooltip from '@/components/ui/DataTooltip'
@@ -130,19 +129,8 @@ function GoalCard({ goal, delay }: { goal: Goal; delay: number }) {
 }
 
 function useGoalsData() {
-  const { authToken } = useDashboard()
-  const [data, setData] = useState<GoalsData | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const headers: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {}
-    fetch('/api/goals', { headers })
-      .then(r => r.json())
-      .then(d => { setData(d); setLoading(false) })
-      .catch(() => setLoading(false))
-  }, [authToken])
-
-  return { data, loading }
+  const { data, isLoading } = useGoalsQuery<Goal>()
+  return { data: data as GoalsData | null, loading: isLoading }
 }
 
 function GoalsDesktop() {

@@ -4,7 +4,7 @@ import { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import type { OnboardingData } from './shared'
 import { heading, body, continueBtn } from './shared'
-import { supabase } from '@/lib/supabase'
+import { useUploadBenefitsMutation } from '@/lib/queries'
 
 interface Props {
   data: OnboardingData
@@ -19,6 +19,7 @@ interface Props {
 // so Step 4 can pre-fill.
 export function Step3Contract({ data, onChange, onAdvance }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const upload = useUploadBenefitsMutation()
   const [state, setState] = useState<'idle' | 'uploading' | 'done' | 'error'>(
     data.contractParsedData ? 'done' : 'idle'
   )
@@ -28,38 +29,17 @@ export function Step3Contract({ data, onChange, onAdvance }: Props) {
     setState('uploading')
     setError(null)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        setError('Session expired. Please sign in again.')
-        setState('error')
-        return
-      }
-
       const fd = new FormData()
       fd.append('contract', file)
-
-      const res = await fetch('/api/user/benefits/extract', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${session.access_token}` },
-        body: fd,
-      })
-
-      const result = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        setError(result?.error ?? 'Could not parse the document.')
-        setState('error')
-        return
-      }
-
-      // result.extracted is the structured ExtractedBenefits blob. Store it on
-      // the onboarding profile so we can pre-fill Step 4 helper context.
+      const result = await upload.mutateAsync(fd)
       onChange({
         contractParsedData: (result?.extracted ?? result?.benefits ?? {}) as Record<string, unknown>,
         contractUploadedAt: new Date().toISOString(),
       })
       setState('done')
-    } catch {
-      setError('Network error. Please try again.')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Could not parse the document.'
+      setError(msg)
       setState('error')
     }
   }

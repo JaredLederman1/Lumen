@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { usePortfolioHistoryQuery } from '@/lib/queries'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import MobileCard from '@/components/ui/MobileCard'
 import MobileMetricCard from '@/components/ui/MobileMetricCard'
@@ -163,13 +163,13 @@ function PeriodSelector({
               fontSize: '11px',
               letterSpacing: '0.10em',
               padding: '5px 12px',
-              borderRadius: '2px',
+              borderRadius: 'var(--radius-sm)',
               cursor: loading && !active ? 'default' : 'pointer',
               border: active ? '1px solid var(--color-gold)' : '1px solid var(--color-border)',
               backgroundColor: active ? 'var(--color-gold)' : 'transparent',
-              color: active ? '#0F1318' : 'var(--color-text-muted)',
+              color: active ? 'var(--color-bg)' : 'var(--color-text-muted)',
               opacity: loading && !active ? 0.4 : 1,
-              transition: 'border-color 120ms ease-out, background-color 120ms ease-out, color 120ms ease-out',
+              transition: 'border-color 150ms ease, background-color 150ms ease, color 150ms ease',
             }}
           >
             {opt.label}
@@ -805,44 +805,13 @@ function OtherHoldings({ holdings }: { holdings: UnresolvableHolding[] }) {
 // ── Desktop Page ──────────────────────────────────────────────────────────────
 
 function PortfolioDesktop() {
-  const [historyData, setHistoryData] = useState<HistoryData | null>(null)
-  const [historyLoading, setHistoryLoading] = useState(true)
-  const [historyError, setHistoryError] = useState(false)
   const [period, setPeriod] = useState<Period>('1y')
-  const initialLoadDone = useRef(false)
-
-  const loadHistory = useCallback(async (p: Period) => {
-    setHistoryLoading(true)
-    setHistoryError(false)
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const headers: Record<string, string> = {}
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`
-      }
-      const res = await fetch(`/api/portfolio/history?period=${p}`, { headers })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const json = await res.json()
-      setHistoryData(json)
-    } catch (err) {
-      console.error('[PortfolioPage] history fetch failed:', err)
-      setHistoryError(true)
-    } finally {
-      setHistoryLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!initialLoadDone.current) {
-      initialLoadDone.current = true
-      loadHistory(period)
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const { data: historyData, isLoading: historyLoading, isError: historyError } =
+    usePortfolioHistoryQuery<HistoryData>(period)
 
   const handlePeriodChange = useCallback((p: Period) => {
     setPeriod(p)
-    loadHistory(p)
-  }, [loadHistory])
+  }, [])
 
   if (historyLoading && !historyData) {
     return (
@@ -1042,44 +1011,13 @@ const ALLOC_COLORS = [
 ]
 
 function PortfolioMobile() {
-  const [historyData, setHistoryData] = useState<HistoryData | null>(null)
-  const [historyLoading, setHistoryLoading] = useState(true)
-  const [historyError, setHistoryError] = useState(false)
   const [period, setPeriod] = useState<Period>('1y')
-  const initialLoadDone = useRef(false)
-
-  const loadHistory = useCallback(async (p: Period) => {
-    setHistoryLoading(true)
-    setHistoryError(false)
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const headers: Record<string, string> = {}
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`
-      }
-      const res = await fetch(`/api/portfolio/history?period=${p}`, { headers })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const json = await res.json()
-      setHistoryData(json)
-    } catch (err) {
-      console.error('[PortfolioMobile] history fetch failed:', err)
-      setHistoryError(true)
-    } finally {
-      setHistoryLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!initialLoadDone.current) {
-      initialLoadDone.current = true
-      loadHistory(period)
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const { data: historyData, isLoading: historyLoading, isError: historyError } =
+    usePortfolioHistoryQuery<HistoryData>(period)
 
   const handlePeriodChange = useCallback((p: Period) => {
     setPeriod(p)
-    loadHistory(p)
-  }, [loadHistory])
+  }, [])
 
   // Loading state
   if (historyLoading && !historyData) {
@@ -1207,10 +1145,10 @@ function PortfolioMobile() {
                   minHeight: spacing.tapTarget,
                   minWidth: spacing.tapTarget,
                   padding: '0 10px',
-                  borderRadius: 2,
+                  borderRadius: 10,
                   border: active ? `1px solid ${colors.gold}` : `1px solid ${colors.border}`,
                   backgroundColor: active ? colors.gold : 'transparent',
-                  color: active ? '#0F1318' : colors.textMuted,
+                  color: active ? 'var(--color-bg)' : colors.textMuted,
                   opacity: historyLoading && !active ? 0.4 : 1,
                   cursor: historyLoading && !active ? 'default' : 'pointer',
                 }}
