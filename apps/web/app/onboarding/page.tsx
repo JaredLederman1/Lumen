@@ -447,16 +447,7 @@ export default function OnboardingPage() {
               justifyContent: 'center',
             }}
           >
-            <div
-              style={{
-                display: 'flex',
-                // Age and Location render centered on the page; every
-                // subsequent question falls back to left-aligned so it lines
-                // up with the LiveProjection sidecar slot.
-                justifyContent: step === 0 && subIndex < 2 ? 'center' : 'flex-start',
-                minWidth: 0,
-              }}
-            >
+            <div style={{ display: 'flex', justifyContent: 'flex-start', minWidth: 0 }}>
               <AnimatePresence mode="wait">
                 <motion.div
                   key={`${step}-${subIndex}`}

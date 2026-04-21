@@ -13,12 +13,6 @@ interface Props {
   continueLabel?: string
   onAdvance: () => void
   isMobile: boolean
-  // When true, the entire form (heading, input, context, Continue) is
-  // horizontally centered on the page rather than left-aligned. Used for
-  // the first two onboarding questions (age and location) so they feel
-  // like a cinematic landing screen before the LiveProjection sidecar
-  // appears on the salary page.
-  centered?: boolean
 }
 
 /**
@@ -36,7 +30,6 @@ export function SubStepShell({
   continueLabel = 'Continue',
   onAdvance,
   isMobile,
-  centered = false,
 }: Props) {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -52,8 +45,6 @@ export function SubStepShell({
         display: 'flex',
         flexDirection: 'column',
         gap: isMobile ? '24px' : '36px',
-        alignItems: centered ? 'center' : 'stretch',
-        textAlign: centered ? 'center' : 'left',
       }}
     >
       <motion.h1
@@ -61,32 +52,15 @@ export function SubStepShell({
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-        style={{
-          ...questionHeading,
-          textAlign: centered ? 'center' : 'left',
-          width: '100%',
-        }}
+        style={questionHeading}
       >
         {question}
       </motion.h1>
 
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '14px',
-          width: '100%',
-          alignItems: centered ? 'center' : 'stretch',
-        }}
-      >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         {children}
         {context && (
-          <p
-            style={{
-              ...contextCopy,
-              textAlign: centered ? 'center' : 'left',
-            }}
-          >
+          <p style={contextCopy}>
             {context}
           </p>
         )}
@@ -98,8 +72,6 @@ export function SubStepShell({
           alignItems: 'center',
           gap: '18px',
           marginTop: '8px',
-          width: '100%',
-          justifyContent: centered ? 'center' : 'flex-start',
         }}
       >
         <button
