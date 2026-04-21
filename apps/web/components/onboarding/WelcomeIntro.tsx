@@ -375,7 +375,10 @@ export function WelcomeIntro({ onStart }: Props) {
           </div>
 
           {/* Begin button. Outlined gold, understated, pulses gently once
-              interactive. Sits below the headline. */}
+              interactive. Anchored to the headline center with a fixed
+              calc offset so the button always sits the same distance below
+              the headline regardless of viewport height, instead of drifting
+              with a proportional percentage. */}
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -386,9 +389,9 @@ export function WelcomeIntro({ onStart }: Props) {
             }}
             style={{
               position: 'absolute',
-              top: '72%',
+              top: 'calc(50% + clamp(80px, 12vh, 140px))',
               left: '50%',
-              transform: 'translateX(-50%)',
+              transform: 'translate(-50%, -50%)',
             }}
           >
             <motion.button
