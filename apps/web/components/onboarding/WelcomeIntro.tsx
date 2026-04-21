@@ -377,8 +377,21 @@ export function WelcomeIntro({ onStart }: Props) {
           {/* Begin button. Outlined gold, understated, pulses gently once
               interactive. Anchored to the headline center with a fixed
               calc offset so the button always sits the same distance below
-              the headline regardless of viewport height, instead of drifting
-              with a proportional percentage. */}
+              the headline regardless of viewport height.
+
+              A static wrapper handles the `translate(-50%, -50%)` centering
+              via CSS. The child motion.div only animates opacity and scale.
+              If centering were placed on the same element as the scale
+              animation, framer-motion would overwrite the style transform
+              each frame and the button would drift off center. */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 'calc(50% + clamp(80px, 12vh, 140px))',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+            }}
+          >
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -386,12 +399,6 @@ export function WelcomeIntro({ onStart }: Props) {
               duration: reducedMotion ? REDUCED_FADE : 1.0,
               delay: reducedMotion ? 0 : BUTTON_START,
               ease: 'easeOut',
-            }}
-            style={{
-              position: 'absolute',
-              top: 'calc(50% + clamp(80px, 12vh, 140px))',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
             }}
           >
             <motion.button
@@ -443,6 +450,7 @@ export function WelcomeIntro({ onStart }: Props) {
               Begin
             </motion.button>
           </motion.div>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
