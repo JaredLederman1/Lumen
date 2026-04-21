@@ -447,7 +447,16 @@ export default function OnboardingPage() {
               justifyContent: 'center',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'flex-start', minWidth: 0 }}>
+            <div
+              style={{
+                display: 'flex',
+                // Age and Location render centered on the page; every
+                // subsequent question falls back to left-aligned so it lines
+                // up with the LiveProjection sidecar slot.
+                justifyContent: step === 0 && subIndex < 2 ? 'center' : 'flex-start',
+                minWidth: 0,
+              }}
+            >
               <AnimatePresence mode="wait">
                 <motion.div
                   key={`${step}-${subIndex}`}
@@ -456,7 +465,18 @@ export default function OnboardingPage() {
                   animate="visible"
                   exit="exit"
                   transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                  style={{ width: '100%' }}
+                  // The motion wrapper is full-width so its flex parent's
+                  // justify-content is a no-op. When the sub-step should be
+                  // centered, make this wrapper a flex column that centers
+                  // its single child (the 620px form) on the x-axis.
+                  // Otherwise let the child stretch to fill the available
+                  // left-aligned column.
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: step === 0 && subIndex < 2 ? 'center' : 'stretch',
+                  }}
                 >
                   {step === 0 && (
                     <Step1Basics

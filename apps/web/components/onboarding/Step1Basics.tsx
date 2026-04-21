@@ -252,6 +252,13 @@ export function Step1Basics({ data, onChange, subIndex, onSubAdvance, isMobile }
     }
   }
 
+  // Age and Location are the two landing questions that appear before the
+  // salary, so the LiveProjection sidecar hasn't yet been introduced.
+  // Render them fully centered on the page for a cinematic opener. From the
+  // salary question onward, the layout reverts to the standard left-aligned
+  // form that lines up with the sidecar slot.
+  const centered = key === 'age' || key === 'location'
+
   return (
     <SubStepShell
       question={QUESTION[key]}
@@ -259,6 +266,7 @@ export function Step1Basics({ data, onChange, subIndex, onSubAdvance, isMobile }
       canAdvance={canAdvance}
       onAdvance={onSubAdvance}
       isMobile={isMobile}
+      centered={centered}
     >
       {field}
     </SubStepShell>
