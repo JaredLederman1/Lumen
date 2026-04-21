@@ -19,11 +19,11 @@ interface Props {
 // employer. This is intentionally conservative and labeled as an estimate.
 const TYPICAL_MATCH_PCT = 0.04
 
-// Count-up animation: 1.3 seconds total, ease-out. Debounce of 3 seconds
+// Count-up animation: 1.3 seconds total, ease-out. Debounce of 1.5 seconds
 // means the animation only fires after the user stops typing, avoiding a
-// spastic re-animation per keystroke.
+// spastic re-animation per keystroke while still feeling responsive.
 const COUNT_UP_DURATION_MS = 1300
-const DEBOUNCE_MS          = 3000
+const DEBOUNCE_MS          = 1500
 
 // Required nest egg for a given retirement income: uses the standard 4%
 // withdrawal rule to back into a principal number.

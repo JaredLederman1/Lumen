@@ -361,16 +361,17 @@ export function WelcomeIntro({ onStart }: Props) {
                 delay: reducedMotion ? 0 : HEADLINE_START,
                 ease: 'easeOut',
               }}
+              className="illumin-intro-headline"
               style={{
                 margin: 0,
                 fontFamily: 'var(--font-display)',
-                fontSize: 'clamp(32px, 9vw, 64px)',
+                fontSize: 'clamp(28px, 7.5vw, 58px)',
                 fontWeight: 300,
                 color: 'var(--color-text)',
                 lineHeight: 1.1,
                 letterSpacing: '-0.01em',
                 textAlign: 'center',
-                maxWidth: '760px',
+                maxWidth: '1100px',
               }}
             >
               <span

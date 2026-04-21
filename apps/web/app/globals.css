@@ -456,6 +456,18 @@ input[type="number"] {
   }
 }
 
+/* WelcomeIntro headline keeps "Illumin changes everything." on a single
+   line at desktop widths. On mobile the sentence is allowed to wrap so the
+   text never overflows a narrow viewport. */
+.illumin-intro-headline {
+  white-space: nowrap;
+}
+@media (max-width: 768px) {
+  .illumin-intro-headline {
+    white-space: normal;
+  }
+}
+
 /* Hide native number-input spinners on onboarding numeric fields. */
 .illumin-no-spin::-webkit-outer-spin-button,
 .illumin-no-spin::-webkit-inner-spin-button {
