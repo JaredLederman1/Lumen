@@ -30,6 +30,7 @@ import {
   type PaydownDebt,
 } from '@/lib/debt-paydown'
 import { updateAccountApr } from './actions'
+import { AprConfirmationBanner } from './AprConfirmationBanner'
 
 const DEFAULT_APR = 0.24
 const RISK_PREMIUM = 0.02
@@ -434,6 +435,11 @@ export default function DebtPaydownPage() {
   const emergencyFundFloor = computeEmergencyFundFloor(monthlyExpenses)
   const deployableCash = computeDeployableCash(totalCash, emergencyFundFloor)
 
+  // Banner trigger: every debt account is still on the 24% fallback. As
+  // soon as any one has a user-entered APR, the nudge is no longer useful.
+  const allDefaultApr =
+    debtAccounts.length > 0 && debtAccounts.every(a => a.apr == null)
+
   // Totals and weighted APR
   const totalDebt = debts.reduce((s, d) => s + d.balance, 0)
   const weightedApr = totalDebt > 0
@@ -598,6 +604,12 @@ export default function DebtPaydownPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+      {/* APR confirmation flag. Only renders when every debt is still on the
+          24% default fallback, and stays dismissed once the user clicks
+          through. Placed above the header so it is the first thing visible
+          on page load. */}
+      <AprConfirmationBanner allDefaultApr={allDefaultApr} />
 
       {/* Header */}
       <motion.div
