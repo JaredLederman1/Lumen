@@ -5,6 +5,7 @@ import PageTransition from '@/components/ui/PageTransition'
 import GlobalTooltipRenderer from '@/components/ui/GlobalTooltipRenderer'
 import CoachWidget from '@/components/ui/CoachWidget'
 import OnboardingBanner from '@/components/dashboard/OnboardingBanner'
+import WatchInscriptionStrip from '@/components/watch/WatchInscriptionStrip'
 import { DashboardProvider } from '@/lib/dashboardData'
 import { TooltipProvider } from '@/lib/tooltipContext'
 
@@ -12,23 +13,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <DashboardProvider>
       <TooltipProvider>
-        <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--color-bg)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--color-bg)' }}>
+          <WatchInscriptionStrip scenario="active" />
 
-          {/* Desktop sidebar, hidden on mobile via CSS */}
-          <div className="desktop-sidebar">
-            <Sidebar />
-          </div>
+          <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
 
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-            <Header />
-            <main
-              className="dashboard-main"
-              style={{ flex: 1, overflowY: 'auto' }}
-            >
-              <OnboardingBanner />
-              <PageTransition>{children}</PageTransition>
-            </main>
+            {/* Desktop sidebar, hidden on mobile via CSS */}
+            <div className="desktop-sidebar">
+              <Sidebar />
+            </div>
 
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+              <Header />
+              <main
+                className="dashboard-main"
+                style={{ flex: 1, overflowY: 'auto' }}
+              >
+                <OnboardingBanner />
+                <PageTransition>{children}</PageTransition>
+              </main>
+
+            </div>
           </div>
         </div>
 
