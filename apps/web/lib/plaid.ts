@@ -10,10 +10,16 @@ import {
 } from 'plaid'
 import { PLAID_CLIENT_ID, PLAID_SECRET, PLAID_ENV, PLAID_SANDBOX_SECRET } from '@/lib/env'
 
-// Localhost (NODE_ENV=development) runs against Plaid sandbox so we can log in
-// with test credentials and avoid production rate limits. Production deploys
-// (Vercel) use the real PLAID_ENV + PLAID_SECRET.
-const useSandbox = process.env.NODE_ENV === 'development' && !!PLAID_SANDBOX_SECRET
+// Sandbox is the default. Real production Plaid is only used when BOTH
+// NODE_ENV and PLAID_ENV explicitly say "production" — anything else
+// (dev, test, preview deploys, misconfigured envs) falls back to sandbox
+// as long as PLAID_SANDBOX_SECRET is available. This prevents accidental
+// production hits during local dev when NODE_ENV isn't strictly
+// 'development' (e.g., `next start`) or when PLAID_ENV was left as
+// "production" in a local .env file.
+const isRealProduction =
+  process.env.NODE_ENV === 'production' && PLAID_ENV === 'production'
+const useSandbox = !isRealProduction && !!PLAID_SANDBOX_SECRET
 
 const resolvedEnv = (useSandbox ? 'sandbox' : PLAID_ENV) as keyof typeof PlaidEnvironments
 const resolvedSecret = useSandbox ? PLAID_SANDBOX_SECRET : PLAID_SECRET
@@ -23,7 +29,7 @@ if (!PlaidEnvironments[resolvedEnv]) {
 }
 
 if (useSandbox) {
-  console.log('[plaid] Using sandbox environment (localhost dev override).')
+  console.log('[plaid] Using sandbox environment.')
 }
 
 const configuration = new Configuration({
