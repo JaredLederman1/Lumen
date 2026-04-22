@@ -32,6 +32,10 @@ import {
   type FilingStatus,
   type HsaCoverage,
 } from '@/lib/taxAdvantaged'
+import type { SignalDomain } from '@/lib/types/vigilance'
+
+const HYSA_RATE = 0.045
+const CHECKING_RATE = 0.0001
 
 export type RecoveryDomain =
   | 'match'
@@ -463,6 +467,103 @@ export function summarize(gaps: RecoveryGap[]): RecoverySummary {
     gaps,
     lastUpdated: new Date().toISOString(),
   }
+}
+
+/**
+ * Wire format consumed by the vigilance scan runner. One entry per currently
+ * flagged gap (i.e. gaps that would surface as "open" in evaluateGaps). The
+ * payload carries signal-specific details the UI can render without having
+ * to re-derive them.
+ */
+export interface DetectedGap {
+  gapId: string
+  domain: SignalDomain
+  annualValue: number
+  lifetimeValue: number | null
+  payload: Record<string, unknown>
+}
+
+/**
+ * RecoveryDomain is a superset of SignalDomain (it includes 'subscription',
+ * which the signal layer does not track yet). This guard keeps the mapping
+ * type-safe without silently dropping future domains.
+ */
+function toSignalDomain(domain: RecoveryDomain): SignalDomain | null {
+  switch (domain) {
+    case 'match':
+    case 'idle_cash':
+    case 'debt':
+    case 'benefits':
+    case 'hysa':
+    case 'tax_advantaged':
+      return domain
+    case 'subscription':
+      return null
+  }
+}
+
+/**
+ * Load raw data for the current user, evaluate recovery gaps, and return
+ * only those that are currently flagged (status === 'open'). Recovered gaps
+ * are intentionally excluded — the scan runner uses the absence of a gapId
+ * from this list to drive resolution of stale signals.
+ */
+export async function detectGaps(
+  userId: string,
+  prismaClient: PrismaClient,
+): Promise<DetectedGap[]> {
+  const sinceDate = new Date()
+  sinceDate.setMonth(sinceDate.getMonth() - 3)
+
+  const [accounts, transactions, holdings, benefits, profile, existingEvents] =
+    await Promise.all([
+      prismaClient.account.findMany({ where: { userId } }),
+      prismaClient.transaction.findMany({
+        where: { account: { userId }, date: { gte: sinceDate } },
+      }),
+      prismaClient.holding.findMany({
+        where: { account: { userId } },
+        include: { account: { select: { accountType: true } } },
+      }),
+      prismaClient.employmentBenefits.findUnique({ where: { userId } }),
+      prismaClient.onboardingProfile.findUnique({ where: { userId } }),
+      prismaClient.recoveryEvent.findMany({ where: { userId } }),
+    ])
+
+  const gaps = evaluateGaps(
+    {
+      accounts,
+      transactions,
+      holdings,
+      benefits,
+      profile,
+      existingEvents: existingEvents.map(e => ({
+        gapId: e.gapId,
+        annualValue: e.annualValue,
+        recoveredAt: e.recoveredAt,
+      })),
+    },
+    { hysaRate: HYSA_RATE, checkingRate: CHECKING_RATE },
+  )
+
+  const detected: DetectedGap[] = []
+  for (const gap of gaps) {
+    if (gap.status !== 'open') continue
+    const domain = toSignalDomain(gap.domain)
+    if (!domain) continue
+    detected.push({
+      gapId: gap.id,
+      domain,
+      annualValue: gap.annualValue,
+      lifetimeValue: gap.lifetimeValue ?? null,
+      payload: {
+        label: gap.label,
+        description: gap.description,
+        actionPath: gap.actionPath ?? null,
+      },
+    })
+  }
+  return detected
 }
 
 export async function persistNewRecoveries(
