@@ -222,8 +222,9 @@ export default function PerimeterSVG({
       >
         <desc>{describe}</desc>
 
-        {/* Aspirational ring (outermost, dashed). Rendered first so inner rings
-         * and dots paint on top if anything ever overlaps. */}
+        {/* Visible rings. Stroke-only, so they don't capture pointer events —
+         * a 0.75px stroke is too fiddly to hover reliably. Dedicated hit
+         * targets below handle the mouse interactions. */}
         <circle
           cx={center}
           cy={center}
@@ -233,11 +234,8 @@ export default function PerimeterSVG({
           strokeOpacity={0.55}
           strokeWidth={0.75}
           strokeDasharray="2 3"
+          pointerEvents="none"
           className={`${styles.ring} ${hoveredRing === "aspirational" ? styles.ringActive : ""}`}
-          onMouseEnter={() => setHoveredRing("aspirational")}
-          onMouseLeave={() => setHoveredRing(null)}
-          onClick={() => onRingClick?.("aspirational")}
-          style={{ cursor: onRingClick ? "pointer" : "default" }}
         />
 
         <circle
@@ -247,11 +245,8 @@ export default function PerimeterSVG({
           fill="none"
           stroke="var(--color-border)"
           strokeWidth={0.75}
+          pointerEvents="none"
           className={`${styles.ring} ${hoveredRing === "long_term" ? styles.ringActive : ""}`}
-          onMouseEnter={() => setHoveredRing("long_term")}
-          onMouseLeave={() => setHoveredRing(null)}
-          onClick={() => onRingClick?.("long_term")}
-          style={{ cursor: onRingClick ? "pointer" : "default" }}
         />
 
         <circle
@@ -261,14 +256,11 @@ export default function PerimeterSVG({
           fill="none"
           stroke="var(--color-border-strong)"
           strokeWidth={0.75}
+          pointerEvents="none"
           className={`${styles.ring} ${hoveredRing === "short_term" ? styles.ringActive : ""}`}
-          onMouseEnter={() => setHoveredRing("short_term")}
-          onMouseLeave={() => setHoveredRing(null)}
-          onClick={() => onRingClick?.("short_term")}
-          style={{ cursor: onRingClick ? "pointer" : "default" }}
         />
 
-        {/* Center cash disc. Subtle fill; stroke does the work. */}
+        {/* Center cash disc. Filled, so it captures pointer events on its own. */}
         <circle
           cx={center}
           cy={center}
@@ -281,6 +273,50 @@ export default function PerimeterSVG({
           onMouseEnter={() => setHoveredRing("cash")}
           onMouseLeave={() => setHoveredRing(null)}
           onClick={() => onRingClick?.("cash")}
+          style={{ cursor: onRingClick ? "pointer" : "default" }}
+        />
+
+        {/* Invisible hit targets for the three stroke-only rings. A 16px
+         * transparent stroke with `pointer-events: stroke` makes a generous
+         * annular hover zone that still ignores the interior of each ring,
+         * so outer hit targets don't eat events meant for inner rings. */}
+        <circle
+          cx={center}
+          cy={center}
+          r={boundaries.ring1}
+          fill="none"
+          stroke="transparent"
+          strokeWidth={16}
+          pointerEvents="stroke"
+          onMouseEnter={() => setHoveredRing("short_term")}
+          onMouseLeave={() => setHoveredRing(null)}
+          onClick={() => onRingClick?.("short_term")}
+          style={{ cursor: onRingClick ? "pointer" : "default" }}
+        />
+        <circle
+          cx={center}
+          cy={center}
+          r={boundaries.ring2}
+          fill="none"
+          stroke="transparent"
+          strokeWidth={16}
+          pointerEvents="stroke"
+          onMouseEnter={() => setHoveredRing("long_term")}
+          onMouseLeave={() => setHoveredRing(null)}
+          onClick={() => onRingClick?.("long_term")}
+          style={{ cursor: onRingClick ? "pointer" : "default" }}
+        />
+        <circle
+          cx={center}
+          cy={center}
+          r={boundaries.ring3}
+          fill="none"
+          stroke="transparent"
+          strokeWidth={16}
+          pointerEvents="stroke"
+          onMouseEnter={() => setHoveredRing("aspirational")}
+          onMouseLeave={() => setHoveredRing(null)}
+          onClick={() => onRingClick?.("aspirational")}
           style={{ cursor: onRingClick ? "pointer" : "default" }}
         />
 
@@ -427,7 +463,10 @@ interface TooltipProps {
 
 const TOOLTIP_WIDTH = 168;
 const TOOLTIP_HEIGHT = 58;
-const TOOLTIP_GAP = 10;
+/* 12px keeps the tooltip outside the scaled-dot's bounding box plus a couple
+ * pixels of margin, so cursor drift never lands on the tooltip while the
+ * dot also animates. The tooltip group is `pointer-events: none` regardless. */
+const TOOLTIP_GAP = 12;
 
 function SignalTooltip({ signal, x, y, placement }: TooltipProps): ReactElement {
   const headline = signalHeadline(signal);

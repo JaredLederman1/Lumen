@@ -24,8 +24,15 @@
 }
 
 /* Signal dot interactive affordances. CSS transforms beat inline style here
- * because we want the scale to ease in/out of the hover state. */
+ * because we want the scale to ease in/out of the hover state.
+ *
+ * `transform-box: fill-box` is load-bearing: without it, `transform-origin:
+ * center` resolves to the SVG viewport's (0,0)-anchored center, which means
+ * scaling translates the dot away from the cursor. That caused a flicker
+ * loop where the cursor fell off the scaled-up dot, mouseleave fired, the
+ * dot shrank back under the cursor, and hover re-entered immediately. */
 .signalDot {
+  transform-box: fill-box;
   transform-origin: center;
   transition: transform 150ms ease, opacity 300ms ease;
   cursor: pointer;
