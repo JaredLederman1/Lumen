@@ -5,6 +5,11 @@ import type { CSSProperties } from "react";
 import PerimeterSVG from "@/components/watch/PerimeterSVG";
 import ThresholdBar from "@/components/watch/ThresholdBar";
 import ThresholdBarList from "@/components/watch/ThresholdBarList";
+import ThresholdGauge from "@/components/watch/variants/ThresholdGauge";
+import ThresholdStrip from "@/components/watch/variants/ThresholdStrip";
+import ThresholdPill from "@/components/watch/variants/ThresholdPill";
+import ThresholdTrajectory from "@/components/watch/variants/ThresholdTrajectory";
+import ThresholdDots from "@/components/watch/variants/ThresholdDots";
 import {
   useMockPerimeterData,
   type PerimeterScenario,
@@ -149,6 +154,80 @@ function SingleThresholdCell() {
   );
 }
 
+function VariantsSection() {
+  const { thresholds } = useMockThresholds("realistic");
+
+  const gaugeGridStyle: CSSProperties = {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+    gap: 16,
+    maxWidth: 800,
+    padding: 24,
+    border: "0.5px solid var(--color-border)",
+    borderRadius: "var(--radius-lg)",
+    backgroundColor: "var(--color-surface)",
+  };
+
+  const stackCellStyle = (gap: number): CSSProperties => ({
+    display: "flex",
+    flexDirection: "column",
+    gap,
+    maxWidth: 640,
+    padding: 24,
+    border: "0.5px solid var(--color-border)",
+    borderRadius: "var(--radius-lg)",
+    backgroundColor: "var(--color-surface)",
+  });
+
+  return (
+    <section>
+      <h2 style={sectionHeadingStyle}>Threshold visualization alternatives</h2>
+      <div style={thresholdStackStyle}>
+        <div>
+          <p style={labelStyle}>option 1 · gauge</p>
+          <div style={gaugeGridStyle}>
+            {thresholds.map(t => (
+              <ThresholdGauge key={t.gapId} threshold={t} />
+            ))}
+          </div>
+        </div>
+        <div>
+          <p style={labelStyle}>option 2 · temperature strip</p>
+          <div style={stackCellStyle(12)}>
+            {thresholds.map(t => (
+              <ThresholdStrip key={t.gapId} threshold={t} />
+            ))}
+          </div>
+        </div>
+        <div>
+          <p style={labelStyle}>option 3 · pill and delta</p>
+          <div style={stackCellStyle(8)}>
+            {thresholds.map(t => (
+              <ThresholdPill key={t.gapId} threshold={t} />
+            ))}
+          </div>
+        </div>
+        <div>
+          <p style={labelStyle}>option 4 · trajectory</p>
+          <div style={stackCellStyle(16)}>
+            {thresholds.map(t => (
+              <ThresholdTrajectory key={t.gapId} threshold={t} />
+            ))}
+          </div>
+        </div>
+        <div>
+          <p style={labelStyle}>option 5 · distance dots</p>
+          <div style={stackCellStyle(12)}>
+            {thresholds.map(t => (
+              <ThresholdDots key={t.gapId} threshold={t} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function PerimeterPreviewPage() {
   return (
     <div style={pageStyle}>
@@ -176,6 +255,10 @@ export default function PerimeterPreviewPage() {
           <ThresholdListCell scenario="empty" label="list · empty" />
         </div>
       </section>
+
+      <hr style={dividerStyle} />
+
+      <VariantsSection />
     </div>
   );
 }
