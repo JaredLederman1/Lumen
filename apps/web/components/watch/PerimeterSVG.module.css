@@ -1,0 +1,64 @@
+/* Pulse animation reserved for urgent signal halos. Opacity-only so the dot
+ * stays anchored to its ring (scale causes sub-pixel jitter and forces a
+ * repaint on every frame, which reads as jank at 3s cycles). */
+@keyframes illumin-perimeter-urgent-pulse {
+  0%, 100% { opacity: 0.18; }
+  50% { opacity: 0.42; }
+}
+
+.urgentHalo {
+  animation: illumin-perimeter-urgent-pulse 3s ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* Ring label fade. Inline style can't express the hover-opacity transition
+ * cleanly because the trigger is a sibling hover state on the SVG group. */
+.ringLabel {
+  opacity: 0;
+  transition: opacity 300ms ease;
+  pointer-events: none;
+}
+
+.ringLabelVisible {
+  opacity: 1;
+}
+
+/* Signal dot interactive affordances. CSS transforms beat inline style here
+ * because we want the scale to ease in/out of the hover state. */
+.signalDot {
+  transform-origin: center;
+  transition: transform 150ms ease, opacity 300ms ease;
+  cursor: pointer;
+}
+
+.signalDot:hover,
+.signalDot:focus-visible {
+  transform: scale(1.15);
+}
+
+.signalDot:active {
+  transform: scale(0.92);
+}
+
+/* Ring stroke hover: the whole SVG gets a data-hovered-ring attr that flags
+ * which ring is active; this keeps the DOM pure SVG and the style sheet
+ * the single source of truth for the dim/highlight logic. */
+.ring {
+  transition: opacity 200ms ease, stroke 200ms ease;
+}
+
+.rootHovered .ring {
+  opacity: 0.55;
+}
+
+.rootHovered .ringActive {
+  opacity: 1;
+  stroke: var(--color-border-hover);
+}
+
+.rootHovered .signalDotOnActiveRing {
+  /* A faint white outline calls out which dots live on the hovered ring. */
+  stroke: var(--color-text);
+  stroke-opacity: 0.55;
+  stroke-width: 1;
+}
