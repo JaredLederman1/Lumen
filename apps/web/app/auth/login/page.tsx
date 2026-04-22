@@ -171,7 +171,25 @@ export default function LoginPage() {
         </button>
       </form>
 
-      {/* Sign-up link removed */}
+      <p style={{
+        textAlign: 'center',
+        fontFamily: 'var(--font-mono)',
+        fontSize: '11px',
+        color: 'var(--color-text-muted)',
+        letterSpacing: '0.04em',
+        margin: '24px 0 0',
+      }}>
+        New to Illumin?{' '}
+        <Link
+          href="/auth/signup"
+          style={{
+            color: 'var(--color-text-muted)',
+            textDecoration: 'underline',
+          }}
+        >
+          Sign up
+        </Link>
+      </p>
     </AuthLayout>
   )
 }

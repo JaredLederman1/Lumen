@@ -4,6 +4,8 @@ import { useState } from 'react'
 import type { OnboardingData } from './shared'
 import { fmt, formatNumber, textInput } from './shared'
 import { SubStepShell } from './SubStepShell'
+import { Autocomplete } from './Autocomplete'
+import { US_CITIES } from './cityData'
 
 interface Props {
   data: OnboardingData
@@ -127,14 +129,20 @@ export function Step1Basics({ data, onChange, subIndex, onSubAdvance, isMobile }
     case 'location':
       field = (
         <div style={{ display: 'flex', gap: '12px' }}>
-          <input
-            type="text"
-            autoFocus
+          <Autocomplete
             value={data.locationCity}
-            onChange={e => onChange({ locationCity: e.target.value })}
+            onChange={v => onChange({ locationCity: v })}
+            onSelect={opt => {
+              if (opt.meta) {
+                onChange({ locationCity: opt.value, locationState: opt.meta })
+              }
+            }}
+            options={US_CITIES.map(c => ({ value: c.value, meta: c.state }))}
             placeholder="City"
-            aria-label="City"
-            style={{ ...textInput, flex: 2, minHeight: '72px', padding: '14px 18px' }}
+            ariaLabel="City"
+            autoFocus
+            wrapperStyle={{ flex: 2 }}
+            style={{ ...textInput, minHeight: '72px', padding: '14px 18px' }}
           />
           <input
             type="text"

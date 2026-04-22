@@ -3,6 +3,8 @@
 import type { OnboardingData } from './shared'
 import { textInput } from './shared'
 import { SubStepShell } from './SubStepShell'
+import { Autocomplete } from './Autocomplete'
+import { COMMON_JOB_TITLES } from './jobTitleData'
 
 interface Props {
   data: OnboardingData
@@ -44,14 +46,13 @@ export function Step2Employment({ data, onChange, subIndex, onSubAdvance, onSkip
   switch (key) {
     case 'title':
       field = (
-        <input
-          type="text"
-          autoFocus
+        <Autocomplete
           value={data.jobTitle}
-          onChange={e => onChange({ jobTitle: e.target.value })}
+          onChange={v => onChange({ jobTitle: v })}
+          options={COMMON_JOB_TITLES.map(t => ({ value: t }))}
           placeholder="Software Engineer"
-          aria-label="Job title"
-          style={textInput}
+          ariaLabel="Job title"
+          autoFocus
         />
       )
       break

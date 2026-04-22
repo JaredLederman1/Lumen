@@ -338,9 +338,9 @@ export function Step5Plaid({
         }}
       >
         {[
-          'Bank-level encryption via Plaid.',
-          'Your credentials are never stored by Illumin.',
-          'Read-only access. We cannot move money.',
+          '256-bit encryption. The same standard your bank uses to protect your account.',
+          'You log in through Plaid, not Illumin. Illumin never sees or stores your credentials.',
+          'Read-only access by design. Illumin can see your accounts but cannot move money, pay bills, or make transfers.',
         ].map(text => (
           <li
             key={text}

@@ -2,18 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { TickingCounter } from './TickingCounter'
 
 interface Props {
   onStart: () => void
 }
 
-const TARGET        = 14247.82
-const CONTINUE_RATE = 0.5   // dollars per second, resumes after main count
-
 // Cinematic intro timings (seconds, from mount). The sequence:
 //   0.6s   counter + subtitle fade in, centered, full size
-//   3.0s   main count finishes; counter continues slow climb
 //   3.0s   counter + subtitle start translating up and shrinking
 //   3.7s   headline "clarity changes everything." fades into center
 //   4.5s   headline fade-in complete, begin 1s hold on "clarity" (no cursor)
@@ -27,7 +22,6 @@ const CONTINUE_RATE = 0.5   // dollars per second, resumes after main count
 //   9.5s   Begin button becomes interactive
 const LOGO_DELAY            = 0.2
 const COUNTER_START         = 0.6
-const COUNTER_END           = 3.0
 const CAPTION_START         = 1.0
 const COUNTER_COLLAPSE_AT   = 3.0
 const COUNTER_MOVE_DUR      = 0.9
@@ -248,9 +242,7 @@ export function WelcomeIntro({ onStart }: Props) {
           </motion.div>
 
           {/* Counter + subtitle. Absolutely positioned so they can start
-              centered and then glide up to the top as the headline arrives.
-              The TickingCounter's continue-phase keeps it climbing during
-              the move. */}
+              centered and then glide up to the top as the headline arrives. */}
           <motion.div
             initial={{
               opacity: 0,
@@ -289,14 +281,8 @@ export function WelcomeIntro({ onStart }: Props) {
               willChange: 'transform, top',
             }}
           >
-            <TickingCounter
-              target={TARGET}
-              mainStartSec={reducedMotion ? 0 : COUNTER_START}
-              mainDurationSec={COUNTER_END - COUNTER_START}
-              continueStartSec={reducedMotion ? REDUCED_FADE : COUNTER_END}
-              continueRatePerSec={CONTINUE_RATE}
-              reducedMotion={reducedMotion}
-              ariaLabel="Estimated annual opportunity cost"
+            <span
+              aria-label="Estimated annual opportunity cost"
               style={{
                 display: 'block',
                 textAlign: 'center',
@@ -305,9 +291,12 @@ export function WelcomeIntro({ onStart }: Props) {
                 fontWeight: 400,
                 letterSpacing: '-0.02em',
                 lineHeight: 1,
-                color: 'var(--color-text)',
+                color: 'var(--color-negative)',
+                fontVariantNumeric: 'tabular-nums',
               }}
-            />
+            >
+              $14,247.82
+            </span>
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -319,7 +308,7 @@ export function WelcomeIntro({ onStart }: Props) {
               style={{
                 margin: 0,
                 fontFamily: 'var(--font-sans)',
-                fontSize: 'clamp(13px, 1.1vw, 14px)',
+                fontSize: 'clamp(19px, 1.65vw, 21px)',
                 color: 'var(--color-text-muted)',
                 letterSpacing: '0.02em',
                 lineHeight: 1.6,

@@ -19,14 +19,14 @@ const FIELDS = ['retireIncome', 'emergencyFund', 'risk'] as const
 type FieldKey = typeof FIELDS[number]
 
 const QUESTION: Record<FieldKey, string> = {
-  retireIncome: 'How much do you want to live on in retirement?',
+  retireIncome: 'What is your target annual retirement income?',
   emergencyFund: 'How many months of expenses do you want in cash?',
   risk: 'How much volatility are you willing to tolerate?',
 }
 
 const CONTEXT: Record<FieldKey, string> = {
-  retireIncome: 'Pre-tax annual income in today’s dollars. Illumin works backward from here.',
-  emergencyFund: 'More cash means more safety and less growth. Six months is the usual anchor.',
+  retireIncome: 'The yearly income you want to live on in retirement, in today’s dollars.',
+  emergencyFund: 'Most financial advisors recommend 3 to 6 months of essential expenses set aside for emergencies.',
   risk: 'This shapes your target asset mix and the rebalancing nudges Illumin sends you.',
 }
 
@@ -88,7 +88,7 @@ export function Step4Goals({ data, onChange, subIndex, onSubAdvance, onSkip, bus
               setIncomeDisplay(num ? formatNumber(num) : '')
             }}
             placeholder="100,000"
-            aria-label="Target retirement income"
+            aria-label="Target annual retirement income"
             style={{ ...textInput, paddingLeft: '32px' }}
           />
         </div>
