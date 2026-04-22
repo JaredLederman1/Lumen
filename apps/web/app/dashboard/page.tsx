@@ -19,6 +19,11 @@ import { detectRecurringMerchants } from '@/lib/data'
 import HeroRow from '@/components/dashboard/HeroRow'
 import DashboardGrid from '@/components/dashboard/DashboardGrid'
 import { useDashboardHeroState } from '@/components/dashboard/useDashboardHeroState'
+import StabilityBadge from '@/components/watch/StabilityBadge'
+import {
+  useMockStabilityStates,
+  MOCK_STABILITY_GAP_IDS,
+} from '@/lib/vigilance/mockStabilityStates'
 
 function fmtChange(n: number): string {
   const abs = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Math.abs(n))
@@ -29,6 +34,7 @@ function DashboardDesktop() {
   const { loading, netWorth, accounts } = useDashboard()
   const hero = useDashboardHeroState()
   const { data: nwHistory } = useNetWorthHistoryQuery()
+  const stability = useMockStabilityStates('mixed')
 
   const hasData = netWorth !== null && (netWorth.totalAssets > 0 || netWorth.totalLiabilities > 0)
 
@@ -111,13 +117,19 @@ function DashboardDesktop() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {heroBlock}
-      <NetWorthCard
-        current={netWorth.current}
-        lastMonth={netWorth.lastMonth}
-        totalAssets={netWorth.totalAssets}
-        totalLiabilities={netWorth.totalLiabilities}
-        accounts={accounts}
-      />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <NetWorthCard
+          current={netWorth.current}
+          lastMonth={netWorth.lastMonth}
+          totalAssets={netWorth.totalAssets}
+          totalLiabilities={netWorth.totalLiabilities}
+          accounts={accounts}
+        />
+        <StabilityBadge
+          state={stability.byGapId[MOCK_STABILITY_GAP_IDS.netWorth]}
+          ariaContextLabel="Net worth stability"
+        />
+      </div>
 
       {showLiabilityOnlyPlaceholder && (
         <motion.div
@@ -148,6 +160,7 @@ function DashboardMobile() {
   const { loading, netWorth, transactions, accounts, monthlyData, spendingByCategory } = useDashboard()
   const hero = useDashboardHeroState()
   const { data: nwHistory } = useNetWorthHistoryQuery()
+  const stability = useMockStabilityStates('mixed')
 
   const accountMap = useMemo(() =>
     Object.fromEntries(accounts.map(a => [a.id, a])),
@@ -257,6 +270,12 @@ function DashboardMobile() {
         <p style={{ fontFamily: fonts.serif, fontSize: 32, fontWeight: 400, color: colors.positive, lineHeight: 1.1, marginBottom: 8 }}>
           {fmt(netWorth!.current)}
         </p>
+        <div style={{ marginBottom: 6 }}>
+          <StabilityBadge
+            state={stability.byGapId[MOCK_STABILITY_GAP_IDS.netWorth]}
+            ariaContextLabel="Net worth stability"
+          />
+        </div>
         {nwHistory && (
           <p style={{ fontFamily: fonts.mono, fontSize: 12, color: nwHistory.change30d >= 0 ? colors.positive : colors.negative, letterSpacing: '0.04em' }}>
             {fmtChange(nwHistory.change30d)} (30d)
