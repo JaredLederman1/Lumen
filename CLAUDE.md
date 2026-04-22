@@ -243,8 +243,12 @@ Motion: 150ms ease hovers, 300-400ms enter (opacity + translateY), 30ms row stag
 
 Migrations on this project go through `prisma migrate dev` only. Never use `prisma db push` against any shared database (remote Supabase, staging, prod) — it bypasses the migration history and causes downstream migrations to fail with "relation already exists" or "column already exists" errors. `db push` is strictly a local-dev tool against a throwaway Postgres instance.
 
-Never hand-write migration SQL. If you think you need to hand-write one (for something `migrate dev` can't express), stop and ask. Hand-written migrations skip Prisma's @@map/@map name translation — the #1 cause of silent migration failures in this codebase has been SQL that targets Prisma model names ("Transaction", "merchantName") instead of DB identifiers (transactions, merchant_name).
+Migrations are generated via `npx prisma migrate dev --name <descriptive_name> --create-only` from `apps/web/`. This requires `SHADOW_DATABASE_URL` in `apps/web/.env.local` pointing to the illumin-shadow Supabase project using the Session pooler connection string (port 5432, IPv4-compatible). Do not point the shadow URL at the direct `db.<project-ref>.supabase.co` host — it resolves to IPv6-only and fails with P1001 on most networks.
 
-When writing any migration that creates objects (CREATE TABLE, CREATE INDEX, ADD COLUMN), always use IF NOT EXISTS guards. The remote DB has accumulated some drift from prior sessions, so migrations must be idempotent. Pattern to follow: see `20260420200000_account_apr_confirmed_at` for the canonical example with self-documenting comment.
+Do not hand-edit generated migration SQL. If adjustment is needed, modify `schema.prisma` and regenerate. Hand-written migrations skip Prisma's @@map/@map name translation — the #1 cause of silent migration failures in this codebase has been SQL that targets Prisma model names ("Transaction", "merchantName") instead of DB identifiers (transactions, merchant_name).
 
 Before running `migrate deploy` against the remote Supabase DB, always run `migrate status` first and surface any failed or drifted migrations for user review. Never auto-resolve a failed migration — the choice between `--applied` and `--rolled-back` requires inspecting the DB's actual state, and that's a judgment call the user makes, not Claude Code.
+
+For verification queries that need to return SELECT output, use a throwaway Prisma Client script (inline `node --input-type=module -e "..."` with `@prisma/client` + `@prisma/adapter-pg`) rather than `prisma db execute`, which does not print SELECT results — it only reports "Script executed successfully."
+
+The archived pre-baseline migrations live in `apps/web/prisma/migrations-archived-20260422/` and are gitignored via `apps/web/.gitignore`. These are the rollback path for the 2026-04-22 baseline reset; do not delete.
