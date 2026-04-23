@@ -178,6 +178,11 @@ export default function Sidebar() {
           DASHBOARD
         </Link>
 
+        {/* Sentinel: primary vigilance destination */}
+        <Link href="/dashboard/sentinel" style={standaloneStyle('/dashboard/sentinel')}>
+          SENTINEL
+        </Link>
+
         {/* Divider */}
         <div style={{ margin: '12px 28px', borderTop: '1px solid var(--color-border)' }} />
 
