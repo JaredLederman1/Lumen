@@ -25,6 +25,16 @@ import {
   MOCK_STABILITY_GAP_IDS,
 } from '@/lib/vigilance/mockStabilityStates'
 import SentinelWidget from '@/components/dashboard/widgets/SentinelWidget'
+import NetWorthWidget from '@/components/dashboard/widgets/NetWorthWidget'
+import RecoveryWidget from '@/components/dashboard/widgets/RecoveryWidget'
+import AccountBalancesWidget from '@/components/dashboard/widgets/AccountBalancesWidget'
+import {
+  GRID_CELL_CLASS,
+  GRID_ROW_CLASS,
+  GRID_ROW_STYLE,
+  computeRowLayout,
+  gridCellStyle,
+} from '@/components/dashboard/gridCell'
 
 function fmtChange(n: number): string {
   const abs = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Math.abs(n))
@@ -132,7 +142,10 @@ function DashboardDesktop() {
         />
       </div>
 
-      <SentinelWidget />
+      <HalfHalfRow
+        left={<SentinelWidget />}
+        right={<NetWorthWidget />}
+      />
 
       {showLiabilityOnlyPlaceholder && (
         <motion.div
@@ -150,7 +163,53 @@ function DashboardDesktop() {
           priorityMetrics={hero.priorityMetrics}
         />
       )}
+
+      <HalfHalfRow
+        left={<RecoveryWidget />}
+        right={<AccountBalancesWidget />}
+      />
     </div>
+  )
+}
+
+/**
+ * A single dashboard grid row with two half-width cells (colSpan 3 on desktop,
+ * 2 on tablet, 1 on mobile). Uses the same grid classes as the Priority /
+ * Context / Reference rows so row gutter and breakpoint behavior match.
+ */
+function HalfHalfRow({
+  left,
+  right,
+}: {
+  left: React.ReactNode
+  right: React.ReactNode
+}) {
+  const raw = [
+    { colSpan: 3, rowSpan: 1 },
+    { colSpan: 3, rowSpan: 1 },
+  ]
+  const { desktop, tablet } = computeRowLayout(raw)
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: 'easeOut' }}
+      className={GRID_ROW_CLASS}
+      style={GRID_ROW_STYLE}
+    >
+      <div
+        className={GRID_CELL_CLASS}
+        style={gridCellStyle(desktop[0], tablet[0])}
+      >
+        {left}
+      </div>
+      <div
+        className={GRID_CELL_CLASS}
+        style={gridCellStyle(desktop[1], tablet[1])}
+      >
+        {right}
+      </div>
+    </motion.section>
   )
 }
 

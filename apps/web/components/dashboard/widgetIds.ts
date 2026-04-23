@@ -44,19 +44,22 @@ export const PRIORITY_ROW: Record<DashboardState, WidgetId[]> = {
 /**
  * Context Row is the same widget set for every state. Deduplication happens
  * at the render layer.
+ *
+ * `recovery` is rendered in the dedicated Recovery + Accounts row on the
+ * dashboard page itself, so it's excluded here to avoid double rendering.
  */
 export const CONTEXT_ROW: WidgetId[] = [
   'recent-transactions',
   'goals-progress',
   'cash-flow',
-  'recovery',
 ]
 
 /**
  * Reference Row is the same widget set for every state. Deduplication happens
  * at the render layer.
+ *
+ * `net-worth-chart` and `account-balances` are rendered in dedicated rows at
+ * the top of the dashboard (alongside Sentinel) and below the main grid, so
+ * they're excluded from this generic row.
  */
-export const REFERENCE_ROW: WidgetId[] = [
-  'net-worth-chart',
-  'account-balances',
-]
+export const REFERENCE_ROW: WidgetId[] = []
