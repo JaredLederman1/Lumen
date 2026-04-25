@@ -13,7 +13,13 @@ import { STALE_TIMES } from '@/lib/queryClient'
 import { normalizeCategory } from '@/lib/categories'
 import type { ScoreReport } from '@illumin/types'
 import type { BenefitStatus, ExtractedBenefits } from '@/lib/benefitsAnalysis'
-import type { WatchLogResponse, WatchStatus } from '@/lib/types/vigilance'
+import type {
+  PerimeterResponse,
+  SignalDetailResponse,
+  WatchLogResponse,
+  WatchStatus,
+  WatchThresholdsResponse,
+} from '@/lib/types/vigilance'
 
 // ── Auth token hook ──────────────────────────────────────────────────────────
 // Subscribes to Supabase auth state and exposes the current bearer token.
@@ -100,6 +106,9 @@ export const queryKeys = {
   profile: () => ['profile'] as const,
   watchStatus: () => ['watch', 'status'] as const,
   watchLog: () => ['watch', 'log'] as const,
+  watchPerimeter: () => ['watch', 'perimeter'] as const,
+  watchThresholds: () => ['watch', 'thresholds'] as const,
+  signalDetail: (id: string) => ['signal', id] as const,
   notifications: (filter: 'unread' | 'all' = 'all', limit?: number) =>
     ['notifications', filter, limit ?? 'default'] as const,
   notificationPreferences: () => ['notifications', 'preferences'] as const,
@@ -993,6 +1002,59 @@ export function useWatchLogQuery() {
       lastPage.hasMore ? lastPage.nextCursor : null,
     enabled: !!token,
     staleTime: STALE_TIMES.short,
+  })
+}
+
+export function useWatchPerimeterQuery(opts?: QueryOpts<PerimeterResponse | null>) {
+  const token = useAuthToken()
+  return useQuery({
+    queryKey: queryKeys.watchPerimeter(),
+    queryFn: async (): Promise<PerimeterResponse | null> => {
+      if (!token) return null
+      return getJson<PerimeterResponse>('/api/watch/perimeter', token)
+    },
+    enabled: !!token,
+    staleTime: STALE_TIMES.long,
+    ...opts,
+  })
+}
+
+export function useWatchThresholdsQuery(
+  opts?: QueryOpts<WatchThresholdsResponse | null>,
+) {
+  const token = useAuthToken()
+  return useQuery({
+    queryKey: queryKeys.watchThresholds(),
+    queryFn: async (): Promise<WatchThresholdsResponse | null> => {
+      if (!token) return null
+      return getJson<WatchThresholdsResponse>('/api/watch/thresholds', token)
+    },
+    enabled: !!token,
+    staleTime: STALE_TIMES.long,
+    ...opts,
+  })
+}
+
+export function useSignalDetailQuery(
+  signalId: string | null,
+  opts?: QueryOpts<SignalDetailResponse | null>,
+) {
+  const token = useAuthToken()
+  return useQuery({
+    queryKey: queryKeys.signalDetail(signalId ?? ''),
+    queryFn: async (): Promise<SignalDetailResponse | null> => {
+      if (!token || !signalId) return null
+      const res = await fetch(
+        `/api/signals/${encodeURIComponent(signalId)}`,
+        { headers: authHeaders(token) },
+      )
+      if (res.status === 404) return null
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      return res.json() as Promise<SignalDetailResponse>
+    },
+    enabled: !!token && !!signalId,
+    staleTime: STALE_TIMES.short,
+    ...opts,
   })
 }
 

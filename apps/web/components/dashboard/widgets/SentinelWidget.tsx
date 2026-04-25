@@ -6,8 +6,11 @@ import { motion } from 'framer-motion'
 import PerimeterSVG from '@/components/watch/PerimeterSVG'
 import WidgetCard from './WidgetCard'
 import WidgetSkeleton, { WIDGET_REVEAL } from './WidgetSkeleton'
-import { useWatchStatusQuery } from '@/lib/queries'
-import { useMockPerimeterData } from '@/lib/vigilance/mockPerimeterData'
+import {
+  useWatchPerimeterQuery,
+  useWatchStatusQuery,
+} from '@/lib/queries'
+import type { PerimeterResponse } from '@/lib/types/vigilance'
 
 const PERIMETER_SIZE_DESKTOP = 160
 const PERIMETER_SIZE_MOBILE = 120
@@ -77,7 +80,7 @@ function ClippedPerimeter({
 }: {
   size: number
   cashAmount: number
-  signals: ReturnType<typeof useMockPerimeterData>['signals']
+  signals: PerimeterResponse['signals']
 }): ReactElement {
   return (
     <div
@@ -106,7 +109,7 @@ function SentinelShell({
   children: ReactNode
   cta: ReactNode
   withPerimeter?: boolean
-  perimeter?: ReturnType<typeof useMockPerimeterData>
+  perimeter?: PerimeterResponse | null
 }) {
   return (
     <>
@@ -180,7 +183,7 @@ function SentinelShell({
 
 export default function SentinelWidget(): ReactElement {
   const { data, isPending, isError } = useWatchStatusQuery()
-  const perimeter = useMockPerimeterData('realistic')
+  const { data: perimeter } = useWatchPerimeterQuery()
 
   if (isPending) {
     return <WidgetSkeleton variant="metric" />

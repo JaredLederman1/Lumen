@@ -14,11 +14,11 @@ import WatchLogFeed from "@/components/watch/WatchLogFeed";
 import SentinelHero from "@/components/watch/SentinelHero";
 import {
   useWatchLogQuery,
+  useWatchPerimeterQuery,
   useWatchStatusQuery,
+  useWatchThresholdsQuery,
 } from "@/lib/queries";
 import type { WatchLogResponse } from "@/lib/types/vigilance";
-import { useMockPerimeterData } from "@/lib/vigilance/mockPerimeterData";
-import { useMockThresholds } from "@/lib/vigilance/mockThresholds";
 
 const DESKTOP_BREAKPOINT = 960;
 const MOBILE_BREAKPOINT = 480;
@@ -79,8 +79,17 @@ export default function SentinelPage(): ReactElement {
     isError: watchStatusError,
   } = useWatchStatusQuery();
   const watchStatus = watchStatusData ?? null;
-  const perimeter = useMockPerimeterData("realistic");
-  const { thresholds, isLoading: thresholdsLoading } = useMockThresholds("realistic");
+  const {
+    data: perimeter,
+    isLoading: perimeterLoading,
+    isError: perimeterError,
+  } = useWatchPerimeterQuery();
+  const {
+    data: thresholdsData,
+    isLoading: thresholdsLoading,
+    isError: thresholdsError,
+  } = useWatchThresholdsQuery();
+  const thresholds = thresholdsData?.thresholds ?? [];
 
   const {
     data: logData,
@@ -213,14 +222,35 @@ export default function SentinelPage(): ReactElement {
             className="illumin-sentinel-perimeter-visual"
             style={{ display: "flex", justifyContent: "flex-start" }}
           >
-            {watchStatus ? (
+            {perimeter ? (
               <PerimeterSVG
                 cashAmount={perimeter.cashAmount}
                 signals={perimeter.signals}
                 size={perimeterSize}
               />
-            ) : (
+            ) : perimeterError ? (
+              <div
+                role="alert"
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 13,
+                  color: "var(--color-text-mid)",
+                }}
+              >
+                Perimeter unavailable. Retrying.
+              </div>
+            ) : perimeterLoading || !watchStatus ? (
               <PerimeterSkeleton size={perimeterSize} />
+            ) : (
+              <div
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 13,
+                  color: "var(--color-text-mid)",
+                }}
+              >
+                No signals to display. Illumin is watching.
+              </div>
             )}
           </div>
           <aside
@@ -331,6 +361,27 @@ export default function SentinelPage(): ReactElement {
               <SkeletonBlock height={120} width="100%" />
               <SkeletonBlock height={120} width="100%" />
               <SkeletonBlock height={120} width="100%" />
+            </div>
+          ) : thresholdsError ? (
+            <div
+              role="alert"
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 13,
+                color: "var(--color-text-mid)",
+              }}
+            >
+              Thresholds unavailable. Retrying.
+            </div>
+          ) : thresholds.length === 0 ? (
+            <div
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 13,
+                color: "var(--color-text-mid)",
+              }}
+            >
+              No thresholds to display. Illumin is watching.
             </div>
           ) : (
             <ThresholdCompositeList thresholds={thresholds} />

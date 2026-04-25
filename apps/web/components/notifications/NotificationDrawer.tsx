@@ -50,7 +50,13 @@ export default function NotificationDrawer({ open, onClose }: Props) {
   const handleSelect = (n: NotificationItemData) => {
     if (!n.readAt) markRead.mutate(n.id)
     onClose()
-    router.push('/dashboard/sentinel')
+    // Deep-link to the specific signal so the user lands on the transition
+    // history and recommended action; falls back to the perimeter overview
+    // if the notification has no signalId (defensive — schema requires it).
+    const target = n.signalId
+      ? `/dashboard/sentinel/${n.signalId}`
+      : '/dashboard/sentinel'
+    router.push(target)
   }
 
   const handleDismiss = (id: string) => {

@@ -174,3 +174,51 @@ export interface SignalThreshold {
 export interface WatchThresholdsResponse {
   thresholds: SignalThreshold[];
 }
+
+/**
+ * Response from /api/watch/perimeter. Drives PerimeterSVG. Signal positions
+ * on the perimeter are derived deterministically from gapId by the component
+ * via getSignalAngle, so no geometry is shipped on the wire.
+ */
+export interface PerimeterResponse {
+  cashAmount: number;
+  signals: Signal[];
+}
+
+/**
+ * Snapshot of a signal at a single scan, as serialized for the per-signal
+ * detail page. One row per (gapId, scanId).
+ */
+export interface SignalSnapshotWire {
+  id: string;
+  scanId: string;
+  capturedAt: string;
+  severity: SignalSeverity;
+  state: SignalState;
+  annualValue: number;
+  lifetimeValue: number | null;
+  payload: Record<string, unknown> | null;
+}
+
+/**
+ * Notification row, as serialized for the per-signal detail page. Mirrors the
+ * NotificationItem shape from lib/queries but scoped to a single signalId.
+ */
+export interface SignalNotificationWire {
+  id: string;
+  kind: 'new' | 'reopened' | 'worsened';
+  title: string;
+  body: string | null;
+  dollarImpact: number | null;
+  readAt: string | null;
+  createdAt: string;
+}
+
+/**
+ * Response from /api/signals/[id]. Drives the per-signal detail page.
+ */
+export interface SignalDetailResponse {
+  signal: Signal;
+  snapshots: SignalSnapshotWire[];
+  notifications: SignalNotificationWire[];
+}
