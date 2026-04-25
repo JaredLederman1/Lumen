@@ -1,9 +1,11 @@
 'use client'
 
 import { CSSProperties } from 'react'
+import { motion } from 'framer-motion'
 import NetWorthChart from '@/components/ui/NetWorthChart'
 import { useNetWorthHistoryQuery } from '@/lib/queries'
 import WidgetCard from './WidgetCard'
+import WidgetSkeleton, { WIDGET_REVEAL } from './WidgetSkeleton'
 
 const fmt = (n: number) => {
   const abs = new Intl.NumberFormat('en-US', {
@@ -23,7 +25,9 @@ const emptyCopy: CSSProperties = {
 }
 
 export default function NetWorthWidget() {
-  const { data: nwHistory } = useNetWorthHistoryQuery()
+  const { data: nwHistory, isPending } = useNetWorthHistoryQuery()
+
+  if (isPending) return <WidgetSkeleton variant="chart" />
 
   const canChart =
     !!nwHistory && nwHistory.history.length >= 2 && nwHistory.hasAssetAccount
@@ -44,28 +48,22 @@ export default function NetWorthWidget() {
   }
 
   return (
-    <WidgetCard
-      variant="metric"
-      eyebrow="Net worth over time"
-      columns={[
-        {
-          caption: '30d change',
-          hero: fmt(nwHistory.change30d),
-          heroColor:
-            nwHistory.change30d >= 0
-              ? 'var(--color-positive)'
-              : 'var(--color-negative)',
-        },
-        {
-          caption: 'All time',
-          hero: fmt(nwHistory.changeAllTime),
-          heroColor:
-            nwHistory.changeAllTime >= 0
-              ? 'var(--color-positive)'
-              : 'var(--color-negative)',
-        },
-      ]}
-      secondary={<NetWorthChart data={nwHistory.history} height={160} />}
-    />
+    <motion.div {...WIDGET_REVEAL}>
+      <WidgetCard
+        variant="metric"
+        eyebrow="Net worth over time"
+        columns={[
+          {
+            caption: '30d change',
+            hero: fmt(nwHistory.change30d),
+            heroColor:
+              nwHistory.change30d >= 0
+                ? 'var(--color-positive)'
+                : 'var(--color-negative)',
+          },
+        ]}
+        secondary={<NetWorthChart data={nwHistory.history} height={160} />}
+      />
+    </motion.div>
   )
 }

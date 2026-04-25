@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { Suspense, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import NetWorthCard from '@/components/ui/NetWorthCard'
@@ -28,6 +28,7 @@ import SentinelWidget from '@/components/dashboard/widgets/SentinelWidget'
 import NetWorthWidget from '@/components/dashboard/widgets/NetWorthWidget'
 import RecoveryWidget from '@/components/dashboard/widgets/RecoveryWidget'
 import AccountBalancesWidget from '@/components/dashboard/widgets/AccountBalancesWidget'
+import WidgetSkeleton from '@/components/dashboard/widgets/WidgetSkeleton'
 import {
   GRID_CELL_CLASS,
   GRID_ROW_CLASS,
@@ -61,19 +62,11 @@ function DashboardDesktop() {
       <HeroRow
         state={hero.state}
         metrics={hero.heroMetrics}
-        loading={hero.loading || loading}
+        loading={hero.loading}
       />
     )
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        {heroBlock}
-      </div>
-    )
-  }
-
-  if (!hasData) {
+  if (!loading && !hasData) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         {heroBlock}
@@ -128,23 +121,29 @@ function DashboardDesktop() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {heroBlock}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <NetWorthCard
-          current={netWorth.current}
-          lastMonth={netWorth.lastMonth}
-          totalAssets={netWorth.totalAssets}
-          totalLiabilities={netWorth.totalLiabilities}
-          accounts={accounts}
-        />
-        <StabilityBadge
-          state={stability.byGapId[MOCK_STABILITY_GAP_IDS.netWorth]}
-          ariaContextLabel="Net worth stability"
-        />
-      </div>
+      {netWorth && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <NetWorthCard
+            current={netWorth.current}
+            lastMonth={netWorth.lastMonth}
+            totalAssets={netWorth.totalAssets}
+            totalLiabilities={netWorth.totalLiabilities}
+            accounts={accounts}
+          />
+          <StabilityBadge
+            state={stability.byGapId[MOCK_STABILITY_GAP_IDS.netWorth]}
+            ariaContextLabel="Net worth stability"
+          />
+        </div>
+      )}
 
       <HalfHalfRow
         left={<SentinelWidget />}
-        right={<NetWorthWidget />}
+        right={
+          <Suspense fallback={<WidgetSkeleton variant="chart" />}>
+            <NetWorthWidget />
+          </Suspense>
+        }
       />
 
       {showLiabilityOnlyPlaceholder && (
@@ -165,8 +164,16 @@ function DashboardDesktop() {
       )}
 
       <HalfHalfRow
-        left={<RecoveryWidget />}
-        right={<AccountBalancesWidget />}
+        left={
+          <Suspense fallback={<WidgetSkeleton variant="metric" />}>
+            <RecoveryWidget />
+          </Suspense>
+        }
+        right={
+          <Suspense fallback={<WidgetSkeleton variant="list" />}>
+            <AccountBalancesWidget />
+          </Suspense>
+        }
       />
     </div>
   )
@@ -252,19 +259,11 @@ function DashboardMobile() {
       <HeroRow
         state={hero.state}
         metrics={hero.heroMetrics}
-        loading={hero.loading || loading}
+        loading={hero.loading}
       />
     )
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sectionGap }}>
-        {heroBlock}
-      </div>
-    )
-  }
-
-  if (!hasData) {
+  if (!loading && !hasData) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sectionGap }}>
         {heroBlock}
@@ -319,7 +318,7 @@ function DashboardMobile() {
     )
   }
 
-  const sections = [
+  const sections = netWorth ? [
     // 1. Net worth hero card
     <motion.div
       key="nw-hero"
@@ -469,7 +468,7 @@ function DashboardMobile() {
         </MobileCard>
       </motion.div>,
     ] : []),
-  ]
+  ] : []
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sectionGap }}>

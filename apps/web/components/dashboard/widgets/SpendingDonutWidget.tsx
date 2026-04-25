@@ -2,8 +2,10 @@
 
 import { CSSProperties } from 'react'
 import Link from 'next/link'
-import { useDashboard } from '@/lib/dashboardData'
+import { motion } from 'framer-motion'
+import { useCashflowQuery } from '@/lib/queries'
 import WidgetCard from './WidgetCard'
+import WidgetSkeleton, { WIDGET_REVEAL } from './WidgetSkeleton'
 
 // Spending category palette. Uses CSS custom properties from globals.css so
 // the widget respects theme tokens and the hover/focus states stay consistent
@@ -98,7 +100,9 @@ const fmtCurrency = (n: number) =>
   }).format(Math.max(0, Math.round(n)))
 
 export default function SpendingDonutWidget() {
-  const { spendingByCategory } = useDashboard()
+  const { data, isPending } = useCashflowQuery()
+  if (isPending) return <WidgetSkeleton variant="metric" />
+  const spendingByCategory = data?.spendingByCategory ?? []
 
   if (!spendingByCategory || spendingByCategory.length === 0) {
     return (
@@ -122,47 +126,49 @@ export default function SpendingDonutWidget() {
   const hiddenCount = Math.max(0, ranked.length - MAX_LEGEND_ITEMS)
 
   return (
-    <WidgetCard
-      variant="metric"
-      eyebrow="Spending by category"
-      columns={[{ caption: 'Last 30 days', hero: fmtCurrency(total), captionPosition: 'below' }]}
-      secondary={
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div style={barTrack} role="img" aria-label="Category share of spending">
-            {ranked.map((item, i) => {
-              const share = total > 0 ? (item.amount / total) * 100 : 0
-              return (
-                <div
-                  key={item.category}
-                  style={{
-                    width: `${share}%`,
-                    backgroundColor: PALETTE[i % PALETTE.length],
-                  }}
-                />
-              )
-            })}
-          </div>
-          <div style={legendGrid}>
-            {topForLegend.map((item, i) => {
-              const share = total > 0 ? (item.amount / total) * 100 : 0
-              return (
-                <div key={item.category} style={legendRow}>
-                  <div style={legendLeft}>
-                    <div style={{ ...legendSwatch, backgroundColor: PALETTE[i % PALETTE.length] }} />
-                    <span style={legendLabel}>{item.category}</span>
+    <motion.div {...WIDGET_REVEAL}>
+      <WidgetCard
+        variant="metric"
+        eyebrow="Spending by category"
+        columns={[{ caption: 'Last 30 days', hero: fmtCurrency(total), captionPosition: 'below' }]}
+        secondary={
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={barTrack} role="img" aria-label="Category share of spending">
+              {ranked.map((item, i) => {
+                const share = total > 0 ? (item.amount / total) * 100 : 0
+                return (
+                  <div
+                    key={item.category}
+                    style={{
+                      width: `${share}%`,
+                      backgroundColor: PALETTE[i % PALETTE.length],
+                    }}
+                  />
+                )
+              })}
+            </div>
+            <div style={legendGrid}>
+              {topForLegend.map((item, i) => {
+                const share = total > 0 ? (item.amount / total) * 100 : 0
+                return (
+                  <div key={item.category} style={legendRow}>
+                    <div style={legendLeft}>
+                      <div style={{ ...legendSwatch, backgroundColor: PALETTE[i % PALETTE.length] }} />
+                      <span style={legendLabel}>{item.category}</span>
+                    </div>
+                    <span style={legendShare}>{share.toFixed(0)}%</span>
                   </div>
-                  <span style={legendShare}>{share.toFixed(0)}%</span>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
-        </div>
-      }
-      cta={
-        <Link href="/dashboard/cashflow" style={ctaLink}>
-          {hiddenCount > 0 ? `See all ${ranked.length} categories` : 'See breakdown'} &rarr;
-        </Link>
-      }
-    />
+        }
+        cta={
+          <Link href="/dashboard/cashflow" style={ctaLink}>
+            {hiddenCount > 0 ? `See all ${ranked.length} categories` : 'See breakdown'} &rarr;
+          </Link>
+        }
+      />
+    </motion.div>
   )
 }

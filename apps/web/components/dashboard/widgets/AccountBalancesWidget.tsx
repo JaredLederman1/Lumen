@@ -2,8 +2,10 @@
 
 import { CSSProperties } from 'react'
 import Link from 'next/link'
-import { useDashboard } from '@/lib/dashboardData'
+import { motion } from 'framer-motion'
+import { useAccountsQuery } from '@/lib/queries'
 import WidgetCard from './WidgetCard'
+import WidgetSkeleton, { WIDGET_REVEAL } from './WidgetSkeleton'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('en-US', {
@@ -28,10 +30,13 @@ const emptyCopy: CSSProperties = {
 }
 
 export default function AccountBalancesWidget() {
-  const { accounts } = useDashboard()
+  const { data, isPending } = useAccountsQuery()
+  if (isPending) return <WidgetSkeleton variant="list" />
+  const accounts = data ?? []
   const ordered = [...accounts].sort((a, b) => Math.abs(b.balance) - Math.abs(a.balance))
 
   return (
+    <motion.div {...WIDGET_REVEAL}>
     <WidgetCard
       variant="list"
       eyebrow="Accounts"
@@ -78,5 +83,6 @@ export default function AccountBalancesWidget() {
         </div>
       )}
     </WidgetCard>
+    </motion.div>
   )
 }

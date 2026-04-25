@@ -2,8 +2,10 @@
 
 import { CSSProperties } from 'react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { useGoalsQuery, useOnboardingProfileQuery } from '@/lib/queries'
 import WidgetCard from './WidgetCard'
+import WidgetSkeleton, { WIDGET_REVEAL } from './WidgetSkeleton'
 
 interface Goal {
   id: string
@@ -27,12 +29,14 @@ const emptyCopy: CSSProperties = {
 }
 
 export default function GoalsProgressWidget() {
-  const { data } = useGoalsQuery<Goal>()
-  const { data: profile } = useOnboardingProfileQuery()
+  const { data, isPending } = useGoalsQuery<Goal>()
+  const { data: profile, isPending: profilePending } = useOnboardingProfileQuery()
+  if (isPending || profilePending) return <WidgetSkeleton variant="list" />
   const goals = data?.goals ?? null
   const gated = profile && !profile.completedAt
 
   return (
+    <motion.div {...WIDGET_REVEAL}>
     <WidgetCard
       variant="list"
       eyebrow="Goals progress"
@@ -91,5 +95,6 @@ export default function GoalsProgressWidget() {
         </div>
       )}
     </WidgetCard>
+    </motion.div>
   )
 }

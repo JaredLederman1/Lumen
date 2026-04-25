@@ -4,10 +4,11 @@ import { CSSProperties } from 'react'
 import Link from 'next/link'
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { useDashboard } from '@/lib/dashboardData'
+import { useTransactionsQuery, useAccountsQuery } from '@/lib/queries'
 import { detectRecurringMerchants } from '@/lib/data'
 import TransactionRow from '@/components/ui/TransactionRow'
 import WidgetCard from './WidgetCard'
+import WidgetSkeleton, { WIDGET_REVEAL } from './WidgetSkeleton'
 
 const ctaLink: CSSProperties = {
   fontFamily: 'var(--font-mono)',
@@ -25,7 +26,10 @@ const emptyCopy: CSSProperties = {
 }
 
 export default function RecentTransactionsWidget() {
-  const { transactions, accounts } = useDashboard()
+  const { data: txData, isPending: txPending } = useTransactionsQuery()
+  const { data: acctData, isPending: acctPending } = useAccountsQuery()
+  const transactions = useMemo(() => txData ?? [], [txData])
+  const accounts = useMemo(() => acctData ?? [], [acctData])
   const accountMap = useMemo(
     () => Object.fromEntries(accounts.map(a => [a.id, a])),
     [accounts],
@@ -35,7 +39,10 @@ export default function RecentTransactionsWidget() {
     [transactions],
   )
 
+  if (txPending || acctPending) return <WidgetSkeleton variant="list" />
+
   return (
+    <motion.div {...WIDGET_REVEAL}>
     <WidgetCard
       variant="list"
       eyebrow="Recent transactions"
@@ -75,5 +82,6 @@ export default function RecentTransactionsWidget() {
         </motion.div>
       )}
     </WidgetCard>
+    </motion.div>
   )
 }

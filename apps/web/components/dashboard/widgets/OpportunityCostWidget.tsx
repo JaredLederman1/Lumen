@@ -2,7 +2,9 @@
 
 import { CSSProperties } from 'react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import WidgetCard from './WidgetCard'
+import WidgetSkeleton, { WIDGET_REVEAL } from './WidgetSkeleton'
 import { useOpportunityQuery, useOnboardingProfileQuery } from '@/lib/queries'
 import type { OpportunityData } from '@/app/api/opportunity/route'
 
@@ -30,8 +32,13 @@ const fmtCurrency = (n: number) =>
   }).format(Math.max(0, Math.round(n)))
 
 export default function OpportunityCostWidget() {
-  const { data: raw, isLoading } = useOpportunityQuery<OpportunityData>()
-  const { data: profile } = useOnboardingProfileQuery()
+  const { data: raw, isPending } = useOpportunityQuery<OpportunityData>()
+  const { data: profile, isPending: profilePending } = useOnboardingProfileQuery()
+
+  if (isPending || profilePending) {
+    return <WidgetSkeleton variant="metric" />
+  }
+
   const data = raw && typeof raw.idleCash === 'number' ? raw : null
 
   const cta = (
@@ -56,18 +63,6 @@ export default function OpportunityCostWidget() {
     )
   }
 
-  if (isLoading) {
-    return (
-      <WidgetCard
-        variant="metric"
-        eyebrow="Opportunity cost"
-        columns={[{ caption: 'Computing', hero: '—', captionPosition: 'below' }]}
-        secondary={<p style={contextCopy}>Computing what idle cash is costing you.</p>}
-        cta={cta}
-      />
-    )
-  }
-
   if (!data || data.idleCash <= 0) {
     return (
       <WidgetCard
@@ -85,22 +80,24 @@ export default function OpportunityCostWidget() {
   }
 
   return (
-    <WidgetCard
-      variant="metric"
-      eyebrow="Opportunity cost"
-      columns={[
-        {
-          caption: '10-year foregone growth',
-          hero: fmtCurrency(data.tenYearCost),
-          captionPosition: 'below',
-        },
-      ]}
-      secondary={
-        <p style={contextCopy}>
-          {fmtCurrency(data.idleCash)} parked above your 3-month buffer compounds to the hero figure at a 7% historical return over ten years.
-        </p>
-      }
-      cta={cta}
-    />
+    <motion.div {...WIDGET_REVEAL}>
+      <WidgetCard
+        variant="metric"
+        eyebrow="Opportunity cost"
+        columns={[
+          {
+            caption: '10-year foregone growth',
+            hero: fmtCurrency(data.tenYearCost),
+            captionPosition: 'below',
+          },
+        ]}
+        secondary={
+          <p style={contextCopy}>
+            {fmtCurrency(data.idleCash)} parked above your 3-month buffer compounds to the hero figure at a 7% historical return over ten years.
+          </p>
+        }
+        cta={cta}
+      />
+    </motion.div>
   )
 }

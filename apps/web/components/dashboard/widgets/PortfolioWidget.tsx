@@ -2,9 +2,11 @@
 
 import { CSSProperties } from 'react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { usePortfolioQuery } from '@/lib/queries'
 import DonutChart from '@/components/ui/DonutChart'
 import WidgetCard from './WidgetCard'
+import WidgetSkeleton, { WIDGET_REVEAL } from './WidgetSkeleton'
 
 interface Alloc {
   label: string
@@ -38,30 +40,34 @@ const emptyCopy: CSSProperties = {
 }
 
 export default function PortfolioWidget() {
-  const { data } = usePortfolioQuery<PortfolioResponse>()
+  const { data, isPending } = usePortfolioQuery<PortfolioResponse>()
+
+  if (isPending) return <WidgetSkeleton variant="chart" />
 
   return (
-    <WidgetCard
-      variant="chart"
-      eyebrow="Portfolio"
-      caption="asset allocation"
-      cta={
-        <Link href="/dashboard/portfolio" style={ctaLink}>
-          Full breakdown &rarr;
-        </Link>
-      }
-    >
-      {!data?.hasHoldings ? (
-        <p style={emptyCopy}>Link an investment account to see your allocation.</p>
-      ) : (
-        <DonutChart
-          data={data.allocationByType.map((a, i) => ({
-            category: a.label,
-            amount: a.value,
-            color: PALETTE[i % PALETTE.length],
-          }))}
-        />
-      )}
-    </WidgetCard>
+    <motion.div {...WIDGET_REVEAL}>
+      <WidgetCard
+        variant="chart"
+        eyebrow="Portfolio"
+        caption="asset allocation"
+        cta={
+          <Link href="/dashboard/portfolio" style={ctaLink}>
+            Full breakdown &rarr;
+          </Link>
+        }
+      >
+        {!data?.hasHoldings ? (
+          <p style={emptyCopy}>Link an investment account to see your allocation.</p>
+        ) : (
+          <DonutChart
+            data={data.allocationByType.map((a, i) => ({
+              category: a.label,
+              amount: a.value,
+              color: PALETTE[i % PALETTE.length],
+            }))}
+          />
+        )}
+      </WidgetCard>
+    </motion.div>
   )
 }
