@@ -3,10 +3,11 @@
   "outputDirectory": "apps/web/.next",
   "installCommand": "npm install",
   "framework": "nextjs",
+  "_cronNote": "Once-daily cron (Hobby plan limit). Premium tier upgrade path: multiple scans per day. Future: per-user timezone staggering. See pricing track in Notion.",
   "crons": [
     {
       "path": "/api/cron/scan-all",
-      "schedule": "0 6,11,15,21 * * *"
+      "schedule": "30 11 * * *"
     }
   ]
 }

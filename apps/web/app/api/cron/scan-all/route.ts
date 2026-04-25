@@ -1,7 +1,8 @@
 /**
- * Vercel Cron trigger. Scheduled in vercel.json to fire 4×/day. Iterates
- * users whose most recent scan is missing or older than the cadence window
- * and runs `runScanForUser` for each with bounded concurrency.
+ * Vercel Cron trigger. Scheduled in vercel.json to fire once daily at
+ * 11:30 UTC (Hobby plan limit). Iterates users whose most recent scan is
+ * missing or older than the cadence window and runs `runScanForUser` for
+ * each with bounded concurrency.
  *
  * Auth: Vercel Cron sends "Authorization: Bearer <CRON_SECRET>". Any other
  * caller (missing header, wrong secret) gets a generic 401.
@@ -47,7 +48,7 @@ export async function GET(request: Request) {
 
   const start = Date.now()
   try {
-    const userIds = await getUsersDueForScan(prisma, { maxAgeHours: 5 })
+    const userIds = await getUsersDueForScan(prisma, { maxAgeHours: 20 })
     const result = await runScheduledScans(userIds, {
       concurrency: 5,
       perUserTimeoutMs: 30_000,

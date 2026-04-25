@@ -7,6 +7,23 @@
  * server runtime; skipping the round-trip is faster and avoids re-auth.
  */
 
+/**
+ * Scan scheduling notes:
+ *
+ * Current cadence: once daily at 11:30 UTC (7:30am EST) via Vercel Cron.
+ * This is a Vercel Hobby plan constraint, Hobby allows one cron fire per day.
+ *
+ * DEFERRED (post-launch premium feature):
+ *   - Per-user timezone staggering: users' scans should fire at their local
+ *     early-morning time (e.g., 4-6am local) so morning-check users get fresh
+ *     data on wake. Requires persisting timezone on User model.
+ *   - Multi-scan cadence (4x/day): once Vercel Pro is acquired or scheduling
+ *     is moved off Vercel Cron, premium tier users can get continuous vigilance.
+ *     Free tier stays once-daily.
+ *
+ * See Pricing domain in Notion for the strategic framing.
+ */
+
 import * as Sentry from '@sentry/nextjs'
 import type { PrismaClient } from '@prisma/client'
 import { runScanForUser, serializeError } from '@/lib/vigilance/scanRunner'
