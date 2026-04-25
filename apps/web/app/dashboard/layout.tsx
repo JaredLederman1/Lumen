@@ -6,6 +6,7 @@ import GlobalTooltipRenderer from '@/components/ui/GlobalTooltipRenderer'
 import CoachWidget from '@/components/ui/CoachWidget'
 import OnboardingBanner from '@/components/dashboard/OnboardingBanner'
 import WatchInscriptionStrip from '@/components/watch/WatchInscriptionStrip'
+import NotificationBell from '@/components/notifications/NotificationBell'
 import { DashboardProvider } from '@/lib/dashboardData'
 import { TooltipProvider } from '@/lib/tooltipContext'
 
@@ -14,7 +15,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <DashboardProvider>
       <TooltipProvider>
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: 'var(--color-bg)' }}>
-          <WatchInscriptionStrip scenario="active" />
+          <WatchInscriptionStrip />
 
           <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
 
@@ -23,8 +24,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Sidebar />
             </div>
 
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, position: 'relative' }}>
               <Header />
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  right: 180,
+                  height: 60,
+                  display: 'flex',
+                  alignItems: 'center',
+                  zIndex: 5,
+                }}
+              >
+                <NotificationBell />
+              </div>
               <main
                 className="dashboard-main"
                 style={{ flex: 1, overflowY: 'auto' }}

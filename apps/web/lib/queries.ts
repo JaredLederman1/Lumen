@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  useInfiniteQuery,
   useQuery,
   useMutation,
   useQueryClient,
@@ -12,6 +13,7 @@ import { STALE_TIMES } from '@/lib/queryClient'
 import { normalizeCategory } from '@/lib/categories'
 import type { ScoreReport } from '@illumin/types'
 import type { BenefitStatus, ExtractedBenefits } from '@/lib/benefitsAnalysis'
+import type { WatchLogResponse, WatchStatus } from '@/lib/types/vigilance'
 
 // ── Auth token hook ──────────────────────────────────────────────────────────
 // Subscribes to Supabase auth state and exposes the current bearer token.
@@ -96,6 +98,11 @@ export const queryKeys = {
   plaidLinkToken: () => ['plaid', 'linkToken'] as const,
   merchants: () => ['merchants'] as const,
   profile: () => ['profile'] as const,
+  watchStatus: () => ['watch', 'status'] as const,
+  watchLog: () => ['watch', 'log'] as const,
+  notifications: (filter: 'unread' | 'all' = 'all', limit?: number) =>
+    ['notifications', filter, limit ?? 'default'] as const,
+  notificationPreferences: () => ['notifications', 'preferences'] as const,
 }
 
 // ── Shared types (mirror dashboardData.tsx public surface) ───────────────────
@@ -752,6 +759,204 @@ export function useMarkBenefitActionMutation() {
       inv.benefits()
       void inv.checklist()
     },
+  })
+}
+
+export function useWatchStatusQuery(opts?: QueryOpts<WatchStatus | null>) {
+  const token = useAuthToken()
+  return useQuery({
+    queryKey: queryKeys.watchStatus(),
+    queryFn: async (): Promise<WatchStatus | null> => {
+      if (!token) return null
+      return getJson<WatchStatus>('/api/watch/status', token)
+    },
+    enabled: !!token,
+    staleTime: STALE_TIMES.short,
+    ...opts,
+  })
+}
+
+// ── Notifications ────────────────────────────────────────────────────────────
+// Cursor-paginated feed of in-app notifications. Cursor is the createdAt ISO
+// of the last row in the previous page; order is createdAt desc.
+
+export type NotificationKind = 'new' | 'reopened' | 'worsened'
+
+export interface NotificationItem {
+  id: string
+  signalId: string
+  kind: NotificationKind
+  domain: string
+  dollarImpact: number | null
+  title: string
+  body: string | null
+  readAt: string | null
+  dismissedAt: string | null
+  createdAt: string
+}
+
+export interface NotificationsPage {
+  notifications: NotificationItem[]
+  nextCursor: string | null
+  unreadCount: number
+}
+
+export function useNotificationsQuery(opts?: {
+  filter?: 'unread' | 'all'
+  limit?: number
+}) {
+  const token = useAuthToken()
+  const filter = opts?.filter ?? 'all'
+  const limit = opts?.limit
+  return useInfiniteQuery({
+    queryKey: queryKeys.notifications(filter, limit),
+    queryFn: async ({ pageParam }): Promise<NotificationsPage> => {
+      const params = new URLSearchParams()
+      params.set('filter', filter)
+      if (limit) params.set('limit', String(limit))
+      if (pageParam) params.set('cursor', pageParam)
+      return getJson<NotificationsPage>(
+        `/api/notifications?${params.toString()}`,
+        token,
+      )
+    },
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    enabled: !!token,
+    staleTime: STALE_TIMES.short,
+  })
+}
+
+function invalidateNotifications(qc: ReturnType<typeof useQueryClient>) {
+  return qc.invalidateQueries({ queryKey: ['notifications'] })
+}
+
+export function useMarkNotificationReadMutation() {
+  const token = useAuthToken()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/notifications/${id}/read`, {
+        method: 'POST',
+        headers: authHeaders(token, 'application/json'),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      return res.json() as Promise<{
+        success: true
+        notification: { id: string; readAt: string | null }
+      }>
+    },
+    onSuccess: () => {
+      void invalidateNotifications(qc)
+    },
+  })
+}
+
+export function useMarkAllNotificationsReadMutation() {
+  const token = useAuthToken()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/notifications/read-all', {
+        method: 'POST',
+        headers: authHeaders(token, 'application/json'),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      return res.json() as Promise<{ success: true; updatedCount: number }>
+    },
+    onSuccess: () => {
+      void invalidateNotifications(qc)
+    },
+  })
+}
+
+export function useDismissNotificationMutation() {
+  const token = useAuthToken()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/notifications/${id}/dismiss`, {
+        method: 'POST',
+        headers: authHeaders(token, 'application/json'),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      return res.json() as Promise<{ success: true }>
+    },
+    onSuccess: () => {
+      void invalidateNotifications(qc)
+    },
+  })
+}
+
+// ── Notification preferences ────────────────────────────────────────────────
+
+export type NotificationEmailMode =
+  | 'off'
+  | 'instant'
+  | 'digest_daily'
+  | 'digest_weekly'
+
+export interface NotificationPreferences {
+  mode: NotificationEmailMode
+  lastSentAt: string | null
+}
+
+export function useNotificationPreferencesQuery(
+  opts?: QueryOpts<NotificationPreferences | null>,
+) {
+  const token = useAuthToken()
+  return useQuery({
+    queryKey: queryKeys.notificationPreferences(),
+    queryFn: async (): Promise<NotificationPreferences | null> => {
+      if (!token) return null
+      return getJson<NotificationPreferences>(
+        '/api/notifications/preferences',
+        token,
+      )
+    },
+    enabled: !!token,
+    staleTime: STALE_TIMES.long,
+    ...opts,
+  })
+}
+
+export function useUpdateNotificationPreferencesMutation() {
+  const token = useAuthToken()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (mode: NotificationEmailMode) => {
+      const res = await fetch('/api/notifications/preferences', {
+        method: 'POST',
+        headers: authHeaders(token, 'application/json'),
+        body: JSON.stringify({ mode }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data?.error ?? `HTTP ${res.status}`)
+      }
+      return res.json() as Promise<NotificationPreferences>
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.notificationPreferences() })
+    },
+  })
+}
+
+export function useWatchLogQuery() {
+  const token = useAuthToken()
+  return useInfiniteQuery({
+    queryKey: queryKeys.watchLog(),
+    queryFn: async ({ pageParam }): Promise<WatchLogResponse> => {
+      const url = pageParam
+        ? `/api/watch/log?cursor=${encodeURIComponent(pageParam)}`
+        : '/api/watch/log'
+      return getJson<WatchLogResponse>(url, token)
+    },
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasMore ? lastPage.nextCursor : null,
+    enabled: !!token,
+    staleTime: STALE_TIMES.short,
   })
 }
 
