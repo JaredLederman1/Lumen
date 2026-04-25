@@ -1,7 +1,7 @@
 /**
  * Runtime environment variable validation.
  * Import in API routes and server-side lib files only.
- * Do NOT import in middleware.ts or client-side code.
+ * Do NOT import in proxy.ts or client-side code.
  *
  * Throws at import time if any required variable is missing or empty,
  * so configuration problems surface immediately on startup.

@@ -21,7 +21,7 @@ const PUBLIC_PATHS = [
   '/unsubscribe',
 ]
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   const isProduction = process.env.NODE_ENV === 'production'

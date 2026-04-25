@@ -13,6 +13,7 @@ export default withSentryConfig(nextConfig, {
   project: "illumin-web",
   silent: true,
   widenClientFileUpload: true,
+  // Replacement (webpack.treeshake.removeDebugLogging) is webpack-only; keep disableLogger until Sentry ships a Turbopack-compatible option.
   disableLogger: true,
   sourcemaps: {
     deleteSourcemapsAfterUpload: true,
