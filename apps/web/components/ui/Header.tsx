@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { usePlaidSyncMutation } from '@/lib/queries'
+import NotificationBell from '@/components/notifications/NotificationBell'
 
 const pageTitles: Record<string, string> = {
   '/dashboard':              'Overview',
@@ -183,6 +184,7 @@ export default function Header() {
             </button>
           </>
         )}
+        <NotificationBell />
         <Link href="/dashboard/profile" style={{
           width: '30px',
           height: '30px',
