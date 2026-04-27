@@ -59,9 +59,9 @@ export default function LightFeaturesSection() {
 
       <ScrollReveal>
         <div className={styles.featuresHeader}>
-          <h2 className={styles.featuresHeadline}>The numbers the watch reports first.</h2>
+          <h2 className={styles.featuresHeadline}>The numbers Illumin reports first.</h2>
           <p className={styles.featuresDesc}>
-            Every default carries a dollar number. Illumin calculates it from your real balances and projects it forward. These are the findings the watch leads with.
+            Every default carries a dollar number. Illumin calculates it from your real balances and projects it forward. These are the findings Illumin leads with.
           </p>
         </div>
       </ScrollReveal>
@@ -73,7 +73,7 @@ export default function LightFeaturesSection() {
             <span className={styles.featureLabel}>Opportunity Cost</span>
             <h3 className={styles.featureH3}>What every default costs you.</h3>
             <p className={styles.featureText}>
-              Idle cash has a cost. The watch calculates what it would have earned invested versus what it does in a checking account, and reports the gap on every login. The watch tracks the gap as you close it.
+              Idle cash has a cost. Illumin calculates what it would have earned invested versus what it does in a checking account, and reports the gap on every login. Illumin tracks the gap as you close it.
             </p>
           </div>
 
@@ -97,9 +97,9 @@ export default function LightFeaturesSection() {
         <div className={`${styles.featureRow} ${styles.featureRowReverse} ${styles.visible}`}>
           <div className={styles.featureLeft}>
             <span className={styles.featureLabel}>Net Worth</span>
-            <h3 className={styles.featureH3}>The number the watch returns to.</h3>
+            <h3 className={styles.featureH3}>The number Illumin returns to.</h3>
             <p className={styles.featureText}>
-              Every account in one place, updating automatically. Assets, liabilities, investments, debt. One number the watch returns to so you can see the line move.
+              Every account in one place, updating automatically. Assets, liabilities, investments, debt. One number Illumin returns to so you can see the line move.
             </p>
           </div>
 

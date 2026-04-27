@@ -27,10 +27,10 @@ export default function Page() {
         <div className={styles.vignette} aria-hidden="true" />
 
         <div className={styles.content}>
-          <p className={styles.eyebrow}>THE WATCH</p>
+          <p className={styles.eyebrow}>STANDING WATCH</p>
 
           <h1 className={styles.headline}>
-            The watch never stops. The cost never hides.
+            Illumin watches what your money is doing while you aren&apos;t.
           </h1>
 
           <p className={styles.subhead}>

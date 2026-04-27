@@ -30,7 +30,7 @@ export default function FeaturesSection() {
 
       <ScrollReveal>
         <div className={styles.featuresHeader}>
-          <h2 id="features-headline" className={styles.featuresHeadline}>What the watch sees.</h2>
+          <h2 id="features-headline" className={styles.featuresHeadline}>What Illumin sees.</h2>
           <p className={styles.featuresDesc}>
             Every account, every transaction, every pattern. Continuously monitored, automatically classified, reported as findings.
           </p>
@@ -44,7 +44,7 @@ export default function FeaturesSection() {
             <span className={styles.featureLabel}>Spending Intelligence</span>
             <h3 className={styles.featureH3}>Every transaction, on the record.</h3>
             <p className={styles.featureText}>
-              Transactions classified automatically, against rules you set. Set a rule once. The watch enforces it on every charge that follows.
+              Transactions classified automatically, against rules you set. Set a rule once. Illumin enforces it on every charge that follows.
             </p>
           </div>
           <div className={styles.featureRight}>
@@ -66,9 +66,9 @@ export default function FeaturesSection() {
         <div className={`${styles.featureRow} ${styles.featureRowReverse} ${styles.visible}`}>
           <div className={styles.featureLeft}>
             <span className={styles.featureLabel}>Cash Flow</span>
-            <h3 className={styles.featureH3}>Income in. Expenses out. The watch screens both.</h3>
+            <h3 className={styles.featureH3}>Income in. Expenses out. Illumin screens both.</h3>
             <p className={styles.featureText}>
-              A month-by-month record of what comes in and what goes out. The watch screens the pattern and reports the moment a number drifts.
+              A month-by-month record of what comes in and what goes out. Illumin screens the pattern and reports the moment a number drifts.
             </p>
           </div>
           <div className={styles.featureRight}>
@@ -94,7 +94,7 @@ export default function FeaturesSection() {
             <span className={styles.featureLabel}>Subscriptions</span>
             <h3 className={styles.featureH3}>The charges that renew on their own.</h3>
             <p className={styles.featureText}>
-              Every recurring charge pulled from your transaction history. No manual entry. The watch reports the real monthly total of every subscription still drawing on your account.
+              Every recurring charge pulled from your transaction history. No manual entry. Illumin reports the real monthly total of every subscription still drawing on your account.
             </p>
           </div>
           <div className={styles.featureRight}>
