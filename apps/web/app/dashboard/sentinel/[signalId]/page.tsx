@@ -4,7 +4,7 @@ import { use, type CSSProperties, type ReactElement } from "react";
 import Link from "next/link";
 import { useSignalDetailQuery } from "@/lib/queries";
 import {
-  getRecommendedAction,
+  getSignalGuidance,
 } from "@/lib/vigilance/signalActions";
 import type {
   Signal,
@@ -261,7 +261,7 @@ export default function SignalDetailPage({
 
   const { signal, snapshots, notifications } = data;
   const headline = signalHeadline(signal);
-  const action = getRecommendedAction(signal.domain);
+  const guidance = getSignalGuidance(signal.domain);
   const timeline = buildTimeline(signal, snapshots);
 
   const wrapperStyle: CSSProperties = {
@@ -338,14 +338,57 @@ export default function SignalDetailPage({
     borderBottom: "0.5px solid var(--color-border)",
   };
 
-  const actionCardStyle: CSSProperties = {
-    padding: 24,
-    backgroundColor: "var(--color-surface)",
-    border: "0.5px solid var(--color-border)",
-    borderRadius: "var(--radius-lg)",
+  const guidanceSectionStyle: CSSProperties = {
     display: "flex",
     flexDirection: "column",
+    marginTop: "var(--space-section-above)",
+    marginBottom: "var(--space-section-below)",
+  };
+
+  const guidanceLabelStyle: CSSProperties = {
+    paddingBottom: 8,
+    borderBottom: "0.5px solid var(--color-border)",
+    marginBottom: 16,
+  };
+
+  const guidanceBodyStyle: CSSProperties = {
+    fontFamily: "var(--font-sans)",
+    fontSize: 15,
+    color: "var(--color-text-mid)",
+    lineHeight: 1.65,
+    margin: 0,
+  };
+
+  const stepListStyle: CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    gap: 14,
+    margin: 0,
+    paddingLeft: 0,
+    listStyle: "none",
+    counterReset: "step-counter",
+  };
+
+  const stepRowStyle: CSSProperties = {
+    display: "grid",
+    gridTemplateColumns: "32px 1fr",
     gap: 12,
+    alignItems: "baseline",
+  };
+
+  const stepNumberStyle: CSSProperties = {
+    fontFamily: "var(--font-mono)",
+    fontSize: 12,
+    color: "var(--color-gold)",
+    letterSpacing: "0.06em",
+  };
+
+  const stepTextStyle: CSSProperties = {
+    fontFamily: "var(--font-sans)",
+    fontSize: 14,
+    color: "var(--color-text-mid)",
+    lineHeight: 1.6,
+    margin: 0,
   };
 
   const timelineStyle: CSSProperties = {
@@ -439,38 +482,50 @@ export default function SignalDetailPage({
       </header>
 
       <section
-        aria-label="Recommended action"
-        style={{ display: "flex", flexDirection: "column", gap: 12 }}
+        aria-label="What this means"
+        style={guidanceSectionStyle}
       >
-        <h2 style={sectionTitleStyle}>RECOMMENDED ACTION</h2>
-        <div style={actionCardStyle}>
-          <p
-            style={{
-              fontFamily: "var(--font-serif)",
-              fontSize: 18,
-              color: "var(--color-text)",
-              margin: 0,
-            }}
+        <h2 className="ui-label" style={guidanceLabelStyle}>
+          What this means
+        </h2>
+        <p style={guidanceBodyStyle}>{guidance.explanation}</p>
+      </section>
+
+      <section
+        aria-label="What to do"
+        style={guidanceSectionStyle}
+      >
+        <h2 className="ui-label" style={guidanceLabelStyle}>
+          What to do
+        </h2>
+        <ol style={stepListStyle}>
+          {guidance.actionSteps.map((step, i) => (
+            <li key={i} style={stepRowStyle}>
+              <span style={stepNumberStyle}>
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <p style={stepTextStyle}>{step}</p>
+            </li>
+          ))}
+        </ol>
+        {guidance.cta && (
+          <Link
+            href={guidance.cta.href}
+            style={{ ...ctaStyle, marginTop: 20 }}
           >
-            {action.headline}
-          </p>
-          <p
-            style={{
-              fontFamily: "var(--font-sans)",
-              fontSize: 14,
-              color: "var(--color-text-mid)",
-              lineHeight: 1.6,
-              margin: 0,
-            }}
-          >
-            {action.body}
-          </p>
-          {action.cta && (
-            <Link href={action.cta.href} style={ctaStyle}>
-              {action.cta.label} &rarr;
-            </Link>
-          )}
-        </div>
+            {guidance.cta.label} &rarr;
+          </Link>
+        )}
+      </section>
+
+      <section
+        aria-label="What changes after"
+        style={guidanceSectionStyle}
+      >
+        <h2 className="ui-label" style={guidanceLabelStyle}>
+          What changes after
+        </h2>
+        <p style={guidanceBodyStyle}>{guidance.afterActing}</p>
       </section>
 
       <section
