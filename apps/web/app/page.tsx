@@ -8,7 +8,7 @@ import HeroCTAs from './HeroCTAs'
 
 export const metadata: Metadata = {
   title: "Illumin: You can't fix what you can't see.",
-  description: 'Institutional-grade wealth management for everyone.',
+  description: 'Illumin watches your financial defaults so you can act on what they cost you.',
 }
 
 export default function Page() {
@@ -27,14 +27,14 @@ export default function Page() {
         <div className={styles.vignette} aria-hidden="true" />
 
         <div className={styles.content}>
-          <p className={styles.eyebrow}>WEALTH INTELLIGENCE</p>
+          <p className={styles.eyebrow}>THE WATCH</p>
 
           <h1 className={styles.headline}>
-            Vigilance Compounds
+            The watch never stops. The cost never hides.
           </h1>
 
           <p className={styles.subhead}>
-            Most people have never had a financial advisor. Illumin stands watch over your complete financial picture and alerts you exactly what to do, starting with what inaction is costing you right now.
+            Illumin watches your financial defaults so you can act on what they cost you.
           </p>
 
           <HeroCTAs />

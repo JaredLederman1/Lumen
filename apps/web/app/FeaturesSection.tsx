@@ -30,9 +30,9 @@ export default function FeaturesSection() {
 
       <ScrollReveal>
         <div className={styles.featuresHeader}>
-          <h2 id="features-headline" className={styles.featuresHeadline}>Watch everything. Understand everything.</h2>
+          <h2 id="features-headline" className={styles.featuresHeadline}>What the watch sees.</h2>
           <p className={styles.featuresDesc}>
-            Every account, every transaction, every pattern. Connected, categorized, and finally making sense.
+            Every account, every transaction, every pattern. Continuously monitored, automatically classified, reported as findings.
           </p>
         </div>
       </ScrollReveal>
@@ -42,9 +42,9 @@ export default function FeaturesSection() {
         <div className={`${styles.featureRow} ${styles.visible}`}>
           <div className={styles.featureLeft}>
             <span className={styles.featureLabel}>Spending Intelligence</span>
-            <h3 className={styles.featureH3}>Every transaction, flagged.</h3>
+            <h3 className={styles.featureH3}>Every transaction, on the record.</h3>
             <p className={styles.featureText}>
-              Transactions categorized automatically, with rules you control. Set a rule once and Illumin monitors it for every future transaction from that merchant. Your data, under your watch.
+              Transactions classified automatically, against rules you set. Set a rule once. The watch enforces it on every charge that follows.
             </p>
           </div>
           <div className={styles.featureRight}>
@@ -66,9 +66,9 @@ export default function FeaturesSection() {
         <div className={`${styles.featureRow} ${styles.featureRowReverse} ${styles.visible}`}>
           <div className={styles.featureLeft}>
             <span className={styles.featureLabel}>Cash Flow</span>
-            <h3 className={styles.featureH3}>Income, expenses, and what Illumin catches.</h3>
+            <h3 className={styles.featureH3}>Income in. Expenses out. The watch screens both.</h3>
             <p className={styles.featureText}>
-              A month-by-month view of what you earn, what you spend, and where it&apos;s all trending. Illumin screens for patterns and flags anomalies you should act on.
+              A month-by-month record of what comes in and what goes out. The watch screens the pattern and reports the moment a number drifts.
             </p>
           </div>
           <div className={styles.featureRight}>
@@ -92,9 +92,9 @@ export default function FeaturesSection() {
         <div className={`${styles.featureRow} ${styles.visible}`}>
           <div className={styles.featureLeft}>
             <span className={styles.featureLabel}>Subscriptions</span>
-            <h3 className={styles.featureH3}>The charges Illumin surfaces.</h3>
+            <h3 className={styles.featureH3}>The charges that renew on their own.</h3>
             <p className={styles.featureText}>
-              Every recurring charge pulled automatically from your transaction history. No manual entry. Illumin flags the real monthly total of everything quietly draining your account.
+              Every recurring charge pulled from your transaction history. No manual entry. The watch reports the real monthly total of every subscription still drawing on your account.
             </p>
           </div>
           <div className={styles.featureRight}>

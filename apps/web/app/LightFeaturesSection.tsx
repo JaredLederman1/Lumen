@@ -59,9 +59,9 @@ export default function LightFeaturesSection() {
 
       <ScrollReveal>
         <div className={styles.featuresHeader}>
-          <h2 className={styles.featuresHeadline}>The numbers Illumin flags first.</h2>
+          <h2 className={styles.featuresHeadline}>The numbers the watch reports first.</h2>
           <p className={styles.featuresDesc}>
-            Inaction has a dollar amount. Illumin calculates it from your real balances and projects it 30 years forward. These are the signals that change everything.
+            Every default carries a dollar number. Illumin calculates it from your real balances and projects it forward. These are the findings the watch leads with.
           </p>
         </div>
       </ScrollReveal>
@@ -71,9 +71,9 @@ export default function LightFeaturesSection() {
         <div ref={row0Ref} className={`${styles.featureRow} ${styles.visible}`}>
           <div className={styles.featureLeft}>
             <span className={styles.featureLabel}>Opportunity Cost</span>
-            <h3 className={styles.featureH3}>What inaction costs you.</h3>
+            <h3 className={styles.featureH3}>What every default costs you.</h3>
             <p className={styles.featureText}>
-              Your idle cash has a cost. Illumin calculates exactly what it would be worth invested versus sitting in a checking account, and screens for that gap on every login. Illumin watches the gap close.
+              Idle cash has a cost. The watch calculates what it would have earned invested versus what it does in a checking account, and reports the gap on every login. The watch tracks the gap as you close it.
             </p>
           </div>
 
@@ -97,9 +97,9 @@ export default function LightFeaturesSection() {
         <div className={`${styles.featureRow} ${styles.featureRowReverse} ${styles.visible}`}>
           <div className={styles.featureLeft}>
             <span className={styles.featureLabel}>Net Worth</span>
-            <h3 className={styles.featureH3}>The metric Illumin monitors for progress.</h3>
+            <h3 className={styles.featureH3}>The number the watch returns to.</h3>
             <p className={styles.featureText}>
-              Every account in one place, updating automatically. Assets, liabilities, investments, debt. One number Illumin watches to verify you&apos;re moving forward.
+              Every account in one place, updating automatically. Assets, liabilities, investments, debt. One number the watch returns to so you can see the line move.
             </p>
           </div>
 
