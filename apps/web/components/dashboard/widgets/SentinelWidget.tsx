@@ -1,6 +1,13 @@
 'use client'
 
-import { CSSProperties, ReactElement, ReactNode } from 'react'
+import {
+  CSSProperties,
+  ReactElement,
+  ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import PerimeterSVG from '@/components/watch/PerimeterSVG'
@@ -12,21 +19,20 @@ import {
 } from '@/lib/queries'
 import type { PerimeterResponse } from '@/lib/types/vigilance'
 
-const PERIMETER_SIZE_DESKTOP = 160
-const PERIMETER_SIZE_MOBILE = 120
 // The bottom ~18px of PerimeterSVG contains the baked-in "PERIMETER" caption.
 // Clipping the wrapper hides that caption without editing the shared component.
 const PERIMETER_CAPTION_PAD = 18
 
-function buildEyebrow(signalsActive: number): string {
+function buildEyebrow(signalsActive: number): ReactNode {
   if (signalsActive === 0) return 'Sentinel · all quiet'
-  return `Sentinel · ${signalsActive} active`
-}
-
-function buildMetaLine(signalsMonitored: number, signalsNew: number): string {
-  const segments = [`${signalsMonitored} monitored`]
-  if (signalsNew > 0) segments.push(`${signalsNew} new since last visit`)
-  return segments.join(' · ')
+  return (
+    <>
+      Sentinel ·{' '}
+      <span style={{ color: 'var(--color-positive)' }}>
+        {signalsActive} active
+      </span>
+    </>
+  )
 }
 
 function formatCurrency(value: number): string {
@@ -69,14 +75,6 @@ const heroSubStyle: CSSProperties = {
   margin: 0,
 }
 
-const metaStyle: CSSProperties = {
-  fontFamily: 'var(--font-mono)',
-  fontSize: 11,
-  color: 'var(--color-text-muted)',
-  lineHeight: 1.5,
-  margin: 0,
-}
-
 const contextStyle: CSSProperties = {
   fontFamily: 'var(--font-mono)',
   fontSize: 13,
@@ -86,28 +84,60 @@ const contextStyle: CSSProperties = {
 }
 
 function ClippedPerimeter({
-  size,
   cashAmount,
   signals,
 }: {
-  size: number
   cashAmount: number
   signals: PerimeterResponse['signals']
 }): ReactElement {
+  const outerRef = useRef<HTMLDivElement>(null)
+  const [size, setSize] = useState(0)
+
+  useEffect(() => {
+    const el = outerRef.current
+    if (!el) return
+    const update = () => {
+      const w = el.clientWidth
+      const h = el.clientHeight
+      // The inner clipped box is `size` wide and `size - CAPTION_PAD` tall, so
+      // the SVG render size is bounded by container width and by container
+      // height plus the cropped caption strip.
+      const next = Math.min(w, h + PERIMETER_CAPTION_PAD)
+      if (next > 0) setSize(Math.floor(next))
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
   return (
     <div
+      ref={outerRef}
       aria-hidden="true"
       style={{
-        width: size,
-        height: size - PERIMETER_CAPTION_PAD,
-        overflow: 'hidden',
+        width: '100%',
+        height: '100%',
         display: 'flex',
-        alignItems: 'flex-start',
+        alignItems: 'center',
         justifyContent: 'center',
         pointerEvents: 'none',
       }}
     >
-      <PerimeterSVG cashAmount={cashAmount} signals={signals} size={size} />
+      {size > 0 && (
+        <div
+          style={{
+            width: size,
+            height: size - PERIMETER_CAPTION_PAD,
+            overflow: 'hidden',
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'center',
+          }}
+        >
+          <PerimeterSVG cashAmount={cashAmount} signals={signals} size={size} />
+        </div>
+      )}
     </div>
   )
 }
@@ -121,7 +151,7 @@ function SentinelShell({
 }: {
   children: ReactNode
   cta: ReactNode
-  eyebrow: string
+  eyebrow: ReactNode
   withPerimeter?: boolean
   perimeter?: PerimeterResponse | null
 }) {
@@ -137,21 +167,23 @@ function SentinelShell({
           flex-direction: row;
           align-items: flex-start;
           gap: 24px;
+          flex: 1;
+          min-height: 0;
         }
         .illumin-sentinel-left {
           display: flex;
           flex-direction: column;
-          flex: 1 1 55%;
+          flex: 1 1 auto;
           min-width: 0;
         }
         .illumin-sentinel-right {
           flex: 0 0 auto;
+          width: clamp(140px, 35%, 240px);
+          align-self: stretch;
           display: flex;
           align-items: center;
           justify-content: center;
         }
-        .illumin-sentinel-perimeter-desktop { display: block; }
-        .illumin-sentinel-perimeter-mobile { display: none; }
         @media (max-width: 768px) {
           .illumin-sentinel-widget-inner {
             flex-direction: column;
@@ -159,10 +191,10 @@ function SentinelShell({
             gap: 20px;
           }
           .illumin-sentinel-right {
-            justify-content: center;
+            width: 100%;
+            height: 220px;
+            align-self: stretch;
           }
-          .illumin-sentinel-perimeter-desktop { display: none; }
-          .illumin-sentinel-perimeter-mobile { display: block; }
         }
       `}</style>
       <div className="illumin-sentinel-widget-root">
@@ -171,20 +203,10 @@ function SentinelShell({
             <div className="illumin-sentinel-left">{children}</div>
             {withPerimeter && perimeter && (
               <div className="illumin-sentinel-right">
-                <div className="illumin-sentinel-perimeter-desktop">
-                  <ClippedPerimeter
-                    size={PERIMETER_SIZE_DESKTOP}
-                    cashAmount={perimeter.cashAmount}
-                    signals={perimeter.signals}
-                  />
-                </div>
-                <div className="illumin-sentinel-perimeter-mobile">
-                  <ClippedPerimeter
-                    size={PERIMETER_SIZE_MOBILE}
-                    cashAmount={perimeter.cashAmount}
-                    signals={perimeter.signals}
-                  />
-                </div>
+                <ClippedPerimeter
+                  cashAmount={perimeter.cashAmount}
+                  signals={perimeter.signals}
+                />
               </div>
             )}
           </div>
@@ -215,8 +237,10 @@ export default function SentinelWidget(): ReactElement {
             </Link>
           }
         >
-          <p style={subheadStyle}>Illumin&apos;s Vigilance Engine</p>
-          <div style={{ height: 'var(--space-label-to-value)' }} />
+          <p style={{ ...subheadStyle, marginTop: -10 }}>
+            Illumin&apos;s Vigilance Engine
+          </p>
+          <div style={{ height: 'var(--space-section-above)' }} />
           <p style={{ ...contextStyle, color: 'var(--color-text-mid)' }}>
             Watch status unavailable.
           </p>
@@ -238,8 +262,10 @@ export default function SentinelWidget(): ReactElement {
             </Link>
           }
         >
-          <p style={subheadStyle}>Illumin&apos;s Vigilance Engine</p>
-          <div style={{ height: 'var(--space-label-to-value)' }} />
+          <p style={{ ...subheadStyle, marginTop: -10 }}>
+            Illumin&apos;s Vigilance Engine
+          </p>
+          <div style={{ height: 'var(--space-section-above)' }} />
           <p style={{ ...contextStyle, color: 'var(--color-text-mid)' }}>
             Setting up your watch...
           </p>
@@ -273,15 +299,13 @@ export default function SentinelWidget(): ReactElement {
         withPerimeter
         perimeter={perimeter}
       >
-        <p style={subheadStyle}>Illumin&apos;s Vigilance Engine</p>
-        <div style={{ height: 'var(--space-label-to-value)' }} />
+        <p style={{ ...subheadStyle, marginTop: -10 }}>
+          Illumin&apos;s Vigilance Engine
+        </p>
+        <div style={{ height: 'var(--space-section-above)' }} />
         <p style={heroStyle}>{heroText}</p>
         <div style={{ height: 'var(--space-value-to-subtext)' }} />
         <p style={heroSubStyle}>{heroSubText}</p>
-        <div style={{ height: 12 }} />
-        <p style={metaStyle}>
-          {buildMetaLine(status.signalsMonitored, status.signalsNew)}
-        </p>
       </SentinelShell>
     </motion.div>
   )

@@ -24,7 +24,7 @@ const CANONICAL_HERO_FONT_SIZE = '56px'
 const SECONDARY_SLOT_MIN_HEIGHT = '96px'
 
 interface BaseProps {
-  eyebrow: string
+  eyebrow: ReactNode
   cta?: ReactNode
   accent?: 'neutral' | 'alert' | 'positive'
   style?: CSSProperties
@@ -115,7 +115,7 @@ const ctaRow: CSSProperties = {
   alignItems: 'flex-end',
 }
 
-function Eyebrow({ text }: { text: string }) {
+function Eyebrow({ text }: { text: ReactNode }) {
   return <p className="ui-label">{text}</p>
 }
 
