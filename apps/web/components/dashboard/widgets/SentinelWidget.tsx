@@ -18,27 +18,23 @@ const PERIMETER_SIZE_MOBILE = 120
 // Clipping the wrapper hides that caption without editing the shared component.
 const PERIMETER_CAPTION_PAD = 18
 
-function integrityColor(score: number): string {
-  if (score >= 90) return 'var(--color-positive)'
-  if (score < 70) return 'var(--color-negative)'
-  return 'var(--color-text)'
+function buildEyebrow(signalsActive: number): string {
+  if (signalsActive === 0) return 'Sentinel · all quiet'
+  return `Sentinel · ${signalsActive} active`
 }
 
-function buildContextLine(
-  signalsMonitored: number,
-  signalsActive: number,
-  signalsNew: number,
-): string {
-  const segments: string[] = [`${signalsMonitored} signals monitored`]
-  if (signalsActive === 0) {
-    segments.push('all quiet')
-  } else {
-    segments.push(`${signalsActive} active`)
-    if (signalsNew > 0) {
-      segments.push(`${signalsNew} new since last visit`)
-    }
-  }
+function buildMetaLine(signalsMonitored: number, signalsNew: number): string {
+  const segments = [`${signalsMonitored} monitored`]
+  if (signalsNew > 0) segments.push(`${signalsNew} new since last visit`)
   return segments.join(' · ')
+}
+
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  }).format(value)
 }
 
 const ctaLink: CSSProperties = {
@@ -49,19 +45,35 @@ const ctaLink: CSSProperties = {
   textDecoration: 'none',
 }
 
+const subheadStyle: CSSProperties = {
+  fontFamily: 'var(--font-mono)',
+  fontSize: 12,
+  color: 'var(--color-text-muted)',
+  margin: 0,
+}
+
 const heroStyle: CSSProperties = {
   fontFamily: 'var(--font-display)',
   fontSize: 48,
   fontWeight: 400,
   lineHeight: 1,
   letterSpacing: '-0.01em',
+  color: 'var(--color-gold)',
   margin: 0,
 }
 
-const subtextStyle: CSSProperties = {
+const heroSubStyle: CSSProperties = {
+  fontFamily: 'var(--font-sans)',
+  fontSize: 12,
+  color: 'var(--color-text-muted)',
+  margin: 0,
+}
+
+const metaStyle: CSSProperties = {
   fontFamily: 'var(--font-mono)',
   fontSize: 11,
   color: 'var(--color-text-muted)',
+  lineHeight: 1.5,
   margin: 0,
 }
 
@@ -103,11 +115,13 @@ function ClippedPerimeter({
 function SentinelShell({
   children,
   cta,
+  eyebrow,
   withPerimeter,
   perimeter,
 }: {
   children: ReactNode
   cta: ReactNode
+  eyebrow: string
   withPerimeter?: boolean
   perimeter?: PerimeterResponse | null
 }) {
@@ -122,8 +136,6 @@ function SentinelShell({
           flex-direction: row;
           align-items: center;
           gap: 24px;
-          flex: 1;
-          min-height: 164px;
         }
         .illumin-sentinel-left {
           display: flex;
@@ -153,7 +165,7 @@ function SentinelShell({
         }
       `}</style>
       <div className="illumin-sentinel-widget-root">
-        <WidgetCard variant="list" eyebrow="Sentinel" cta={cta}>
+        <WidgetCard variant="list" eyebrow={eyebrow} cta={cta}>
           <div className="illumin-sentinel-widget-inner">
             <div className="illumin-sentinel-left">{children}</div>
             {withPerimeter && perimeter && (
@@ -195,12 +207,15 @@ export default function SentinelWidget(): ReactElement {
     return (
       <motion.div {...WIDGET_REVEAL}>
         <SentinelShell
+          eyebrow="Sentinel"
           cta={
             <Link href="/dashboard/sentinel" style={ctaLink}>
               Open sentinel &rarr;
             </Link>
           }
         >
+          <p style={subheadStyle}>Illumin&apos;s Vigilance Engine</p>
+          <div style={{ height: 'var(--space-label-to-value)' }} />
           <p style={{ ...contextStyle, color: 'var(--color-text-mid)' }}>
             Watch status unavailable.
           </p>
@@ -215,12 +230,15 @@ export default function SentinelWidget(): ReactElement {
     return (
       <motion.div {...WIDGET_REVEAL}>
         <SentinelShell
+          eyebrow="Sentinel"
           cta={
             <Link href="/onboarding" style={ctaLink}>
               Complete setup &rarr;
             </Link>
           }
         >
+          <p style={subheadStyle}>Illumin&apos;s Vigilance Engine</p>
+          <div style={{ height: 'var(--space-label-to-value)' }} />
           <p style={{ ...contextStyle, color: 'var(--color-text-mid)' }}>
             Setting up your watch...
           </p>
@@ -229,16 +247,23 @@ export default function SentinelWidget(): ReactElement {
     )
   }
 
-  const integrity = status.perimeterIntegrity
-  const contextLine = buildContextLine(
-    status.signalsMonitored,
-    status.signalsActive,
-    status.signalsNew,
-  )
+  // Aggregate dollar cost across active signals. /api/watch/status doesn't
+  // return this; sum perimeter.signals[].annualValue client-side. When
+  // status reports active signals but the perimeter query hasn't resolved
+  // yet, render a placeholder rather than a misleading $0.
+  const perimeterReady = perimeter !== undefined && perimeter !== null
+  const aggregateCost = perimeterReady
+    ? perimeter.signals.reduce((sum, s) => sum + Math.abs(s.annualValue), 0)
+    : null
+  const showZeroState = aggregateCost === 0
+  const heroText =
+    aggregateCost === null ? '—' : formatCurrency(aggregateCost)
+  const heroSubText = showZeroState ? 'no findings to act on' : 'in unrealized cost'
 
   return (
     <motion.div {...WIDGET_REVEAL}>
       <SentinelShell
+        eyebrow={buildEyebrow(status.signalsActive)}
         cta={
           <Link href="/dashboard/sentinel" style={ctaLink}>
             Open sentinel &rarr;
@@ -247,13 +272,15 @@ export default function SentinelWidget(): ReactElement {
         withPerimeter
         perimeter={perimeter}
       >
-        <p style={{ ...heroStyle, color: integrityColor(integrity) }}>
-          {integrity}
+        <p style={subheadStyle}>Illumin&apos;s Vigilance Engine</p>
+        <div style={{ height: 'var(--space-label-to-value)' }} />
+        <p style={heroStyle}>{heroText}</p>
+        <div style={{ height: 'var(--space-value-to-subtext)' }} />
+        <p style={heroSubStyle}>{heroSubText}</p>
+        <div style={{ height: 12 }} />
+        <p style={metaStyle}>
+          {buildMetaLine(status.signalsMonitored, status.signalsNew)}
         </p>
-        <div style={{ height: 4 }} />
-        <p style={subtextStyle}>out of 100</p>
-        <div style={{ height: 16 }} />
-        <p style={contextStyle}>{contextLine}</p>
       </SentinelShell>
     </motion.div>
   )

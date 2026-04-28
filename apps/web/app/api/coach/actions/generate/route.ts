@@ -22,7 +22,7 @@ const DISCRETIONARY_CATS = new Set([
 const fmt = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
 
-const SYSTEM_PROMPT = `You are the Illumin Engine generating a prioritized financial action plan. Based on the user's financial data, produce 3 to 6 concrete, specific action items.
+const SYSTEM_PROMPT = `You are Illumin's Coach Engine generating a prioritized financial action plan. Based on the user's financial data, produce 3 to 6 concrete, specific action items.
 
 Follow this exact priority order:
 1. DEFICIT: If monthly expenses exceed monthly income, this must be the first action.

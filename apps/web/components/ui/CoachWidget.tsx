@@ -292,7 +292,7 @@ export default function CoachWidget() {
           ;(e.currentTarget as HTMLButtonElement).style.transform  = 'scale(1)'
           ;(e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 20px rgba(0,0,0,0.4)'
         }}
-        aria-label={isOpen ? 'Close Illumin Engine' : 'Open Illumin Engine'}
+        aria-label={isOpen ? "Close Illumin's Coach Engine" : "Open Illumin's Coach Engine"}
       >
         {isOpen ? (
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -343,7 +343,7 @@ export default function CoachWidget() {
             }}>
               <div>
                 <div style={{ fontFamily: 'var(--font-serif)', fontSize: 15, color: 'var(--color-text)' }}>
-                  Illumin Engine
+                  Illumin&apos;s Coach Engine
                 </div>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--color-text-muted)' }}>
                   Financial analysis engine

@@ -443,7 +443,7 @@ function DashboardMobile() {
     ] : []),
 
     // Sharpen forecast: prompts the user to fill in extended profile fields
-    // (career, household, compensation) so Illumin's Engine can be more
+    // (career, household, compensation) so Illumin's Coach Engine can be more
     // precise. Self-hides when all 7 fields are filled, so it costs zero
     // dashboard space when complete. Position mirrors desktop, slotted
     // between the primary metrics cluster (sentinel + nw-chart) and the

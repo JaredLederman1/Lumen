@@ -895,7 +895,7 @@ function ProfileContent({ isMobile }: { isMobile: boolean }) {
                 </div>
               </div>
             ),
-            "Helps Illumin's Engine tailor your trajectory.",
+            "Helps Illumin's Coach Engine tailor your trajectory.",
             'career',
           )}
 

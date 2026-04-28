@@ -164,7 +164,7 @@ export default function ChecklistPage() {
           <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-text-muted)' }}>
             {totalItems > 0
               ? `${totalDone} of ${totalItems} complete`
-              : 'Use the Illumin Engine to generate recommendations'}
+              : "Use Illumin's Coach Engine to generate recommendations"}
           </p>
         </div>
       </motion.div>
@@ -244,7 +244,7 @@ export default function ChecklistPage() {
         {!coachLoading && coachItems.length === 0 && (
           <div style={{ padding: '8px 0' }}>
             <p style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.7 }}>
-              No recommendations yet. Ask the Illumin Engine for financial advice and save its recommendations here.
+              No recommendations yet. Ask Illumin&apos;s Coach Engine for financial advice and save its recommendations here.
             </p>
           </div>
         )}
