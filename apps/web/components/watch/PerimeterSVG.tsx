@@ -16,7 +16,6 @@ import {
   getRingForDomain,
   getSignalAngle,
   polarToCartesian,
-  quadrantOf,
   type PerimeterRing,
 } from "@/lib/vigilance/perimeterMath";
 import styles from "./PerimeterSVG.module.css";
@@ -447,13 +446,14 @@ export default function PerimeterSVG({
           );
         })}
 
-        {/* Tooltip for the hovered/focused signal. Quadrant-based placement so
-         * it stays inside the SVG box without measuring text width. */}
+        {/* Tooltip for the hovered/focused signal. Edge-aware placement so
+         * the tooltip stays inside the size x size box even when the
+         * container is too narrow for symmetric flipping. */}
         {activeSignal && (
           <SignalTooltip
-            placement={quadrantOf({ x: activeSignal.x, y: activeSignal.y }, { x: center, y: center })}
             x={activeSignal.x}
             y={activeSignal.y}
+            size={size}
             signal={activeSignal.signal}
           />
         )}
@@ -481,7 +481,7 @@ interface TooltipProps {
   signal: Signal;
   x: number;
   y: number;
-  placement: { horizontal: "left" | "right"; vertical: "top" | "bottom" };
+  size: number;
 }
 
 const TOOLTIP_WIDTH = 168;
@@ -490,27 +490,70 @@ const TOOLTIP_HEIGHT = 58;
  * pixels of margin, so cursor drift never lands on the tooltip while the
  * dot also animates. The tooltip group is `pointer-events: none` regardless. */
 const TOOLTIP_GAP = 12;
+/* Inset from the SVG bounding box so the tooltip never paints flush against
+ * an edge, leaving a hair of breathing room. */
+const TOOLTIP_EDGE_INSET = 4;
+/* Cap tooltip width relative to container so a small perimeter does not get
+ * a tooltip wider than itself. */
+const TOOLTIP_WIDTH_RATIO = 0.8;
 
-function SignalTooltip({ signal, x, y, placement }: TooltipProps): ReactElement {
+/**
+ * Resolve the tooltip's top-left corner inside the SVG's coord space. Picks
+ * the side of the dot with room to spare; if neither side fits, clamps the
+ * anchor to the nearest edge so the tooltip stays in-bounds (may overlap the
+ * dot in a tight corner, which we accept rather than letting it crop).
+ */
+function resolveAnchor(
+  x: number,
+  y: number,
+  size: number,
+  width: number,
+  height: number,
+): { anchorX: number; anchorY: number } {
+  const minX = TOOLTIP_EDGE_INSET;
+  const maxX = size - width - TOOLTIP_EDGE_INSET;
+  const minY = TOOLTIP_EDGE_INSET;
+  const maxY = size - height - TOOLTIP_EDGE_INSET;
+
+  // Horizontal: prefer right of dot when it fits, else left, else clamp.
+  let anchorX: number;
+  if (x + TOOLTIP_GAP + width <= size - TOOLTIP_EDGE_INSET) {
+    anchorX = x + TOOLTIP_GAP;
+  } else if (x - TOOLTIP_GAP - width >= TOOLTIP_EDGE_INSET) {
+    anchorX = x - TOOLTIP_GAP - width;
+  } else {
+    anchorX = Math.max(minX, Math.min(x - width / 2, maxX));
+  }
+
+  // Vertical: prefer below dot when it fits, else above, else clamp.
+  let anchorY: number;
+  if (y + TOOLTIP_GAP + height <= size - TOOLTIP_EDGE_INSET) {
+    anchorY = y + TOOLTIP_GAP;
+  } else if (y - TOOLTIP_GAP - height >= TOOLTIP_EDGE_INSET) {
+    anchorY = y - TOOLTIP_GAP - height;
+  } else {
+    anchorY = Math.max(minY, Math.min(y - height / 2, maxY));
+  }
+
+  return { anchorX, anchorY };
+}
+
+function SignalTooltip({ signal, x, y, size }: TooltipProps): ReactElement {
   const headline = signalHeadline(signal);
   const annual = formatCurrency(signal.annualValue);
   const severityLabel = signal.severity.toUpperCase();
 
-  // If the dot is on the right half, put the tooltip to its left; same for
-  // top/bottom. This keeps the tooltip inside the SVG bounds without having
-  // to measure actual text width.
-  const anchorX =
-    placement.horizontal === "right" ? x - TOOLTIP_WIDTH - TOOLTIP_GAP : x + TOOLTIP_GAP;
-  const anchorY =
-    placement.vertical === "top" ? y + TOOLTIP_GAP : y - TOOLTIP_HEIGHT - TOOLTIP_GAP;
+  const width = Math.min(TOOLTIP_WIDTH, size * TOOLTIP_WIDTH_RATIO);
+  const height = TOOLTIP_HEIGHT;
+  const { anchorX, anchorY } = resolveAnchor(x, y, size, width, height);
 
   return (
     <g pointerEvents="none" aria-hidden="true">
       <rect
         x={anchorX}
         y={anchorY}
-        width={TOOLTIP_WIDTH}
-        height={TOOLTIP_HEIGHT}
+        width={width}
+        height={height}
         rx={6}
         ry={6}
         fill="var(--color-surface-elevated)"
