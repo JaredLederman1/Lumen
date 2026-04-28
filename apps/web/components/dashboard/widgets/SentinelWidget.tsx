@@ -130,11 +130,12 @@ function SentinelShell({
       <style>{`
         .illumin-sentinel-widget-root {
           width: 100%;
+          height: 100%;
         }
         .illumin-sentinel-widget-inner {
           display: flex;
           flex-direction: row;
-          align-items: center;
+          align-items: flex-start;
           gap: 24px;
         }
         .illumin-sentinel-left {
