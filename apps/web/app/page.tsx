@@ -5,7 +5,6 @@ import FloatingNav from './FloatingNav'
 import FeaturesSection from './FeaturesSection'
 import LightFeaturesSection from './LightFeaturesSection'
 import HeroCTAs from './HeroCTAs'
-import FitText from './FitText'
 
 export const metadata: Metadata = {
   title: "Illumin: You can't fix what you can't see.",
@@ -30,13 +29,13 @@ export default function Page() {
         <div className={styles.content}>
           <p className={styles.eyebrow}>STANDING WATCH</p>
 
-          <FitText className={styles.headline} widthRatio={0.75}>
+          <h1 className={styles.headline}>
             Illumin Watches What You Don&apos;t
-          </FitText>
+          </h1>
 
-          <FitText as="p" className={styles.subhead} widthRatio={0.75}>
+          <p className={styles.subhead}>
             Illumin Finds What Your Financial Habits are Secretly Costing You
-          </FitText>
+          </p>
 
           <HeroCTAs />
         </div>
