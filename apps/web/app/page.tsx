@@ -30,11 +30,11 @@ export default function Page() {
         <div className={styles.content}>
           <p className={styles.eyebrow}>STANDING WATCH</p>
 
-          <FitText className={styles.headline}>
+          <FitText className={styles.headline} widthRatio={0.75}>
             Illumin Watches What You Don&apos;t
           </FitText>
 
-          <FitText as="p" className={styles.subhead}>
+          <FitText as="p" className={styles.subhead} widthRatio={0.75}>
             Illumin Finds What Your Financial Habits are Secretly Costing You
           </FitText>
 

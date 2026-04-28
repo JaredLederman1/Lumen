@@ -6,10 +6,12 @@ export default function FitText({
   as: Tag = 'h1',
   className,
   children,
+  widthRatio = 1,
 }: {
   as?: ElementType
   className?: string
   children: ReactNode
+  widthRatio?: number
 }) {
   const ref = useRef<HTMLElement>(null)
 
@@ -20,7 +22,7 @@ export default function FitText({
     const fit = () => {
       el.style.fontSize = ''
       for (let i = 0; i < 4; i++) {
-        const available = el.clientWidth
+        const available = el.clientWidth * widthRatio
         if (el.scrollWidth <= available) break
         const current = parseFloat(getComputedStyle(el).fontSize)
         const ratio = available / el.scrollWidth
@@ -36,7 +38,7 @@ export default function FitText({
     }
 
     return () => ro.disconnect()
-  }, [])
+  }, [widthRatio])
 
   return (
     <Tag ref={ref} className={className} style={{ whiteSpace: 'nowrap' }}>
