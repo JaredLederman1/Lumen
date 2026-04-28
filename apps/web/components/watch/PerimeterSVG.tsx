@@ -365,34 +365,6 @@ export default function PerimeterSVG({
           {formatCurrency(cashAmount)}
         </text>
 
-        {/* Ring hover labels. Positioned above each ring's apex. */}
-        {(["short_term", "long_term", "aspirational"] as const).map(ring => {
-          const ringRadius =
-            ring === "short_term"
-              ? boundaries.ring1
-              : ring === "long_term"
-                ? boundaries.ring2
-                : boundaries.ring3;
-          return (
-            <text
-              key={ring}
-              x={center}
-              y={center - ringRadius - 6}
-              textAnchor="middle"
-              aria-live="polite"
-              className={`${styles.ringLabel} ${hoveredRing === ring ? styles.ringLabelVisible : ""}`}
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: 9,
-                letterSpacing: "0.08em",
-                fill: "var(--color-text-mid)",
-              }}
-            >
-              {RING_LABEL[ring]}
-            </text>
-          );
-        })}
-
         {/* Signal halos. Drawn before dots so dots sit on top. */}
         {placed.map(({ signal, x, y }) => {
           const halo = severityHaloRadius(signal.severity);
@@ -438,6 +410,40 @@ export default function PerimeterSVG({
               onClick={() => activateSignal(signal)}
               onKeyDown={event => handleSignalKey(event, signal)}
             />
+          );
+        })}
+
+        {/* Ring hover labels. Rendered after dots so they paint on top of any
+         * signal dot sitting near the ring's apex. The paint-order halo keeps
+         * the label legible when it overlaps a dot. */}
+        {(["short_term", "long_term", "aspirational"] as const).map(ring => {
+          const ringRadius =
+            ring === "short_term"
+              ? boundaries.ring1
+              : ring === "long_term"
+                ? boundaries.ring2
+                : boundaries.ring3;
+          return (
+            <text
+              key={ring}
+              x={center}
+              y={center - ringRadius - 6}
+              textAnchor="middle"
+              aria-live="polite"
+              className={`${styles.ringLabel} ${hoveredRing === ring ? styles.ringLabelVisible : ""}`}
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 9,
+                letterSpacing: "0.08em",
+                fill: "var(--color-text-mid)",
+                paintOrder: "stroke",
+                stroke: "var(--color-bg)",
+                strokeWidth: 3,
+                strokeLinejoin: "round",
+              }}
+            >
+              {RING_LABEL[ring]}
+            </text>
           );
         })}
 

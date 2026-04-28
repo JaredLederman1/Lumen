@@ -17,7 +17,12 @@ import {
   useWatchPerimeterQuery,
   useWatchStatusQuery,
 } from '@/lib/queries'
-import type { PerimeterResponse } from '@/lib/types/vigilance'
+import type {
+  PerimeterResponse,
+  Signal,
+  SignalDomain,
+  SignalSeverity,
+} from '@/lib/types/vigilance'
 
 // The bottom ~18px of PerimeterSVG contains the baked-in "PERIMETER" caption.
 // Clipping the wrapper hides that caption without editing the shared component.
@@ -51,11 +56,35 @@ const ctaLink: CSSProperties = {
   textDecoration: 'none',
 }
 
-const subheadStyle: CSSProperties = {
-  fontFamily: 'var(--font-mono)',
-  fontSize: 12,
-  color: 'var(--color-text-muted)',
-  margin: 0,
+const TOP_FINDINGS_COUNT = 5
+
+const DOMAIN_HUMAN: Record<SignalDomain, string> = {
+  idle_cash: 'Idle cash drag',
+  hysa: 'HYSA yield gap',
+  debt: 'High-APR debt',
+  match: 'Employer match gap',
+  tax_advantaged: 'Tax-advantaged capacity',
+  benefits: 'Benefits capacity',
+  subscription: 'Subscription load',
+  category_overspend: 'Spending pressure',
+  recurring_change: 'Recurring drift',
+}
+
+function signalHeadline(signal: Signal): string {
+  const label = (signal.payload as { label?: string } | null)?.label
+  if (label && typeof label === 'string') return label
+  return DOMAIN_HUMAN[signal.domain]
+}
+
+function severityColor(severity: SignalSeverity): string {
+  switch (severity) {
+    case 'urgent':
+      return 'var(--color-negative)'
+    case 'flagged':
+      return 'var(--color-gold)'
+    case 'advisory':
+      return 'var(--color-text-muted)'
+  }
 }
 
 const heroStyle: CSSProperties = {
@@ -184,6 +213,39 @@ function SentinelShell({
           align-items: center;
           justify-content: center;
         }
+        .illumin-sentinel-findings {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          margin-top: var(--space-section-above);
+        }
+        .illumin-sentinel-finding {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-family: var(--font-mono);
+          font-size: 12px;
+          color: var(--color-text-mid);
+          line-height: 1.4;
+        }
+        .illumin-sentinel-finding-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: var(--radius-pill);
+          flex: 0 0 auto;
+        }
+        .illumin-sentinel-finding-headline {
+          flex: 1 1 auto;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .illumin-sentinel-finding-amount {
+          flex: 0 0 auto;
+          color: var(--color-text);
+          font-variant-numeric: tabular-nums;
+        }
         @media (max-width: 768px) {
           .illumin-sentinel-widget-inner {
             flex-direction: column;
@@ -237,10 +299,6 @@ export default function SentinelWidget(): ReactElement {
             </Link>
           }
         >
-          <p style={{ ...subheadStyle, marginTop: -10 }}>
-            Illumin&apos;s Vigilance Engine
-          </p>
-          <div style={{ height: 'var(--space-section-above)' }} />
           <p style={{ ...contextStyle, color: 'var(--color-text-mid)' }}>
             Watch status unavailable.
           </p>
@@ -262,10 +320,6 @@ export default function SentinelWidget(): ReactElement {
             </Link>
           }
         >
-          <p style={{ ...subheadStyle, marginTop: -10 }}>
-            Illumin&apos;s Vigilance Engine
-          </p>
-          <div style={{ height: 'var(--space-section-above)' }} />
           <p style={{ ...contextStyle, color: 'var(--color-text-mid)' }}>
             Setting up your watch...
           </p>
@@ -287,6 +341,12 @@ export default function SentinelWidget(): ReactElement {
     aggregateCost === null ? '—' : formatCurrency(aggregateCost)
   const heroSubText = showZeroState ? 'no findings to act on' : 'in unrealized cost'
 
+  const topFindings = perimeterReady
+    ? [...perimeter.signals]
+        .sort((a, b) => Math.abs(b.annualValue) - Math.abs(a.annualValue))
+        .slice(0, TOP_FINDINGS_COUNT)
+    : []
+
   return (
     <motion.div {...WIDGET_REVEAL}>
       <SentinelShell
@@ -299,13 +359,27 @@ export default function SentinelWidget(): ReactElement {
         withPerimeter
         perimeter={perimeter}
       >
-        <p style={{ ...subheadStyle, marginTop: -10 }}>
-          Illumin&apos;s Vigilance Engine
-        </p>
-        <div style={{ height: 'var(--space-section-above)' }} />
         <p style={heroStyle}>{heroText}</p>
         <div style={{ height: 'var(--space-value-to-subtext)' }} />
         <p style={heroSubStyle}>{heroSubText}</p>
+        {topFindings.length > 0 && (
+          <div className="illumin-sentinel-findings">
+            {topFindings.map((s) => (
+              <div key={s.id} className="illumin-sentinel-finding">
+                <span
+                  className="illumin-sentinel-finding-dot"
+                  style={{ backgroundColor: severityColor(s.severity) }}
+                />
+                <span className="illumin-sentinel-finding-headline">
+                  {signalHeadline(s)}
+                </span>
+                <span className="illumin-sentinel-finding-amount">
+                  {formatCurrency(Math.abs(s.annualValue))}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </SentinelShell>
     </motion.div>
   )
