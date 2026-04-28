@@ -2,7 +2,7 @@
 
 // Bespoke layout. Step 5 multi-screen flow + Plaid Link integration cannot use SubStepShell.
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   animate,
   AnimatePresence,
@@ -12,6 +12,13 @@ import {
   useTransform,
 } from 'framer-motion'
 import { usePlaidLink } from 'react-plaid-link'
+import {
+  Area,
+  ComposedChart,
+  Line,
+  ResponsiveContainer,
+  XAxis,
+} from 'recharts'
 import {
   questionHeading,
   contextCopy,
@@ -71,16 +78,18 @@ const REVEAL_DELAYS: Record<number, number> = {
   [STAGE.BUTTON]: 4200,
 }
 
-// Side-by-side reveal timing. The card fades in first; once it's visible the
-// three numbers count up in a stagger so the eye lands on Current, then the
-// gold Gap, then Optimized. Times are absolute from screen 1 mount.
-const CARD_FADE_MS          = 400
-const CURRENT_DELAY_MS      = CARD_FADE_MS + 0
-const CURRENT_DURATION_MS   = 800
-const GAP_DELAY_MS          = CARD_FADE_MS + 400
-const GAP_DURATION_MS       = 1000
-const OPTIMIZED_DELAY_MS    = CARD_FADE_MS + 800
-const OPTIMIZED_DURATION_MS = 1000
+// The whole card fades from 0→1 over CARD_FADE_MS before any internal
+// animation begins. The per-day count-up starts 200ms after that fade so
+// the eye lands on the gold figure once the card is fully present. The
+// chart drives its own animations via recharts: the two trajectory lines
+// begin at chart mount, and the gold gap fill starts CHART_FILL_BEGIN_MS
+// later so the user reads divergence first, then watches the gap fill in.
+const CARD_FADE_MS           = 400
+const PER_DAY_DELAY_MS       = CARD_FADE_MS + 200
+const PER_DAY_DURATION_MS    = 1400
+const CHART_LINE_DURATION_MS = 1800
+const CHART_FILL_BEGIN_MS    = 400
+const CHART_FILL_DURATION_MS = 1800
 
 export function Step5Plaid({
   linkedAccounts,
@@ -105,31 +114,64 @@ export function Step5Plaid({
   const [stage, setStage] = useState(0)
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([])
 
-  // Math for the side-by-side gap reveal. Reuses projectWealth from shared.ts;
-  // no new projection math is introduced here. If the user's saved rate is
-  // missing, falsy, or zero, fall back to 5 (the new default) for the
-  // current-path calculation. Optimized is always 10 points above current,
-  // floored at 15, so guidance always represents a meaningful step up.
+  const reducedMotion = useReducedMotion() ?? false
+
+  // Math for the time-decomposed loss readout. Reuses projectWealth from
+  // shared.ts. The current rate is floored at 5 (the new default) so
+  // pre-onboarding zeros and sub-5 entries map onto a meaningful baseline.
+  // The optimized rate is always 10 points above current, never less than
+  // 15, so the gap always represents a real step up.
   const ageNum = typeof age === 'number' ? age : 0
   const yearsToRetire = retirementAge - ageNum
-  const projectionImpossible = ageNum <= 0 || retirementAge <= ageNum
+  const projectionImpossible = yearsToRetire <= 0
 
-  const effectiveCurrentRate =
-    typeof savingsRate === 'number' && savingsRate > 0 ? savingsRate : 5
-  const optimizedRate = Math.max(effectiveCurrentRate + 10, 15)
+  const currentRate = Math.max(savingsRate || 0, 5)
+  const optimizedRate = Math.max(currentRate + 10, 15)
 
-  const currentPathValue = projectionImpossible
+  const currentTotal = projectionImpossible
     ? 0
-    : projectWealth(ageNum, annualIncome, effectiveCurrentRate, retirementAge)
-  const optimizedPathValue = projectionImpossible
+    : projectWealth(ageNum, annualIncome, currentRate, retirementAge)
+  const optimizedTotal = projectionImpossible
     ? 0
     : projectWealth(ageNum, annualIncome, optimizedRate, retirementAge)
-  const gapValue = Math.max(0, optimizedPathValue - currentPathValue)
+  const lifetimeGap = Math.max(0, optimizedTotal - currentTotal)
+
+  const perDay = projectionImpossible ? 0 : Math.round(lifetimeGap / (yearsToRetire * 365))
+  const perMonth = projectionImpossible ? 0 : Math.round(lifetimeGap / (yearsToRetire * 12))
+  const perYear = projectionImpossible ? 0 : Math.round(lifetimeGap / yearsToRetire)
+
+  // Per-year sample of both trajectories from year 0 to year `yearsToRetire`
+  // for the chart. Memoized so recharts only re-mounts the animation when
+  // an upstream input actually changes.
+  const chartData = useMemo(() => {
+    if (projectionImpossible) {
+      return [] as Array<{ year: number; currentPath: number; optimizedPath: number; gap: number }>
+    }
+    const points: Array<{ year: number; currentPath: number; optimizedPath: number; gap: number }> = []
+    for (let y = 0; y <= yearsToRetire; y++) {
+      const cur = projectWealth(ageNum, annualIncome, currentRate, ageNum + y)
+      const opt = projectWealth(ageNum, annualIncome, optimizedRate, ageNum + y)
+      points.push({
+        year: y,
+        currentPath: cur,
+        optimizedPath: opt,
+        gap: Math.max(0, opt - cur),
+      })
+    }
+    return points
+  }, [projectionImpossible, yearsToRetire, ageNum, annualIncome, currentRate, optimizedRate])
+
+  const midYear = Math.round(yearsToRetire / 2)
+  const tickFormatter = useCallback(
+    (v: number) => (v === 0 ? 'Today' : `Year ${v}`),
+    [],
+  )
 
   // Treat the unmeasured first paint (isMobile === null) as mobile so the
   // stacked layout is the safer default before hydration measures the
   // viewport.
   const stackOnMobile = isMobile === true || isMobile === null
+  const chartHeight = stackOnMobile ? 200 : 280
 
   const handlePlaidSuccess = useCallback(
     async (publicToken: string, metadata: PlaidOnSuccessMetadata) => {
@@ -228,9 +270,9 @@ export function Step5Plaid({
               transition={{ duration: 0.4, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
               style={contextCopy}
             >
-              Your numbers right now project two very different futures.
-              Linking your accounts lets Illumin's Engine close the gap
-              between them.
+              Every day you wait, the gap between your current path and your
+              optimized path grows. Linking your accounts is the first step to
+              closing it.
             </motion.p>
 
             <motion.div
@@ -260,57 +302,101 @@ export function Step5Plaid({
                     display: 'flex',
                     flexDirection: stackOnMobile ? 'column' : 'row',
                     alignItems: 'stretch',
-                    gap: stackOnMobile ? '28px' : '0',
+                    gap: stackOnMobile ? '24px' : '32px',
                   }}
                 >
-                  <ProjectionPanel
-                    label="Current Path"
-                    value={currentPathValue}
-                    caption="Your trajectory at today's savings rate."
-                    tone="muted"
-                    size="default"
-                    delayMs={CURRENT_DELAY_MS}
-                    durationMs={CURRENT_DURATION_MS}
+                  <LossReadout
+                    perDay={perDay}
+                    perMonth={perMonth}
+                    perYear={perYear}
+                    lifetimeGap={lifetimeGap}
+                    yearsToRetire={yearsToRetire}
+                    reducedMotion={reducedMotion}
+                    stackOnMobile={stackOnMobile}
                   />
-                  {!stackOnMobile && <PanelDivider />}
-                  <ProjectionPanel
-                    label="Gap"
-                    value={gapValue}
-                    caption="What waiting costs you."
-                    tone="gold"
-                    size="hero"
-                    delayMs={GAP_DELAY_MS}
-                    durationMs={GAP_DURATION_MS}
-                  />
-                  {!stackOnMobile && <PanelDivider />}
-                  <ProjectionPanel
-                    label="Optimized Path"
-                    value={optimizedPathValue}
-                    caption="What guided saving could deliver."
-                    tone="muted"
-                    size="default"
-                    delayMs={OPTIMIZED_DELAY_MS}
-                    durationMs={OPTIMIZED_DURATION_MS}
-                  />
+                  <div
+                    style={{
+                      flex: stackOnMobile ? '1 1 auto' : '1 1 60%',
+                      minWidth: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <ResponsiveContainer width="100%" height={chartHeight}>
+                      <ComposedChart
+                        data={chartData}
+                        margin={{ top: 8, right: 12, bottom: 0, left: 0 }}
+                      >
+                        <XAxis
+                          dataKey="year"
+                          type="number"
+                          domain={[0, yearsToRetire]}
+                          ticks={[0, midYear, yearsToRetire]}
+                          tickFormatter={tickFormatter}
+                          tick={{
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: 11,
+                            fill: 'var(--color-text-muted)',
+                          }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+
+                        {/* Stacked Areas paint the gold gap region between
+                            the two trajectories. Strokes are suppressed
+                            here so the trajectory lines below can animate
+                            on their own schedule (lines first, fill 400ms
+                            later). */}
+                        <Area
+                          type="monotone"
+                          dataKey="currentPath"
+                          stackId="gap-fill"
+                          stroke="none"
+                          fill="transparent"
+                          isAnimationActive={!reducedMotion}
+                          animationBegin={CHART_FILL_BEGIN_MS}
+                          animationDuration={CHART_FILL_DURATION_MS}
+                          animationEasing="ease-out"
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="gap"
+                          stackId="gap-fill"
+                          stroke="none"
+                          fill="var(--color-gold)"
+                          fillOpacity={0.12}
+                          isAnimationActive={!reducedMotion}
+                          animationBegin={CHART_FILL_BEGIN_MS}
+                          animationDuration={CHART_FILL_DURATION_MS}
+                          animationEasing="ease-out"
+                        />
+
+                        <Line
+                          type="monotone"
+                          dataKey="currentPath"
+                          stroke="var(--color-text-muted)"
+                          strokeWidth={1.5}
+                          dot={false}
+                          isAnimationActive={!reducedMotion}
+                          animationDuration={CHART_LINE_DURATION_MS}
+                          animationEasing="ease-out"
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="optimizedPath"
+                          stroke="var(--color-gold)"
+                          strokeWidth={2}
+                          dot={false}
+                          isAnimationActive={!reducedMotion}
+                          animationDuration={CHART_LINE_DURATION_MS}
+                          animationEasing="ease-out"
+                        />
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
               )}
             </motion.div>
-
-            {!projectionImpossible && (
-              <p
-                style={{
-                  margin: 0,
-                  fontFamily: 'var(--font-sans)',
-                  fontSize: '12px',
-                  color: 'var(--color-text-muted)',
-                  letterSpacing: '0.02em',
-                  lineHeight: 1.55,
-                  textAlign: 'center',
-                }}
-              >
-                Assumes 7% real return over {yearsToRetire} years to retirement age {retirementAge}.
-              </p>
-            )}
 
             {assetRequired && (
               <div
@@ -635,43 +721,39 @@ function CheckmarkRow({ children }: { children: React.ReactNode }) {
   )
 }
 
-interface ProjectionPanelProps {
-  label: string
-  value: number
-  caption: string
-  tone: 'muted' | 'gold'
-  size: 'default' | 'hero'
-  delayMs: number
-  durationMs: number
+interface LossReadoutProps {
+  perDay: number
+  perMonth: number
+  perYear: number
+  lifetimeGap: number
+  yearsToRetire: number
+  reducedMotion: boolean
+  stackOnMobile: boolean
 }
 
-function ProjectionPanel({
-  label,
-  value,
-  caption,
-  tone,
-  size,
-  delayMs,
-  durationMs,
-}: ProjectionPanelProps) {
-  const digitColor = tone === 'gold' ? 'var(--color-gold)' : 'var(--color-text-muted)'
-  const digitFontSize =
-    size === 'hero'
-      ? 'clamp(40px, 6vw, 56px)'
-      : 'clamp(26px, 3.4vw, 34px)'
-  const digitFontWeight = size === 'hero' ? 500 : 400
+function LossReadout({
+  perDay,
+  perMonth,
+  perYear,
+  lifetimeGap,
+  yearsToRetire,
+  reducedMotion,
+  stackOnMobile,
+}: LossReadoutProps) {
+  const rows: Array<{ label: string; value: string }> = [
+    { label: 'PER MONTH', value: fmt(perMonth) },
+    { label: 'PER YEAR', value: fmt(perYear) },
+    { label: `OVER ${yearsToRetire} YEARS`, value: fmt(Math.round(lifetimeGap)) },
+  ]
 
   return (
     <div
       style={{
-        flex: 1,
+        flex: stackOnMobile ? '1 1 auto' : '0 0 40%',
         minWidth: 0,
-        padding: '0 12px',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        gap: '12px',
-        textAlign: 'center',
+        gap: stackOnMobile ? '20px' : '24px',
       }}
     >
       <span
@@ -684,65 +766,98 @@ function ProjectionPanel({
           fontWeight: 500,
         }}
       >
-        {label}
+        What waiting costs you
       </span>
-      <CountUpNumber
-        value={value}
-        delayMs={delayMs}
-        durationMs={durationMs}
+
+      <div
         style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: digitFontSize,
-          fontWeight: digitFontWeight,
-          color: digitColor,
-          lineHeight: 1,
-          letterSpacing: '-0.01em',
-          fontVariantNumeric: 'tabular-nums',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '4px',
+          minWidth: 0,
         }}
-      />
+      >
+        <PerDayHero value={perDay} reducedMotion={reducedMotion} />
+        <span
+          style={{
+            fontFamily: 'var(--font-serif)',
+            fontSize: 'clamp(14px, 1.6vw, 17px)',
+            fontWeight: 400,
+            color: 'var(--color-text-muted)',
+            lineHeight: 1.2,
+            letterSpacing: '0.005em',
+          }}
+        >
+          every day
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {rows.map((row, i) => (
+          <div
+            key={row.label}
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'baseline',
+              gap: '12px',
+              paddingTop: i === 0 ? 0 : 12,
+              paddingBottom: i === rows.length - 1 ? 0 : 12,
+              borderTop: i === 0 ? 'none' : '1px solid var(--color-border)',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '10.5px',
+                color: 'var(--color-text-muted)',
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                fontWeight: 500,
+              }}
+            >
+              {row.label}
+            </span>
+            <span
+              style={{
+                fontFamily: 'var(--font-sans)',
+                fontSize: '14px',
+                color: 'var(--color-text-muted)',
+                fontVariantNumeric: 'tabular-nums',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {row.value}
+            </span>
+          </div>
+        ))}
+      </div>
+
       <span
         style={{
           fontFamily: 'var(--font-sans)',
-          fontSize: '12px',
-          color: 'var(--color-text-mid)',
+          fontSize: '11px',
+          color: 'var(--color-text-muted)',
           lineHeight: 1.5,
-          maxWidth: '200px',
+          letterSpacing: '0.01em',
         }}
       >
-        {caption}
+        Assumes 7% real return at current vs optimized savings rate.
       </span>
     </div>
   )
 }
 
-function PanelDivider() {
-  return (
-    <div
-      aria-hidden
-      style={{
-        width: '1px',
-        alignSelf: 'stretch',
-        backgroundColor: 'var(--color-border)',
-      }}
-    />
-  )
-}
-
-interface CountUpNumberProps {
+interface PerDayHeroProps {
   value: number
-  delayMs: number
-  durationMs: number
-  style: React.CSSProperties
+  reducedMotion: boolean
 }
 
-// Numeric tween from 0 to `value`, formatted via `fmt` on each frame. Honors
-// prefers-reduced-motion by snapping straight to the final value with no
-// animation. Re-runs whenever the target value changes so the panel still
-// reflows after the user adjusts inputs upstream. Uses framer-motion's
-// motion-value plumbing so the count-up is driven by the animation runtime
-// rather than React setState calls inside an effect.
-function CountUpNumber({ value, delayMs, durationMs, style }: CountUpNumberProps) {
-  const reducedMotion = useReducedMotion()
+// Count-up tween from 0 to the per-day value, formatted via `fmt` on each
+// frame. Honors prefers-reduced-motion by snapping straight to the final
+// value. Re-runs whenever the target value changes so upstream input edits
+// still reflow the figure.
+function PerDayHero({ value, reducedMotion }: PerDayHeroProps) {
   const count = useMotionValue(reducedMotion ? value : 0)
   const formatted = useTransform(count, latest => fmt(Math.round(latest)))
 
@@ -753,12 +868,30 @@ function CountUpNumber({ value, delayMs, durationMs, style }: CountUpNumberProps
     }
     count.set(0)
     const controls = animate(count, value, {
-      duration: durationMs / 1000,
-      delay: delayMs / 1000,
+      duration: PER_DAY_DURATION_MS / 1000,
+      delay: PER_DAY_DELAY_MS / 1000,
       ease: 'easeOut',
     })
     return () => controls.stop()
-  }, [value, delayMs, durationMs, reducedMotion, count])
+  }, [value, reducedMotion, count])
 
-  return <motion.span style={style}>{formatted}</motion.span>
+  return (
+    <motion.span
+      style={{
+        fontFamily: 'var(--font-serif)',
+        // Hero figure capped at 64px so a 6-character value ($X,XXX or
+        // $9,999) fits inside the ~273px left column on desktop without
+        // truncation. Min 44px keeps it dominant on a 375px viewport.
+        fontSize: 'clamp(44px, 6.4vw, 64px)',
+        fontWeight: 400,
+        color: 'var(--color-gold)',
+        lineHeight: 1,
+        letterSpacing: '-0.02em',
+        fontVariantNumeric: 'tabular-nums',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {formatted}
+    </motion.span>
+  )
 }

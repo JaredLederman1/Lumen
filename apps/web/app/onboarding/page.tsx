@@ -393,8 +393,9 @@ export default function OnboardingPage() {
         {/* Mobile sticky LiveProjection bar. Stays above the step content.
             Only renders once the user has entered a salary, so the strip
             doesn't sit empty across the entire pre-salary portion of the
-            flow. */}
-        {isMobile !== false && salaryEverEntered && (
+            flow. Suppressed on Step 5 because that step renders its own
+            bespoke gap-reveal and the sidecar would duplicate the projection. */}
+        {isMobile !== false && salaryEverEntered && step !== 4 && (
           <div
             style={{
               position: 'sticky',
@@ -435,7 +436,7 @@ export default function OnboardingPage() {
               maxWidth: '1040px',
               display: 'grid',
               gridTemplateColumns:
-                isMobile !== false || !salaryEverEntered
+                isMobile !== false || !salaryEverEntered || step === 4
                   ? '1fr'
                   : 'minmax(0, 1fr) minmax(300px, max-content)',
               gap: isMobile !== false ? '24px' : '56px',
@@ -446,10 +447,15 @@ export default function OnboardingPage() {
             <div
               style={{
                 display: 'flex',
-                // Age and Location render centered on the page; every
-                // subsequent question falls back to left-aligned so it lines
-                // up with the LiveProjection sidecar slot.
-                justifyContent: step === 0 && subIndex < 2 ? 'center' : 'flex-start',
+                // Age and Location render centered on the page; Step 5
+                // (Plaid) also centers because the sidecar is suppressed and
+                // the reveal card should sit on the column axis. Every other
+                // question falls back to left-aligned so it lines up with the
+                // LiveProjection sidecar slot.
+                justifyContent:
+                  (step === 0 && subIndex < 2) || step === 4
+                    ? 'center'
+                    : 'flex-start',
                 minWidth: 0,
               }}
             >
@@ -471,7 +477,10 @@ export default function OnboardingPage() {
                     width: '100%',
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: step === 0 && subIndex < 2 ? 'center' : 'stretch',
+                    alignItems:
+                      (step === 0 && subIndex < 2) || step === 4
+                        ? 'center'
+                        : 'stretch',
                   }}
                 >
                   {step === 0 && (
@@ -547,7 +556,7 @@ export default function OnboardingPage() {
               </AnimatePresence>
             </div>
 
-            {isMobile === false && salaryEverEntered && (
+            {isMobile === false && salaryEverEntered && step !== 4 && (
               <div style={{ alignSelf: 'center', justifySelf: 'start' }}>
                 <LiveProjection
                   data={data}
