@@ -34,7 +34,7 @@ export default function Page() {
           </h1>
 
           <p className={styles.subhead}>
-            Illumin Finds What Your Financial Habits are Secretly Costing You
+            Illumin finds what your financial habits are secretly costing you.
           </p>
 
           <HeroCTAs />
