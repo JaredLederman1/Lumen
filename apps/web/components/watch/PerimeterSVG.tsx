@@ -9,6 +9,7 @@ import {
   type KeyboardEvent,
   type ReactElement,
 } from "react";
+import { useRouter } from "next/navigation";
 import type { Signal, SignalDomain, SignalSeverity } from "@/lib/types/vigilance";
 import {
   getRingBoundaries,
@@ -136,6 +137,7 @@ export default function PerimeterSVG({
   const size = useResponsiveSize(sizeProp);
   const center = size / 2;
   const boundaries = getRingBoundaries(size);
+  const router = useRouter();
 
   const [hoveredRing, setHoveredRing] = useState<PerimeterRing | null>(null);
   const [hoveredSignalId, setHoveredSignalId] = useState<string | null>(null);
@@ -193,14 +195,26 @@ export default function PerimeterSVG({
       ? placed.find(p => p.signal.id === hoveredSignalId) ?? null
       : null;
 
+  const activateSignal = useCallback(
+    (signal: Signal) => {
+      if (onSignalClick) {
+        onSignalClick(signal);
+        return;
+      }
+      if (!signal.id) return;
+      router.push(`/dashboard/sentinel/${signal.id}`);
+    },
+    [onSignalClick, router],
+  );
+
   const handleSignalKey = useCallback(
     (event: KeyboardEvent<SVGCircleElement>, signal: Signal) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        onSignalClick?.(signal);
+        activateSignal(signal);
       }
     },
-    [onSignalClick],
+    [activateSignal],
   );
 
   const containerStyle: CSSProperties = {
@@ -421,7 +435,7 @@ export default function PerimeterSVG({
               onMouseLeave={() => setHoveredSignalId(prev => (prev === signal.id ? null : prev))}
               onFocus={() => setHoveredSignalId(signal.id)}
               onBlur={() => setHoveredSignalId(prev => (prev === signal.id ? null : prev))}
-              onClick={() => onSignalClick?.(signal)}
+              onClick={() => activateSignal(signal)}
               onKeyDown={event => handleSignalKey(event, signal)}
             />
           );
